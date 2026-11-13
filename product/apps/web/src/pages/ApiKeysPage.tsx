@@ -71,21 +71,26 @@ function CreateKeyDialog({
           <>
             <DialogHeader>
               <DialogTitle>
-                <Trans>Copy your key</Trans>
+                <Trans>Copy your key now</Trans>
               </DialogTitle>
-              <DialogDescription>
-                <Trans>You won't see it again.</Trans>
+              <DialogDescription className="text-warning">
+                <Trans>
+                  This is the only time it is shown. If you lose it, revoke it and create a new one.
+                </Trans>
               </DialogDescription>
             </DialogHeader>
             <div className="flex min-w-0 items-center gap-2 rounded-lg border border-border bg-card p-2 pl-3">
-              <code className="min-w-0 flex-1 truncate font-mono text-body2 text-foreground">
+              <code className="min-w-0 flex-1 font-mono text-body2 break-all text-foreground select-all">
                 {secret}
               </code>
               <CopyButton value={secret} label={t`Copy key`} />
             </div>
+            <p className="text-label text-muted-foreground">
+              <Trans>Demo key, generated locally.</Trans>
+            </p>
             <DialogFooter>
               <Button onClick={() => close(false)}>
-                <Trans>Done</Trans>
+                <Trans>I have saved it</Trans>
               </Button>
             </DialogFooter>
           </>
@@ -99,8 +104,13 @@ function CreateKeyDialog({
           >
             <DialogHeader>
               <DialogTitle>
-                <Trans>New API key</Trans>
+                <Trans>Create API key</Trans>
               </DialogTitle>
+              <DialogDescription>
+                <Trans>
+                  Name it after where it will run, so you can revoke the right one later.
+                </Trans>
+              </DialogDescription>
             </DialogHeader>
             <Field>
               <FieldLabel htmlFor="key-name">
@@ -111,7 +121,7 @@ function CreateKeyDialog({
                 value={name}
                 maxLength={API_KEY_NAME_MAX_LENGTH}
                 autoComplete="off"
-                placeholder={t`For example, production`}
+                placeholder={t`e.g. ci-runner`}
                 onChange={(event) => setName(event.currentTarget.value)}
               />
             </Field>
@@ -141,7 +151,12 @@ function RevokeKey({ apiKey }: { apiKey: ApiKey }) {
   const { name } = apiKey;
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
-      <Button variant="text" size="sm" onClick={() => setOpen(true)} aria-label={t`Revoke ${name}`}>
+      <Button
+        variant="outline"
+        className="h-11 px-3 text-body2 font-semibold text-destructive"
+        onClick={() => setOpen(true)}
+        aria-label={t`Revoke ${name}`}
+      >
         <Trans>Revoke</Trans>
       </Button>
       <AlertDialogContent>
@@ -182,12 +197,22 @@ export function ApiKeysPage() {
       <PageHeader
         title={<Trans>API keys</Trans>}
         action={
-          <Button onClick={() => setCreating(true)}>
+          <Button
+            className="h-11 px-[18px] text-body1 font-semibold"
+            onClick={() => setCreating(true)}
+          >
             <Plus aria-hidden="true" />
-            <Trans>New key</Trans>
+            <Trans>Create key</Trans>
           </Button>
         }
       />
+      <p className="max-w-[640px] text-muted-foreground">
+        <Trans>
+          Keys authenticate the E2B SDK. Set one as your API key and point{" "}
+          <span className="font-mono text-foreground">E2B_DOMAIN</span> at your Rookbox domain. We
+          store only a hash, so a key is shown once.
+        </Trans>
+      </p>
 
       {keys.isPending ? (
         <Skeleton className="h-24 w-full rounded-lg" />
@@ -200,54 +225,59 @@ export function ApiKeysPage() {
           <Trans>No keys yet</Trans>
         </p>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>
-                <Trans>Name</Trans>
-              </TableHead>
-              <TableHead>
-                <Trans>Key</Trans>
-              </TableHead>
-              <TableHead className="max-sm:hidden">
-                <Trans>Created</Trans>
-              </TableHead>
-              <TableHead className="max-md:hidden">
-                <Trans>Last used</Trans>
-              </TableHead>
-              <TableHead className="w-20">
-                <span className="sr-only">
-                  <Trans>Actions</Trans>
-                </span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {keys.data.map((apiKey) => (
-              <TableRow key={apiKey.id} className="h-13">
-                <TableCell className="font-medium text-foreground">{apiKey.name}</TableCell>
-                <TableCell className="font-mono text-body2 text-muted-foreground">
-                  {apiKey.hint}…
-                </TableCell>
-                <TableCell className="text-body2 text-muted-foreground max-sm:hidden">
-                  {formatDate(apiKey.createdAt, i18n.locale)}
-                </TableCell>
-                <TableCell className="text-body2 text-muted-foreground max-md:hidden">
-                  {apiKey.lastUsedAt ? (
-                    formatRelative(apiKey.lastUsedAt, i18n.locale)
-                  ) : (
-                    <Trans>Never</Trans>
-                  )}
-                </TableCell>
-                <TableCell className="text-right">
-                  <RevokeKey apiKey={apiKey} />
-                </TableCell>
+        <div className="overflow-hidden rounded-2xl border border-border bg-card">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>
+                  <Trans>Name</Trans>
+                </TableHead>
+                <TableHead>
+                  <Trans>Key</Trans>
+                </TableHead>
+                <TableHead className="max-sm:hidden">
+                  <Trans>Created</Trans>
+                </TableHead>
+                <TableHead className="max-md:hidden">
+                  <Trans>Last used</Trans>
+                </TableHead>
+                <TableHead className="w-20">
+                  <span className="sr-only">
+                    <Trans>Actions</Trans>
+                  </span>
+                </TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {keys.data.map((apiKey) => (
+                <TableRow key={apiKey.id} className="h-13">
+                  <TableCell className="font-medium text-foreground">{apiKey.name}</TableCell>
+                  <TableCell className="font-mono text-body2 text-muted-foreground">
+                    {apiKey.hint}…
+                  </TableCell>
+                  <TableCell className="text-body2 text-muted-foreground max-sm:hidden">
+                    {formatDate(apiKey.createdAt, i18n.locale)}
+                  </TableCell>
+                  <TableCell className="text-body2 text-muted-foreground max-md:hidden">
+                    {apiKey.lastUsedAt ? (
+                      formatRelative(apiKey.lastUsedAt, i18n.locale)
+                    ) : (
+                      <Trans>Never</Trans>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <RevokeKey apiKey={apiKey} />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       )}
 
+      <p className="text-label text-muted-foreground">
+        <Trans>Sample data. Key format is a placeholder.</Trans>
+      </p>
       <CreateKeyDialog open={creating} onOpenChange={setCreating} />
     </div>
   );

@@ -31,16 +31,25 @@ export function useMachineActions() {
   const failed = () => toast.error(t`That didn't work. Try again.`);
 
   const suspend = useMutation(
-    orpc.machines.suspend.mutationOptions({ onSettled: refresh, onError: failed }),
+    orpc.machines.suspend.mutationOptions({
+      onSettled: refresh,
+      onError: failed,
+      onSuccess: ({ name }) => toast.success(t`Suspending ${name}, memory is being saved`),
+    }),
   );
   const restore = useMutation(
-    orpc.machines.restore.mutationOptions({ onSettled: refresh, onError: failed }),
+    orpc.machines.restore.mutationOptions({
+      onSettled: refresh,
+      onError: failed,
+      onSuccess: ({ name }) => toast.success(t`Restoring ${name}`),
+    }),
   );
   const fork = useMutation(
     orpc.machines.fork.mutationOptions({
       onSettled: refresh,
       onError: failed,
-      onSuccess: ({ name }) => toast.success(t`Forked into ${name}`),
+      onSuccess: ({ name }) =>
+        toast.success(t`Forked into ${name}. The disk was copied, not memory.`),
     }),
   );
   const remove = useMutation(
@@ -56,6 +65,7 @@ export function useMachineActions() {
   return { run, remove, pending: suspend.isPending || restore.isPending || fork.isPending };
 }
 
+/** The "Delete" dialog says what is lost, so a confirm button is not a reflex. */
 export function DeleteMachineDialog({
   machine,
   open,
@@ -67,6 +77,7 @@ export function DeleteMachineDialog({
   onOpenChange: (open: boolean) => void;
   onDeleted?: () => void;
 }) {
+  const { t } = useLingui();
   const { remove } = useMachineActions();
   const { name } = machine;
   return (
@@ -87,7 +98,15 @@ export function DeleteMachineDialog({
           <AlertDialogAction
             variant="destructive"
             onClick={() => {
-              remove.mutate({ id: machine.id }, { onSuccess: onDeleted });
+              remove.mutate(
+                { id: machine.id },
+                {
+                  onSuccess: () => {
+                    toast.success(t`${name} deleted`);
+                    onDeleted?.();
+                  },
+                },
+              );
               onOpenChange(false);
             }}
           >
@@ -145,5 +164,61 @@ export function MachineActionsMenu({ machine }: { machine: Machine }) {
       </DropdownMenu>
       <DeleteMachineDialog machine={machine} open={confirming} onOpenChange={setConfirming} />
     </>
+  );
+}
+
+/** Suspend or restore, fork and delete as buttons in the row, for screens wide enough. */
+export function MachineRowActions({ machine }: { machine: Machine }) {
+  const { t } = useLingui();
+  const { run } = useMachineActions();
+  const [confirming, setConfirming] = useState(false);
+  const can = (action: MachineAction) => canPerform(machine.status, action);
+  const { name } = machine;
+  const button = "h-11 px-3 text-body2 font-semibold";
+
+  return (
+    <div className="flex flex-wrap justify-end gap-1.5">
+      {can("suspend") ? (
+        <Button
+          variant="outline"
+          className={button}
+          aria-label={t`Suspend ${name}`}
+          onClick={() => run("suspend", machine)}
+        >
+          <Trans>Suspend</Trans>
+        </Button>
+      ) : null}
+      {can("restore") ? (
+        <Button
+          variant="outline"
+          className={button}
+          aria-label={t`Restore ${name}`}
+          onClick={() => run("restore", machine)}
+        >
+          <Trans>Restore</Trans>
+        </Button>
+      ) : null}
+      {can("fork") ? (
+        <Button
+          variant="outline"
+          className={button}
+          aria-label={t`Fork ${name}`}
+          onClick={() => run("fork", machine)}
+        >
+          <Trans>Fork</Trans>
+        </Button>
+      ) : null}
+      {can("delete") ? (
+        <Button
+          variant="outline"
+          className={`${button} text-destructive`}
+          aria-label={t`Delete ${name}`}
+          onClick={() => setConfirming(true)}
+        >
+          <Trans>Delete</Trans>
+        </Button>
+      ) : null}
+      <DeleteMachineDialog machine={machine} open={confirming} onOpenChange={setConfirming} />
+    </div>
   );
 }

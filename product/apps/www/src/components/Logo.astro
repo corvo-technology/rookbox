@@ -1,15 +1,21 @@
 ---
-import BoxMascot from "./BoxMascot.astro";
-
+/**
+ * THE logo for the site. The owner has not chosen a mark yet, so this is a neutral placeholder:
+ * the plain monochrome "Rookbox" wordmark (Instrument Sans 700, tracking -0.055em), no symbol.
+ *
+ * Swap point for the logo: replace this file (the final lockup), HeroVisual.astro (the large hero
+ * slot) and public/favicon.svg. Nothing else draws the brand.
+ */
 type Props = {
   href: string;
   label: string;
+  /** Wordmark size in px. */
+  size?: number;
 };
 
-const { href, label } = Astro.props;
+const { href, label, size = 20 } = Astro.props;
 ---
 
-<a class="inline-flex items-center gap-2.5 rounded-lg" href={href} aria-label={label}>
-  <BoxMascot size={28} />
-  <span class="text-[17px] font-semibold tracking-tight text-foreground" aria-hidden="true">Rookbox</span>
+<a class="logo" href={href} aria-label={label}>
+  <span class="logo__word" style={`font-size:${size}px`} aria-hidden="true">Rookbox</span>
 </a>
