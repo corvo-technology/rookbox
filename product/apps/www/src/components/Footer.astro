@@ -2,13 +2,14 @@
 import type { Copy } from "../i18n/copy";
 import type { Locale } from "../i18n/locales";
 import { LOCALE_HREFLANG, LOCALE_LABELS, LOCALES, localeHomePath } from "../i18n/locales";
+import { LEGAL_LINE } from "../placeholders";
 import {
-  ABOUT_URL,
+  API_REFERENCE_URL,
   CHANGELOG_URL,
-  DASHBOARD_URL,
   DOCS_URL,
-  PRICING_URL,
   PRIVACY_URL,
+  ROOK_URL,
+  STATUS_URL,
   TERMS_URL,
 } from "../site";
 import Logo from "./Logo.astro";
@@ -19,66 +20,67 @@ type Props = {
 };
 
 const { locale, copy } = Astro.props;
+const f = copy.footer;
 
 const columns = [
   {
-    heading: copy.footer.product,
+    heading: f.product,
     links: [
-      { href: DOCS_URL, label: copy.nav.docs },
-      { href: PRICING_URL, label: copy.nav.pricing },
-      { href: CHANGELOG_URL, label: copy.nav.changelog },
-      { href: DASHBOARD_URL, label: copy.nav.dashboard },
+      { href: "#demo", label: f.howItWorks },
+      { href: "#pricing", label: f.pricing },
+      { href: STATUS_URL, label: f.status },
     ],
   },
   {
-    heading: copy.footer.company,
+    heading: f.developers,
     links: [
-      { href: ABOUT_URL, label: copy.footer.about },
-      { href: PRIVACY_URL, label: copy.footer.privacy },
-      { href: TERMS_URL, label: copy.footer.terms },
+      { href: DOCS_URL, label: f.docs },
+      { href: API_REFERENCE_URL, label: f.api },
+      { href: CHANGELOG_URL, label: f.changelog },
+    ],
+  },
+  {
+    heading: f.company,
+    links: [
+      { href: ROOK_URL, label: f.rook },
+      { href: PRIVACY_URL, label: f.privacy },
+      { href: TERMS_URL, label: f.terms },
     ],
   },
 ];
 ---
 
-<footer class="mt-24 grid gap-10 border-t border-border py-12 md:grid-cols-[1fr_auto]">
-  <div class="flex flex-col items-start gap-5">
-    <Logo href={localeHomePath(locale)} label={copy.nav.home} />
-    <nav class="flex flex-wrap gap-x-4 gap-y-2" aria-label={copy.footer.languages}>
-      {
-        LOCALES.map((item) => (
-          <a
-            href={localeHomePath(item)}
-            hreflang={LOCALE_HREFLANG[item]}
-            aria-current={item === locale ? "page" : undefined}
-            class="text-sm text-muted-foreground transition-colors duration-150 hover:text-foreground aria-[current=page]:text-foreground"
-          >
-            {LOCALE_LABELS[item]}
-          </a>
-        ))
-      }
-    </nav>
-    <span class="text-sm text-faint-foreground">© 2026 Rookbox</span>
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot__grid">
+      <div class="foot__brand">
+        <Logo href={localeHomePath(locale)} label={copy.nav.home} size={28} />
+        <p>{f.tagline} <a class="foot__rook" href={ROOK_URL}>{f.rook}</a>.</p>
+        <nav class="foot__langs" aria-label={f.languages}>
+          {
+            LOCALES.map((item) => (
+              <a
+                href={localeHomePath(item)}
+                hreflang={LOCALE_HREFLANG[item]}
+                aria-current={item === locale ? "page" : undefined}
+              >
+                {LOCALE_LABELS[item]}
+              </a>
+            ))
+          }
+        </nav>
+      </div>
+      <nav class="foot__cols" aria-label={f.nav}>
+        {
+          columns.map((column) => (
+            <div class="foot__col">
+              <h2>{column.heading}</h2>
+              {column.links.map((link) => <a href={link.href}>{link.label}</a>)}
+            </div>
+          ))
+        }
+      </nav>
+    </div>
+    <p class="fine foot__legal">{LEGAL_LINE}</p>
   </div>
-  <nav class="flex gap-16" aria-label={copy.footer.nav}>
-    {
-      columns.map((column) => (
-        <div>
-          <h2 class="text-sm font-medium text-foreground">{column.heading}</h2>
-          <ul class="mt-3 flex flex-col gap-2 p-0">
-            {column.links.map((link) => (
-              <li class="list-none">
-                <a
-                  class="text-sm text-muted-foreground transition-colors duration-150 hover:text-foreground"
-                  href={link.href}
-                >
-                  {link.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))
-    }
-  </nav>
 </footer>

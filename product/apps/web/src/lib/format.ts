@@ -48,6 +48,20 @@ export function formatDay(date: string, locale: string): string {
   }).format(new Date(`${date}T00:00:00Z`));
 }
 
+/** A UTC calendar day, `YYYY-MM-DD`, as "13 Nov" (the order follows the locale). */
+export function formatDayShort(date: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  }).format(new Date(`${date}T00:00:00Z`));
+}
+
+/** The top of a bar chart's axis: the largest value rounded up to a multiple of 20 (at least 20), so four gridlines land on whole numbers. */
+export function chartCeiling(max: number): number {
+  return Math.max(20, Math.ceil(max / 20) * 20);
+}
+
 export function formatHours(hours: number, locale: string): string {
   return new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(hours);
 }

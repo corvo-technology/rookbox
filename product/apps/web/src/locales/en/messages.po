@@ -13,9 +13,37 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
+#: src/pages/UsagePage.tsx
+msgid "[CREDITS] remaining"
+msgstr "[CREDITS] remaining"
+
+#: src/components/AppShell.tsx
+msgid "[PLAN NAME] plan. [LIMIT] machines running of [LIMIT]."
+msgstr "[PLAN NAME] plan. [LIMIT] machines running of [LIMIT]."
+
+#: src/pages/UsagePage.tsx
+msgid "[PRICE] per month plus usage. Renews [DATE]."
+msgstr "[PRICE] per month plus usage. Renews [DATE]."
+
+#: src/pages/UsagePage.tsx
+msgid "{days} days"
+msgstr "{days} days"
+
+#: src/components/MachineActions.tsx
+msgid "{name} deleted"
+msgstr "{name} deleted"
+
+#: src/pages/UsagePage.tsx
+msgid "{period} day total"
+msgstr "{period} day total"
+
 #: src/components/SizeText.tsx
 msgid "{vcpu} vCPU · {memory} RAM · {disk} disk"
 msgstr "{vcpu} vCPU · {memory} RAM · {disk} disk"
+
+#: src/components/SizeText.tsx
+msgid "{vcpu} vCPU / {memory}"
+msgstr "{vcpu} vCPU / {memory}"
 
 #: src/pages/MachinePage.tsx
 msgid "A deleted machine"
@@ -30,15 +58,27 @@ msgstr "Actions"
 msgid "Actions for {name}"
 msgstr "Actions for {name}"
 
+#: src/pages/UsagePage.tsx
+msgid "Active"
+msgstr "Active"
+
+#: src/pages/UsagePage.tsx
+msgid "Add credits"
+msgstr "Add credits"
+
 #: src/components/CreateMachineDialog.tsx
 msgid "Advanced"
 msgstr "Advanced"
+
+#: src/pages/MachinesPage.tsx
+msgid "All"
+msgstr "All"
 
 #: src/pages/ApiKeysPage.tsx
 msgid "Anything using this key stops working right away."
 msgstr "Anything using this key stops working right away."
 
-#: src/components/AppRail.tsx
+#: src/components/AppShell.tsx
 #: src/pages/ApiKeysPage.tsx
 msgid "API keys"
 msgstr "API keys"
@@ -47,12 +87,45 @@ msgstr "API keys"
 msgid "Appearance"
 msgstr "Appearance"
 
+#: src/pages/MachinePage.tsx
+msgid "Back to running in about 1 s"
+msgstr "Back to running in about 1 s"
+
+#: src/pages/UsagePage.tsx
+msgid "Bar chart of running machine-hours per day over {count} days. Lowest day {low}, highest day {high}."
+msgstr "Bar chart of running machine-hours per day over {count} days. Lowest day {low}, highest day {high}."
+
+#: src/pages/MachinePage.tsx
+msgid "Booted from template seed in about 2 s"
+msgstr "Booted from template seed in about 2 s"
+
+#: src/pages/MachinePage.tsx
+msgid "Breadcrumb"
+msgstr "Breadcrumb"
+
+#: src/pages/UsagePage.tsx
+msgid "By machine"
+msgstr "By machine"
+
 #: src/components/MachineActions.tsx
 #: src/pages/ApiKeysPage.tsx
 msgid "Cancel"
 msgstr "Cancel"
 
+#: src/pages/MachinePage.tsx
+msgid "Chromium over VNC will appear here."
+msgstr "Chromium over VNC will appear here."
+
+#: src/components/AppShell.tsx
+msgid "CI"
+msgstr "CI"
+
+#: src/components/AppShell.tsx
+msgid "Close menu"
+msgstr "Close menu"
+
 #: src/components/CreateMachineDialog.tsx
+#: src/pages/MachinePage.tsx
 msgid "Coming soon"
 msgstr "Coming soon"
 
@@ -72,9 +145,21 @@ msgstr "Copy"
 msgid "Copy key"
 msgstr "Copy key"
 
+#: src/pages/MachinePage.tsx
+msgid "Copy URL for port {port}"
+msgstr "Copy URL for port {port}"
+
 #: src/pages/ApiKeysPage.tsx
-msgid "Copy your key"
-msgstr "Copy your key"
+msgid "Copy your key now"
+msgstr "Copy your key now"
+
+#: src/pages/UsagePage.tsx
+msgid "Cost"
+msgstr "Cost"
+
+#: src/pages/ApiKeysPage.tsx
+msgid "Create API key"
+msgstr "Create API key"
 
 #: src/pages/ApiKeysPage.tsx
 msgid "Create key"
@@ -94,18 +179,22 @@ msgstr "Created"
 msgid "Creating"
 msgstr "Creating"
 
+#: src/pages/UsagePage.tsx
+msgid "Credits"
+msgstr "Credits"
+
 #: src/pages/SettingsPage.tsx
 msgid "Dark"
 msgstr "Dark"
-
-#: src/pages/UsagePage.tsx
-msgid "Day"
-msgstr "Day"
 
 #: src/components/MachineActions.tsx
 #: src/pages/MachinePage.tsx
 msgid "Delete"
 msgstr "Delete"
+
+#: src/components/MachineActions.tsx
+msgid "Delete {name}"
+msgstr "Delete {name}"
 
 #: src/components/MachineActions.tsx
 msgid "Delete {name}?"
@@ -119,54 +208,102 @@ msgstr "Delete machine"
 msgid "Deleting"
 msgstr "Deleting"
 
+#: src/pages/ApiKeysPage.tsx
+msgid "Demo key, generated locally."
+msgstr "Demo key, generated locally."
+
 #: src/pages/MachinePage.tsx
 msgid "Desktop"
 msgstr "Desktop"
+
+#: src/pages/MachinePage.tsx
+msgid "Disk"
+msgstr "Disk"
 
 #: src/components/CreateMachineDialog.tsx
 msgid "Disk (GiB)"
 msgstr "Disk (GiB)"
 
+#: src/pages/MachinePage.tsx
+msgid "Disk copied, memory not"
+msgstr "Disk copied, memory not"
+
+#: src/components/AppShell.tsx
+msgid "Docs"
+msgstr "Docs"
+
 #: src/pages/ApiKeysPage.tsx
-msgid "Done"
-msgstr "Done"
+msgid "e.g. ci-runner"
+msgstr "e.g. ci-runner"
+
+#: src/pages/MachinePage.tsx
+msgid "Expose a port"
+msgstr "Expose a port"
 
 #: src/components/StatusChip.tsx
 msgid "Failed"
 msgstr "Failed"
 
-#: src/pages/ApiKeysPage.tsx
-msgid "For example, production"
-msgstr "For example, production"
+#: src/pages/MachinesPage.tsx
+msgid "Filter by name or id"
+msgstr "Filter by name or id"
+
+#: src/pages/MachinesPage.tsx
+msgid "Filter machines"
+msgstr "Filter machines"
 
 #: src/components/MachineActions.tsx
 #: src/pages/MachinePage.tsx
 msgid "Fork"
 msgstr "Fork"
 
+#: src/components/MachineActions.tsx
+msgid "Fork {name}"
+msgstr "Fork {name}"
+
+#: src/pages/MachinePage.tsx
+msgid "Forked"
+msgstr "Forked"
+
 #: src/pages/MachinePage.tsx
 msgid "Forked from"
 msgstr "Forked from"
 
 #: src/components/MachineActions.tsx
-msgid "Forked into {name}"
-msgstr "Forked into {name}"
+msgid "Forked into {name}. The disk was copied, not memory."
+msgstr "Forked into {name}. The disk was copied, not memory."
 
 #: src/App.tsx
 msgid "Go to machines"
 msgstr "Go to machines"
 
 #: src/pages/MachinePage.tsx
-msgid "ID"
-msgstr "ID"
+msgid "HTTPS URL issued"
+msgstr "HTTPS URL issued"
+
+#: src/pages/ApiKeysPage.tsx
+msgid "I have saved it"
+msgstr "I have saved it"
+
+#: src/components/AppShell.tsx
+msgid "Integrations"
+msgstr "Integrations"
 
 #: src/components/MachineActions.tsx
 msgid "Its disk and saved memory are deleted. This can't be undone."
 msgstr "Its disk and saved memory are deleted. This can't be undone."
 
+#: src/pages/MachinePage.tsx
+msgid "Kernel"
+msgstr "Kernel"
+
 #: src/pages/ApiKeysPage.tsx
 msgid "Key"
 msgstr "Key"
+
+#: src/pages/ApiKeysPage.tsx
+msgid "Keys authenticate the E2B SDK. Set one as your API key and point <0>E2B_DOMAIN</0> at your Rookbox domain. We store only a hash, so a key is shown once."
+msgstr "Keys authenticate the E2B SDK. Set one as your API key and point <0>E2B_DOMAIN</0> at your Rookbox domain. We store only a hash, so a key is shown once."
 
 #: src/pages/ApiKeysPage.tsx
 msgid "Keys didn't load."
@@ -183,6 +320,10 @@ msgstr "Large"
 #: src/pages/ApiKeysPage.tsx
 msgid "Last used"
 msgstr "Last used"
+
+#: src/pages/MachinePage.tsx
+msgid "Lifecycle"
+msgstr "Lifecycle"
 
 #: src/pages/SettingsPage.tsx
 msgid "Light"
@@ -201,20 +342,17 @@ msgid "Loading"
 msgstr "Loading"
 
 #: src/pages/UsagePage.tsx
-msgid "Machine hours"
-msgstr "Machine hours"
+msgid "Machine"
+msgstr "Machine"
 
 #: src/pages/UsagePage.tsx
-msgid "Machine hours per day"
-msgstr "Machine hours per day"
+msgid "Machine-hours per day. Billed per second, shown per day."
+msgstr "Machine-hours per day. Billed per second, shown per day."
 
-#: src/pages/UsagePage.tsx
-msgid "Machine hours, last {DAYS} days"
-msgstr "Machine hours, last {DAYS} days"
-
-#: src/components/AppRail.tsx
+#: src/components/AppShell.tsx
 #: src/pages/MachinePage.tsx
 #: src/pages/MachinesPage.tsx
+#: src/pages/UsagePage.tsx
 msgid "Machines"
 msgstr "Machines"
 
@@ -222,19 +360,31 @@ msgstr "Machines"
 msgid "Machines didn't load."
 msgstr "Machines didn't load."
 
-#: src/components/AppRail.tsx
-msgid "Main"
-msgstr "Main"
-
 #: src/components/CreateMachineDialog.tsx
 msgid "Medium"
 msgstr "Medium"
+
+#: src/components/AppShell.tsx
+msgid "Members"
+msgstr "Members"
+
+#: src/pages/MachinePage.tsx
+msgid "Memory"
+msgstr "Memory"
+
+#: src/pages/MachinePage.tsx
+msgid "Memory and state saved, worker released"
+msgstr "Memory and state saved, worker released"
 
 #: src/components/CreateMachineDialog.tsx
 #: src/pages/ApiKeysPage.tsx
 #: src/pages/MachinesPage.tsx
 msgid "Name"
 msgstr "Name"
+
+#: src/pages/ApiKeysPage.tsx
+msgid "Name it after where it will run, so you can revoke the right one later."
+msgstr "Name it after where it will run, so you can revoke the right one later."
 
 #: src/pages/MachinePage.tsx
 msgid "Needs the desktop template, coming soon."
@@ -243,14 +393,6 @@ msgstr "Needs the desktop template, coming soon."
 #: src/pages/ApiKeysPage.tsx
 msgid "Never"
 msgstr "Never"
-
-#: src/pages/ApiKeysPage.tsx
-msgid "New API key"
-msgstr "New API key"
-
-#: src/pages/ApiKeysPage.tsx
-msgid "New key"
-msgstr "New key"
 
 #: src/components/CreateMachineDialog.tsx
 #: src/pages/MachinesPage.tsx
@@ -262,6 +404,10 @@ msgid "No keys yet"
 msgstr "No keys yet"
 
 #: src/pages/MachinesPage.tsx
+msgid "No machines match."
+msgstr "No machines match."
+
+#: src/pages/MachinesPage.tsx
 msgid "No machines yet"
 msgstr "No machines yet"
 
@@ -269,26 +415,70 @@ msgstr "No machines yet"
 msgid "Open desktop"
 msgstr "Open desktop"
 
+#: src/components/AppShell.tsx
+msgid "Open menu"
+msgstr "Open menu"
+
 #: src/components/CreateMachineDialog.tsx
 msgid "Optional"
 msgstr "Optional"
+
+#: src/pages/MachinePage.tsx
+msgid "Own, Firecracker microVM"
+msgstr "Own, Firecracker microVM"
 
 #: src/App.tsx
 msgid "Page not found"
 msgstr "Page not found"
 
+#: src/pages/UsagePage.tsx
+msgid "Period"
+msgstr "Period"
+
+#: src/pages/UsagePage.tsx
+msgid "Plan"
+msgstr "Plan"
+
+#: src/pages/MachinePage.tsx
+msgid "Port 3000 exposed"
+msgstr "Port 3000 exposed"
+
+#: src/pages/MachinePage.tsx
+msgid "Ports"
+msgstr "Ports"
+
+#: src/pages/MachinePage.tsx
+msgid "Preview. Connects over exec."
+msgstr "Preview. Connects over exec."
+
 #: src/components/CreateMachineDialog.tsx
 msgid "RAM (GiB)"
 msgstr "RAM (GiB)"
+
+#: src/pages/MachinePage.tsx
+msgid "Region"
+msgstr "Region"
 
 #: src/components/MachineActions.tsx
 #: src/pages/MachinePage.tsx
 msgid "Restore"
 msgstr "Restore"
 
+#: src/components/MachineActions.tsx
+msgid "Restore {name}"
+msgstr "Restore {name}"
+
+#: src/pages/MachinePage.tsx
+msgid "Restored"
+msgstr "Restored"
+
 #: src/components/StatusChip.tsx
 msgid "Restoring"
 msgstr "Restoring"
+
+#: src/components/MachineActions.tsx
+msgid "Restoring {name}"
+msgstr "Restoring {name}"
 
 #: src/pages/ApiKeysPage.tsx
 msgid "Revoke"
@@ -306,32 +496,107 @@ msgstr "Revoke {name}?"
 msgid "Revoke key"
 msgstr "Revoke key"
 
-#: src/components/AppRail.tsx
+#: src/components/AppShell.tsx
 msgid "Rookbox home"
 msgstr "Rookbox home"
 
 #: src/components/StatusChip.tsx
+#: src/pages/MachinesPage.tsx
 msgid "Running"
 msgstr "Running"
 
 #: src/pages/UsagePage.tsx
-msgid "Sample data"
-msgstr "Sample data"
+msgid "Running at once"
+msgstr "Running at once"
 
-#: src/components/AppRail.tsx
+#: src/pages/UsagePage.tsx
+msgid "Running time"
+msgstr "Running time"
+
+#: src/pages/UsagePage.tsx
+msgid "Sample data, not real usage."
+msgstr "Sample data, not real usage."
+
+#: src/pages/UsagePage.tsx
+msgid "Sample data."
+msgstr "Sample data."
+
+#: src/pages/MachinesPage.tsx
+msgid "Sample data. Fork copies the disk, not memory."
+msgstr "Sample data. Fork copies the disk, not memory."
+
+#: src/pages/ApiKeysPage.tsx
+msgid "Sample data. Key format is a placeholder."
+msgstr "Sample data. Key format is a placeholder."
+
+#: src/pages/UsagePage.tsx
+msgid "Sample data. Rates and totals are placeholders."
+msgstr "Sample data. Rates and totals are placeholders."
+
+#: src/pages/MachinePage.tsx
+msgid "Sample data. Values in [brackets] are placeholders."
+msgstr "Sample data. Values in [brackets] are placeholders."
+
+#: src/pages/MachinePage.tsx
+msgid "Sample events"
+msgstr "Sample events"
+
+#: src/pages/MachinePage.tsx
+msgid "Sample ports. Exposing a port is coming soon."
+msgstr "Sample ports. Exposing a port is coming soon."
+
+#: src/pages/MachinePage.tsx
+msgid "Sample snapshots. Snapshots are coming soon."
+msgstr "Sample snapshots. Snapshots are coming soon."
+
+#: src/pages/UsagePage.tsx
+msgid "Sample: 62 percent of credits remaining"
+msgstr "Sample: 62 percent of credits remaining"
+
+#: src/components/AppShell.tsx
+msgid "Search"
+msgstr "Search"
+
+#: src/components/AppShell.tsx
+msgid "Secrets"
+msgstr "Secrets"
+
+#: src/components/AppShell.tsx
 #: src/pages/SettingsPage.tsx
 msgid "Settings"
 msgstr "Settings"
 
 #: src/components/CreateMachineDialog.tsx
-#: src/pages/MachinePage.tsx
 #: src/pages/MachinesPage.tsx
 msgid "Size"
 msgstr "Size"
 
+#: src/pages/MachinePage.tsx
+msgid "Sizing"
+msgstr "Sizing"
+
 #: src/components/CreateMachineDialog.tsx
 msgid "Small"
 msgstr "Small"
+
+#: src/components/AppShell.tsx
+#: src/pages/MachinePage.tsx
+#: src/pages/UsagePage.tsx
+msgid "Snapshots"
+msgstr "Snapshots"
+
+#: src/components/AppShell.tsx
+#: src/pages/MachinePage.tsx
+msgid "Soon"
+msgstr "Soon"
+
+#: src/pages/MachinePage.tsx
+msgid "Specs"
+msgstr "Specs"
+
+#: src/pages/MachinesPage.tsx
+msgid "State filter"
+msgstr "State filter"
 
 #: src/pages/MachinesPage.tsx
 msgid "Status"
@@ -342,23 +607,53 @@ msgstr "Status"
 msgid "Suspend"
 msgstr "Suspend"
 
+#: src/components/MachineActions.tsx
+msgid "Suspend {name}"
+msgstr "Suspend {name}"
+
 #: src/components/StatusChip.tsx
+#: src/pages/MachinePage.tsx
+#: src/pages/MachinesPage.tsx
 msgid "Suspended"
 msgstr "Suspended"
+
+#: src/pages/UsagePage.tsx
+msgid "Suspended time"
+msgstr "Suspended time"
 
 #: src/components/StatusChip.tsx
 msgid "Suspending"
 msgstr "Suspending"
 
+#: src/components/MachineActions.tsx
+msgid "Suspending {name}, memory is being saved"
+msgstr "Suspending {name}, memory is being saved"
+
+#: src/components/AppShell.tsx
+msgid "Switch to dark theme"
+msgstr "Switch to dark theme"
+
+#: src/components/AppShell.tsx
+msgid "Switch to light theme"
+msgstr "Switch to light theme"
+
 #: src/pages/SettingsPage.tsx
 msgid "System"
 msgstr "System"
+
+#: src/pages/MachinePage.tsx
+msgid "Take snapshot"
+msgstr "Take snapshot"
 
 #: src/components/CreateMachineDialog.tsx
 #: src/pages/MachinePage.tsx
 #: src/pages/MachinesPage.tsx
 msgid "Template"
 msgstr "Template"
+
+#: src/pages/MachinePage.tsx
+msgid "Terminal"
+msgstr "Terminal"
 
 #: src/components/MachineActions.tsx
 msgid "That didn't work. Try again."
@@ -380,18 +675,31 @@ msgstr "The machine didn't load."
 msgid "The machine wasn't created. Try again."
 msgstr "The machine wasn't created. Try again."
 
+#: src/pages/ApiKeysPage.tsx
+msgid "This is the only time it is shown. If you lose it, revoke it and create a new one."
+msgstr "This is the only time it is shown. If you lose it, revoke it and create a new one."
+
 #: src/pages/MachinePage.tsx
 msgid "This machine doesn't exist."
 msgstr "This machine doesn't exist."
 
 #: src/pages/MachinesPage.tsx
+msgid "Total"
+msgstr "Total"
+
+#: src/pages/MachinesPage.tsx
 msgid "Try again"
 msgstr "Try again"
 
-#: src/components/AppRail.tsx
+#: src/components/AppShell.tsx
 #: src/pages/UsagePage.tsx
-msgid "Usage"
-msgstr "Usage"
+msgid "Upgrade plan"
+msgstr "Upgrade plan"
+
+#: src/components/AppShell.tsx
+#: src/pages/UsagePage.tsx
+msgid "Usage and billing"
+msgstr "Usage and billing"
 
 #: src/pages/UsagePage.tsx
 msgid "Usage didn't load."
@@ -401,10 +709,22 @@ msgstr "Usage didn't load."
 msgid "Use lowercase letters, digits and dashes."
 msgstr "Use lowercase letters, digits and dashes."
 
+#: src/pages/UsagePage.tsx
+msgid "Used first, then the card on file is charged. Sample meter."
+msgstr "Used first, then the card on file is charged. Sample meter."
+
 #: src/components/CreateMachineDialog.tsx
 msgid "vCPU"
 msgstr "vCPU"
 
-#: src/pages/ApiKeysPage.tsx
-msgid "You won't see it again."
-msgstr "You won't see it again."
+#: src/components/AppShell.tsx
+msgid "Webhooks"
+msgstr "Webhooks"
+
+#: src/components/AppShell.tsx
+msgid "Workspace"
+msgstr "Workspace"
+
+#: src/components/AppShell.tsx
+msgid "Workspace switcher, coming soon"
+msgstr "Workspace switcher, coming soon"

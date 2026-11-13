@@ -1,36 +1,55 @@
-import { SDK_DOMAIN } from "./site";
+import type { Copy } from "./i18n/copy";
 
-/** The hero's snippets: the unmodified E2B SDK pointed at Rookbox. */
-export const SNIPPETS = [
-  {
-    language: "Python",
-    code: `import os
-from e2b import Sandbox
+export type Tone = "c" | "o" | "m";
+/** One line of the sample session: the step it belongs to, its text and how it is drawn. */
+export type SessionLine = readonly [step: number, text: string, tone: Tone];
+export type Sessions = { py: SessionLine[]; ts: SessionLine[]; cli: SessionLine[] };
 
-sandbox = Sandbox.create(
-    template="seed",
-    domain="${SDK_DOMAIN}",
-    api_key=os.environ["ROOKBOX_API_KEY"],
-)
-print(sandbox.commands.run("uname -s").stdout)`,
-  },
-  {
-    language: "TypeScript",
-    code: `import { Sandbox } from "e2b";
+/**
+ * The sample session shown in the hero terminal. The code is the same in every language; only the
+ * comments come from the copy. `[your-domain]`, `[cli]` and the fork call are owner placeholders.
+ */
+export function buildSessions(s: Copy["demo"]["session"]): Sessions {
+  return {
+    py: [
+      [0, 'sbx = Sandbox.create(template="seed")', "c"],
+      [0, `# ${s.ready}`, "m"],
+      [1, 'sbx.commands.run("uname -sr").stdout', "c"],
+      [1, "Linux 6.1", "o"],
+      [2, "sbx.get_host(3000)", "c"],
+      [2, "3000-4f2a.[your-domain]", "o"],
+      [3, `sbx.pause()  # ${s.pause}`, "c"],
+      [3, `# ${s.saved}`, "m"],
+      [4, `sbx.fork()  # [${s.fork}]`, "c"],
+      [4, `# ${s.forkChild}`, "m"],
+    ],
+    ts: [
+      [0, 'const sbx = await Sandbox.create("seed")', "c"],
+      [0, `// ${s.ready}`, "m"],
+      [1, 'await sbx.commands.run("uname -sr")', "c"],
+      [1, "Linux 6.1", "o"],
+      [2, "sbx.getHost(3000)", "c"],
+      [2, "3000-4f2a.[your-domain]", "o"],
+      [3, `await sbx.pause()  // ${s.pause}`, "c"],
+      [3, `// ${s.saved}`, "m"],
+      [4, `await sbx.fork()  // [${s.fork}]`, "c"],
+      [4, `// ${s.forkChild}`, "m"],
+    ],
+    cli: [
+      [0, "$ [cli] create seed", "c"],
+      [0, `4f2a  running  ${s.cliReady}`, "o"],
+      [1, "$ [cli] exec 4f2a -- uname -sr", "c"],
+      [1, "Linux 6.1", "o"],
+      [2, "$ [cli] expose 4f2a 3000", "c"],
+      [2, "https://3000-4f2a.[your-domain]", "o"],
+      [3, "$ [cli] suspend 4f2a", "c"],
+      [3, `4f2a  suspended  ${s.cliSaved}`, "o"],
+      [4, "$ [cli] fork 4f2a", "c"],
+      [4, `9c1e  running  ${s.cliFork}`, "o"],
+    ],
+  };
+}
 
-const sandbox = await Sandbox.create("seed", {
-  domain: "${SDK_DOMAIN}",
-  apiKey: process.env.ROOKBOX_API_KEY,
-});
-const { stdout } = await sandbox.commands.run("uname -s");`,
-  },
-] as const;
-
-/** The SDK section: the only lines that change from an E2B setup. */
-export const SDK_DIFF: { mark: " " | "+"; line: string }[] = [
-  { mark: " ", line: "sandbox = Sandbox.create(" },
-  { mark: " ", line: '    template="seed",' },
-  { mark: "+", line: `    domain="${SDK_DOMAIN}",` },
-  { mark: "+", line: '    api_key=os.environ["ROOKBOX_API_KEY"],' },
-  { mark: " ", line: ")" },
-];
+/** The env-var change the E2B section shows. */
+export const ENV_BEFORE = "export E2B_DOMAIN=e2b.dev";
+export const ENV_AFTER = "export E2B_DOMAIN=[your-domain]";

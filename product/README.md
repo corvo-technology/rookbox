@@ -54,14 +54,23 @@ installed Google Chrome through Playwright and writes PNGs to `.screenshots/` (i
   are generated per day and the page labels them "Sample data".
 - **No auth, no database, no backend server** in this round.
 - **Placeholders:** the domain `box.example.com` (SDK snippets, site URL, sitemap), the
-  `ROOKBOX_API_KEY` variable name, and the Docs, Pricing, Changelog, About, Privacy and Terms
-  links (anchors until those pages exist). The `desktop` template is shown as coming soon and
-  cannot be selected; "Open desktop" is disabled.
+  `ROOKBOX_API_KEY` variable name, the Docs, Changelog, Status, API reference, Rook, Privacy and
+  Terms links (anchors until those pages exist), and every `[BRACKETED]` value on the landing
+  (plans, prices, legal line, free-credit offer, fleet-count endpoint; see
+  `apps/www/src/placeholders.ts`) and in the dashboard (workspace, plan, limits, credits, region,
+  snapshot sizes). Sidebar entries without a screen (Snapshots, Secrets, Webhooks, CI, Members)
+  are marked "Soon" and are not links. The `desktop` template is coming soon and cannot be
+  selected; "Open desktop" is disabled. The landing's "machines running" counter is illustrative
+  demo data and says so.
+- **The logo.** Not chosen yet. `apps/www/src/components/Logo.astro` and
+  `apps/web/src/components/Logo.tsx` hold a plain "Rookbox" wordmark, and both apps'
+  `public/favicon.svg` is a placeholder "R". Replace those files to ship a mark.
 
 ## Design
 
 Follows Rook's `DESIGN.md`: monochrome ink and paper, one green (the dark theme's primary),
-Instrument Sans, hairline borders, no gradients or glow, light and dark following the system.
+Instrument Sans, hairline borders, no gradients or glow. The dashboard follows the system theme
+and has a toggle in the top bar; the landing is light.
 Components use semantic tokens only.
 
 ## Origin and licences

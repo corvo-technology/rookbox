@@ -17,26 +17,31 @@ export function useStatusLabel() {
   return (status: MachineStatus) => labels[status];
 }
 
-const DOT: Record<MachineStatus, string> = {
-  creating: "bg-status-working",
-  running: "bg-success",
-  suspending: "bg-status-working",
-  suspended: "bg-faint-foreground",
-  restoring: "bg-status-working",
-  deleting: "bg-destructive",
-  failed: "bg-destructive",
+/** Tinted chips: green for running, amber for suspended, blue-green while moving, red for trouble. */
+const TONE: Record<MachineStatus, string> = {
+  creating: "bg-status-working/15 text-status-working",
+  running: "bg-link/15 text-link",
+  suspending: "bg-status-working/15 text-status-working",
+  suspended: "bg-warning/15 text-warning",
+  restoring: "bg-status-working/15 text-status-working",
+  deleting: "bg-destructive/15 text-destructive",
+  failed: "bg-destructive/15 text-destructive",
 };
 
 export function StatusChip({ status }: { status: MachineStatus }) {
   const label = useStatusLabel();
   return (
-    <span className="inline-flex h-6 items-center gap-1.5 rounded-full border border-border px-2.5 text-label font-medium text-foreground">
+    <span
+      className={cn(
+        "inline-flex items-center gap-[7px] rounded-full py-[3px] pr-[11px] pl-[9px] text-body2 font-semibold",
+        TONE[status],
+      )}
+    >
       <span
         aria-hidden="true"
         className={cn(
-          "size-1.5 rounded-full",
-          DOT[status],
-          isTransitional(status) && "animate-pulse",
+          "size-[7px] rounded-full bg-current",
+          isTransitional(status) && "animate-pulse motion-reduce:animate-none",
         )}
       />
       {label(status)}

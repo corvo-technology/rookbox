@@ -20,7 +20,10 @@ async function page(colorScheme, width, height, locale = "en-US") {
     locale,
     deviceScaleFactor: 1,
   });
-  return context.newPage();
+  const p = await context.newPage();
+  // Reports a sideways scroll, the most common mobile layout bug.
+  p.overflow = () => p.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  return p;
 }
 
 const saved = [];
@@ -30,25 +33,27 @@ async function shot(p, name, fullPage = true) {
   saved.push(path);
 }
 
-for (const [locale, path] of [
-  ["en", "/"],
-  ["pt", "/pt/"],
+// The landing is light whatever the system says; check it in all three languages.
+for (const [locale, path, browserLocale] of [
+  ["en", "/", "en-US"],
+  ["pt", "/pt/", "pt-BR"],
+  ["es", "/es/", "es-ES"],
 ]) {
-  for (const scheme of ["dark", "light"]) {
-    for (const [device, width, height] of [
-      ["desktop", 1440, 900],
-      ["mobile", 390, 844],
-    ]) {
-      const p = await page(scheme, width, height);
-      await p.goto(`${WWW}${path}`, { waitUntil: "networkidle" });
-      await shot(p, `landing-${locale}-${device}-${scheme}`);
-      await p.context().close();
-    }
+  for (const [device, width, height] of [
+    ["desktop", 1440, 900],
+    ["mobile", 390, 844],
+  ]) {
+    const p = await page("light", width, height, browserLocale);
+    await p.goto(`${WWW}${path}`, { waitUntil: "networkidle" });
+    await shot(p, `landing-${locale}-${device}-light`);
+    const extra = await p.overflow();
+    if (extra > 0) console.warn(`landing ${locale} ${device}: ${extra}px of sideways scroll`);
+    await p.context().close();
   }
 }
 
 for (const scheme of ["dark", "light"]) {
-  const p = await page(scheme, 1280, 800);
+  const p = await page(scheme, 1440, 900);
   await p.goto(`${WEB}/machines`, { waitUntil: "networkidle" });
   await p.getByRole("link", { name: "build-runner" }).waitFor();
   await shot(p, `dashboard-machines-${scheme}`, false);
@@ -60,34 +65,49 @@ for (const scheme of ["dark", "light"]) {
   await shot(p, `dashboard-create-dialog-${scheme}`, false);
   await p.keyboard.press("Escape");
 
+  await p.goto(`${WEB}/machines`, { waitUntil: "networkidle" });
+  await p.getByRole("link", { name: "build-runner" }).click();
+  await p.getByRole("heading", { name: "Specs" }).waitFor();
+  await shot(p, `dashboard-machine-detail-${scheme}`);
+
+  await p.goto(`${WEB}/usage`, { waitUntil: "networkidle" });
+  await p.getByText("Sample data, not real usage.").waitFor();
+  await shot(p, `dashboard-usage-${scheme}`);
+
   await p.goto(`${WEB}/keys`, { waitUntil: "networkidle" });
-  await p.getByRole("button", { name: "New key" }).click();
+  await p.getByRole("button", { name: "Create key" }).first().click();
   await p.getByLabel("Name").fill("production");
-  await p.getByRole("button", { name: "Create key" }).click();
-  await p.getByText("Copy your key").waitFor();
+  await p.getByRole("button", { name: "Create key" }).last().click();
+  await p.getByText("Copy your key now").waitFor();
   await shot(p, `dashboard-api-key-created-${scheme}`, false);
-  await p.keyboard.press("Escape");
+  await p.getByRole("button", { name: "I have saved it" }).click();
   await p.waitForTimeout(300);
   await shot(p, `dashboard-api-keys-${scheme}`, false);
-
-  if (scheme === "dark") {
-    await p.goto(`${WEB}/machines`, { waitUntil: "networkidle" });
-    await p.getByRole("link", { name: "build-runner" }).click();
-    await p.getByRole("heading", { name: "Connect" }).waitFor();
-    await shot(p, "dashboard-machine-detail-dark", false);
-    await p.goto(`${WEB}/usage`, { waitUntil: "networkidle" });
-    await p.getByText("Sample data").waitFor();
-    await shot(p, "dashboard-usage-dark", false);
-  }
   await p.context().close();
 }
 
-// pt-BR dashboard, to check the catalogs load.
-{
-  const p = await page("dark", 1280, 800, "pt-BR");
+// Phone width: the sidebar collapses behind the menu button.
+for (const scheme of ["dark", "light"]) {
+  const p = await page(scheme, 390, 844);
   await p.goto(`${WEB}/machines`, { waitUntil: "networkidle" });
   await p.getByRole("link", { name: "build-runner" }).waitFor();
-  await shot(p, "dashboard-machines-pt-BR-dark", false);
+  await shot(p, `dashboard-machines-mobile-${scheme}`, false);
+  const extra = await p.overflow();
+  if (extra > 0) console.warn(`dashboard machines mobile ${scheme}: ${extra}px of sideways scroll`);
+  await p.getByRole("button", { name: "Open menu" }).click();
+  await shot(p, `dashboard-menu-mobile-${scheme}`, false);
+  await p.context().close();
+}
+
+// pt-BR and es dashboards, to check the catalogs load.
+for (const [name, locale] of [
+  ["pt-BR", "pt-BR"],
+  ["es", "es-ES"],
+]) {
+  const p = await page("light", 1440, 900, locale);
+  await p.goto(`${WEB}/machines`, { waitUntil: "networkidle" });
+  await p.getByRole("link", { name: "build-runner" }).waitFor();
+  await shot(p, `dashboard-machines-${name}-light`, false);
   await p.context().close();
 }
 
