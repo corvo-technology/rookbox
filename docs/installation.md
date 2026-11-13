@@ -107,6 +107,17 @@ Run this block from the checkout root. It checks the platform, required devices,
 
 These checks do not verify privileged Docker operations, loop devices, or btrfs support.
 
+Raise the host's inotify limits before the bring-up. The Kind nodes share them,
+and the Ubuntu defaults (128 instances per user) are too low: `kube-proxy` then
+restarts with `too many open files` and pods cannot reach the cluster API. This
+persists the limits across reboots:
+
+```bash
+printf 'fs.inotify.max_user_instances = 8192\nfs.inotify.max_user_watches = 1048576\n' |
+  sudo tee /etc/sysctl.d/90-space-kind-inotify.conf >/dev/null &&
+  sudo sysctl --system >/dev/null
+```
+
 This deployment uses development passwords and signing keys. Keep it private and do not use production credentials.
 
 ## Install and verify tools
