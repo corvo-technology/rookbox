@@ -6,8 +6,15 @@
       "cache": false
     },
     "build": {
-      "dependsOn": ["^build", "^generate"],
-      "env": ["PUBLIC_DASHBOARD_URL"],
+      "dependsOn": ["^build", "^generate", "generate"],
+      "env": [
+        "PUBLIC_DASHBOARD_URL",
+        "PUBLIC_SITE_URL",
+        "PUBLIC_SDK_DOMAIN",
+        "VITE_API_URL",
+        "VITE_E2B_DOMAIN",
+        "VITE_DOCS_URL"
+      ],
       "outputs": ["dist/**"]
     },
     "check": {

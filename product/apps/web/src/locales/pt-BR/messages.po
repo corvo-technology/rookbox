@@ -49,6 +49,14 @@ msgstr "{vcpu} vCPU / {memory}"
 msgid "A deleted machine"
 msgstr "Uma máquina excluída"
 
+#: src/pages/MachinePage.tsx
+msgid "A port needs the machine's traffic access token in the e2b-traffic-access-token header, so a browser tab cannot open it directly."
+msgstr "Uma porta exige o token de acesso de tráfego da máquina no cabeçalho e2b-traffic-access-token, então uma aba do navegador não consegue abri-la diretamente."
+
+#: src/pages/SettingsPage.tsx
+msgid "Account"
+msgstr "Conta"
+
 #: src/pages/ApiKeysPage.tsx
 #: src/pages/MachinesPage.tsx
 msgid "Actions"
@@ -107,14 +115,18 @@ msgstr "Trilha de navegação"
 msgid "By machine"
 msgstr "Por máquina"
 
+#: src/pages/LoginPage.tsx
+msgid "Can't reach Rookbox. Check your connection and try again."
+msgstr "Não foi possível acessar o Rookbox. Verifique sua conexão e tente de novo."
+
 #: src/components/MachineActions.tsx
 #: src/pages/ApiKeysPage.tsx
 msgid "Cancel"
 msgstr "Cancelar"
 
 #: src/pages/MachinePage.tsx
-msgid "Chromium over VNC will appear here."
-msgstr "O Chromium via VNC vai aparecer aqui."
+msgid "Chromium over VNC, in a new tab."
+msgstr "Chromium via VNC, em uma nova aba."
 
 #: src/components/AppShell.tsx
 msgid "CI"
@@ -125,9 +137,12 @@ msgid "Close menu"
 msgstr "Fechar menu"
 
 #: src/components/CreateMachineDialog.tsx
-#: src/pages/MachinePage.tsx
 msgid "Coming soon"
 msgstr "Em breve"
+
+#: src/pages/MachinePage.tsx
+msgid "Command"
+msgstr "Comando"
 
 #: src/pages/MachinePage.tsx
 msgid "Connect"
@@ -236,6 +251,19 @@ msgstr "Documentação"
 msgid "e.g. ci-runner"
 msgstr "ex.: ci-runner"
 
+#: src/pages/LoginPage.tsx
+msgid "Email"
+msgstr "E-mail"
+
+#: src/pages/LoginPage.tsx
+msgid "Email or password is wrong."
+msgstr "E-mail ou senha incorretos."
+
+#. placeholder {0}: entry.result.exitCode
+#: src/pages/MachinePage.tsx
+msgid "Exit code {0}"
+msgstr "Código de saída {0}"
+
 #: src/pages/MachinePage.tsx
 msgid "Expose a port"
 msgstr "Expor uma porta"
@@ -276,6 +304,10 @@ msgstr "Fork criado em {name}. O disco foi copiado, não a memória."
 #: src/App.tsx
 msgid "Go to machines"
 msgstr "Ir para máquinas"
+
+#: src/pages/LoginPage.tsx
+msgid "Hide password"
+msgstr "Ocultar senha"
 
 #: src/pages/MachinePage.tsx
 msgid "HTTPS URL issued"
@@ -386,10 +418,6 @@ msgstr "Nome"
 msgid "Name it after where it will run, so you can revoke the right one later."
 msgstr "Dê um nome conforme o lugar onde ela vai rodar, para revogar a chave certa depois."
 
-#: src/pages/MachinePage.tsx
-msgid "Needs the desktop template, coming soon."
-msgstr "Precisa do template desktop, que chega em breve."
-
 #: src/pages/ApiKeysPage.tsx
 msgid "Never"
 msgstr "Nunca"
@@ -424,12 +452,20 @@ msgid "Optional"
 msgstr "Opcional"
 
 #: src/pages/MachinePage.tsx
+msgid "Output cut"
+msgstr "Saída cortada"
+
+#: src/pages/MachinePage.tsx
 msgid "Own, Firecracker microVM"
 msgstr "Próprio, microVM Firecracker"
 
 #: src/App.tsx
 msgid "Page not found"
 msgstr "Página não encontrada"
+
+#: src/pages/LoginPage.tsx
+msgid "Password"
+msgstr "Senha"
 
 #: src/pages/UsagePage.tsx
 msgid "Period"
@@ -446,10 +482,6 @@ msgstr "Porta 3000 exposta"
 #: src/pages/MachinePage.tsx
 msgid "Ports"
 msgstr "Portas"
-
-#: src/pages/MachinePage.tsx
-msgid "Preview. Connects over exec."
-msgstr "Prévia. Conecta via exec."
 
 #: src/components/CreateMachineDialog.tsx
 msgid "RAM (GiB)"
@@ -500,6 +532,14 @@ msgstr "Revogar chave"
 msgid "Rookbox home"
 msgstr "Início do Rookbox"
 
+#: src/pages/MachinePage.tsx
+msgid "Run"
+msgstr "Executar"
+
+#: src/pages/MachinePage.tsx
+msgid "Run a command to see its output here."
+msgstr "Execute um comando para ver a saída aqui."
+
 #: src/components/StatusChip.tsx
 #: src/pages/MachinesPage.tsx
 msgid "Running"
@@ -512,6 +552,10 @@ msgstr "Em execução ao mesmo tempo"
 #: src/pages/UsagePage.tsx
 msgid "Running time"
 msgstr "Tempo em execução"
+
+#: src/pages/MachinePage.tsx
+msgid "Runs in a shell as root"
+msgstr "Executa em um shell como root"
 
 #: src/pages/UsagePage.tsx
 msgid "Sample data, not real usage."
@@ -542,10 +586,6 @@ msgid "Sample events"
 msgstr "Eventos de exemplo"
 
 #: src/pages/MachinePage.tsx
-msgid "Sample ports. Exposing a port is coming soon."
-msgstr "Portas de exemplo. Expor uma porta chega em breve."
-
-#: src/pages/MachinePage.tsx
 msgid "Sample snapshots. Snapshots are coming soon."
 msgstr "Snapshots de exemplo. Os snapshots chegam em breve."
 
@@ -565,6 +605,22 @@ msgstr "Segredos"
 #: src/pages/SettingsPage.tsx
 msgid "Settings"
 msgstr "Ajustes"
+
+#: src/pages/LoginPage.tsx
+msgid "Show password"
+msgstr "Mostrar senha"
+
+#: src/pages/LoginPage.tsx
+msgid "Sign in"
+msgstr "Entrar"
+
+#: src/pages/SettingsPage.tsx
+msgid "Sign out"
+msgstr "Sair"
+
+#: src/pages/SettingsPage.tsx
+msgid "Signed in as"
+msgstr "Conectado como"
 
 #: src/components/CreateMachineDialog.tsx
 #: src/pages/MachinesPage.tsx
@@ -593,6 +649,10 @@ msgstr "Em breve"
 #: src/pages/MachinePage.tsx
 msgid "Specs"
 msgstr "Especificações"
+
+#: src/pages/MachinePage.tsx
+msgid "Start the machine to run commands."
+msgstr "Inicie a máquina para executar comandos."
 
 #: src/pages/MachinesPage.tsx
 msgid "State filter"
@@ -656,8 +716,13 @@ msgid "Terminal"
 msgstr "Terminal"
 
 #: src/components/MachineActions.tsx
+#: src/pages/MachinePage.tsx
 msgid "That didn't work. Try again."
 msgstr "Não deu certo. Tente de novo."
+
+#: src/components/CreateMachineDialog.tsx
+msgid "The computer-use image."
+msgstr "A imagem de uso de computador."
 
 #: src/pages/ApiKeysPage.tsx
 msgid "The key wasn't created. Try again."
@@ -671,6 +736,10 @@ msgstr "A chave não foi revogada. Tente de novo."
 msgid "The machine didn't load."
 msgstr "A máquina não carregou."
 
+#: src/pages/MachinePage.tsx
+msgid "The machine has to be running."
+msgstr "A máquina precisa estar em execução."
+
 #: src/components/CreateMachineDialog.tsx
 msgid "The machine wasn't created. Try again."
 msgstr "A máquina não foi criada. Tente de novo."
@@ -682,6 +751,10 @@ msgstr "Esta é a única vez em que ela é mostrada. Se você a perder, revogue-
 #: src/pages/MachinePage.tsx
 msgid "This machine doesn't exist."
 msgstr "Esta máquina não existe."
+
+#: src/pages/MachinePage.tsx
+msgid "Timed out"
+msgstr "Tempo esgotado"
 
 #: src/pages/MachinesPage.tsx
 msgid "Total"
@@ -708,6 +781,10 @@ msgstr "O uso não carregou."
 #: src/components/CreateMachineDialog.tsx
 msgid "Use lowercase letters, digits and dashes."
 msgstr "Use letras minúsculas, números e hifens."
+
+#: src/pages/LoginPage.tsx
+msgid "Use the account you were given."
+msgstr "Use a conta que você recebeu."
 
 #: src/pages/UsagePage.tsx
 msgid "Used first, then the card on file is charged. Sample meter."

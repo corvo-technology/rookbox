@@ -1,0 +1,25 @@
+{
+	# TLS is terminated in front of this container.
+	auto_https off
+	admin off
+}
+
+:80 {
+	root * /srv
+	encode zstd gzip
+
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		X-Frame-Options DENY
+	}
+	# Built assets are content-hashed; the HTML shell must always be revalidated.
+	@hashed path /assets/* /fonts/*
+	header @hashed Cache-Control "public, max-age=31536000, immutable"
+	@shell not path /assets/* /fonts/*
+	header @shell Cache-Control "no-cache"
+
+	# Single-page app: any path that is not a file serves index.html.
+	try_files {path} /index.html
+	file_server
+}

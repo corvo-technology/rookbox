@@ -1,11 +1,11 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { isDefinedError } from "@orpc/client";
-import type { Machine } from "@rookbox/contracts";
-import { canPerform, isTransitional } from "@rookbox/contracts";
-import { Button, Skeleton } from "@rookbox/ui-web";
-import { useQuery } from "@tanstack/react-query";
+import type { ExecResult, Machine } from "@rookbox/contracts";
+import { canPerform, DESKTOP_TEMPLATES, isTransitional } from "@rookbox/contracts";
+import { Button, buttonVariants, Input, Skeleton } from "@rookbox/ui-web";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { GitFork, Monitor, Pause, Play, Trash2 } from "lucide-react";
-import type { ReactNode } from "react";
+import type { FormEvent, ReactNode } from "react";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { CodeBlock } from "../components/CodeBlock";
@@ -95,27 +95,95 @@ function Actions({ machine }: { machine: Machine }) {
   );
 }
 
-/** A static preview: the exec connection is not built yet. */
-function TerminalPreview({ id }: { id: string }) {
+type RunEntry = { command: string; result?: ExecResult; failed?: boolean };
+
+/** Runs one command at a time in the machine and keeps what came back. */
+function CommandRunner({ machine }: { machine: Machine }) {
+  const { t } = useLingui();
+  const [command, setCommand] = useState("");
+  const [entries, setEntries] = useState<RunEntry[]>([]);
+  const exec = useMutation(orpc.machines.exec.mutationOptions());
+  const running = machine.status === "running";
+
+  const run = async (event: FormEvent) => {
+    event.preventDefault();
+    const text = command.trim();
+    if (!text || exec.isPending) return;
+    setCommand("");
+    setEntries((list) => [...list, { command: text }]);
+    const settle = (patch: Partial<RunEntry>) =>
+      setEntries((list) =>
+        list.map((entry, i) => (i === list.length - 1 ? { ...entry, ...patch } : entry)),
+      );
+    try {
+      settle({ result: await exec.mutateAsync({ id: machine.id, command: text }) });
+    } catch {
+      settle({ failed: true });
+    }
+  };
+
   return (
-    <div
-      className="overflow-x-auto rounded-xl border border-border bg-[#050506] p-4 font-mono text-body2 leading-[1.8] whitespace-pre text-[#f5f5f5]"
-      role="img"
-      aria-label="root@machine:~# uname -sr"
-    >
-      <div className="text-[#a9a9ab]">{`root@${id}:~# uname -sr`}</div>
-      <div>Linux 6.1</div>
-      <div className="text-[#a9a9ab]">{`root@${id}:~# python3 -m http.server 3000 &`}</div>
-      <div className="text-[#3fd6a8]">Serving HTTP on 0.0.0.0 port 3000</div>
-      <div className="text-[#a9a9ab]">
-        {`root@${id}:~# `}
-        <span className="inline-block h-[15px] w-2 animate-pulse bg-[#3fd6a8] align-[-2px] motion-reduce:animate-none" />
+    <div className="flex flex-col gap-3">
+      <div
+        className="max-h-80 min-h-32 overflow-auto rounded-xl border border-border bg-[#050506] p-4 font-mono text-body2 leading-[1.8] break-words whitespace-pre-wrap text-[#f5f5f5]"
+        role="log"
+        aria-live="polite"
+      >
+        {entries.length === 0 ? (
+          <div className="text-[#a9a9ab]">
+            {running
+              ? t`Run a command to see its output here.`
+              : t`Start the machine to run commands.`}
+          </div>
+        ) : null}
+        {entries.map((entry, index) => (
+          <div key={index} className="mb-2">
+            <div className="text-[#a9a9ab]">{`$ ${entry.command}`}</div>
+            {entry.result ? (
+              <>
+                {entry.result.stdout ? <div>{entry.result.stdout}</div> : null}
+                {entry.result.stderr ? (
+                  <div className="text-[#ff8a80]">{entry.result.stderr}</div>
+                ) : null}
+                <div className="text-[#a9a9ab]">
+                  {entry.result.exitCode === null
+                    ? t`Timed out`
+                    : t`Exit code ${entry.result.exitCode}`}
+                  {entry.result.truncated ? ` · ${t`Output cut`}` : ""}
+                </div>
+              </>
+            ) : entry.failed ? (
+              <div className="text-[#ff8a80]">{t`That didn't work. Try again.`}</div>
+            ) : (
+              <div className="text-[#a9a9ab]">…</div>
+            )}
+          </div>
+        ))}
       </div>
+      <form onSubmit={run} className="flex gap-2">
+        <Input
+          aria-label={t`Command`}
+          className="h-11 flex-1 font-mono"
+          placeholder="uname -a"
+          autoComplete="off"
+          spellCheck={false}
+          value={command}
+          disabled={!running}
+          onChange={(event) => setCommand(event.target.value)}
+        />
+        <Button
+          type="submit"
+          className="h-11 px-[18px] text-body1 font-semibold"
+          disabled={!running || exec.isPending || !command.trim()}
+        >
+          <Trans>Run</Trans>
+        </Button>
+      </form>
     </div>
   );
 }
 
-const SAMPLE_PORTS = [3000, 5173] as const;
+const PORTS = [3000, 5173, 8080] as const;
 const SAMPLE_SNAPSHOTS = ["after-install", "before-refactor", "suspend-auto"] as const;
 const SAMPLE_EVENTS = [
   {
@@ -216,43 +284,51 @@ export function MachinePage() {
             title={<Trans>Terminal</Trans>}
             action={
               <span className="text-label text-muted-foreground">
-                <Trans>Preview. Connects over exec.</Trans>
+                <Trans>Runs in a shell as root</Trans>
               </span>
             }
           >
-            <TerminalPreview id={data.id} />
+            <CommandRunner machine={data} />
           </Panel>
 
           <Panel title={<Trans>Connect</Trans>}>
             <CodeBlock code={connectSnippet(data.id)} label="Python · E2B SDK" />
           </Panel>
 
-          <Panel
-            title={<Trans>Desktop</Trans>}
-            action={
-              <Tag>
-                <Trans>Coming soon</Trans>
-              </Tag>
-            }
-          >
-            <div className="flex aspect-[16/8] flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-border p-4 text-center text-muted-foreground">
-              <Monitor className="size-10" strokeWidth={1.5} aria-hidden="true" />
-              <p>
-                <Trans>Chromium over VNC will appear here.</Trans>
-              </p>
-              <Button
-                variant="outline"
-                disabled
-                className="mt-2 h-11 px-3"
-                aria-describedby="desktop-note"
-              >
-                <Trans>Open desktop</Trans>
-              </Button>
-              <p id="desktop-note" className="text-label">
-                <Trans>Needs the desktop template, coming soon.</Trans>
-              </p>
-            </div>
-          </Panel>
+          {DESKTOP_TEMPLATES.includes(data.template) ? (
+            <Panel title={<Trans>Desktop</Trans>}>
+              <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-border p-6 text-center text-muted-foreground">
+                <Monitor className="size-10" strokeWidth={1.5} aria-hidden="true" />
+                <p>
+                  <Trans>Chromium over VNC, in a new tab.</Trans>
+                </p>
+                {data.access.desktopUrl ? (
+                  <a
+                    href={data.access.desktopUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`${buttonVariants({ variant: "outline" })} mt-2 h-11 px-3`}
+                  >
+                    <Trans>Open desktop</Trans>
+                  </a>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      disabled
+                      className="mt-2 h-11 px-3"
+                      aria-describedby="desktop-note"
+                    >
+                      <Trans>Open desktop</Trans>
+                    </Button>
+                    <p id="desktop-note" className="text-label">
+                      <Trans>The machine has to be running.</Trans>
+                    </p>
+                  </>
+                )}
+              </div>
+            </Panel>
+          ) : null}
 
           <Panel
             title={<Trans>Lifecycle</Trans>}
@@ -311,8 +387,8 @@ export function MachinePage() {
             }
           >
             <ul className="m-0 flex list-none flex-col p-0">
-              {SAMPLE_PORTS.map((port) => {
-                const url = `https://${port}-${data.id}.[your-domain]`;
+              {PORTS.map((port) => {
+                const url = data.access.portUrlTemplate.replace("{port}", String(port));
                 return (
                   <li
                     key={port}
@@ -328,7 +404,10 @@ export function MachinePage() {
               })}
             </ul>
             <p className="mt-2 text-label text-muted-foreground">
-              <Trans>Sample ports. Exposing a port is coming soon.</Trans>
+              <Trans>
+                A port needs the machine's traffic access token in the e2b-traffic-access-token
+                header, so a browser tab cannot open it directly.
+              </Trans>
             </p>
           </Panel>
 

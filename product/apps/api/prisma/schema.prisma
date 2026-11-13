@@ -1,0 +1,113 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// better-auth tables (email and password only).
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+  apiKeys       ApiKey[]
+  machines      Machine[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime? @default(now())
+  updatedAt  DateTime? @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+/// A Rookbox API key. Only the SHA-256 of the secret is stored.
+model ApiKey {
+  id         String    @id
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  /// First characters of the secret, to tell keys apart.
+  hint       String
+  keyHash    String    @unique
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+  revokedAt  DateTime?
+
+  @@index([userId])
+  @@map("api_key")
+}
+
+/// A machine a user owns. The id is the SPACE sandbox id. SPACE holds the state; this row holds
+/// ownership, the name, the lineage and an in-flight operation, which SPACE cannot report.
+model Machine {
+  id        String    @id
+  ownerId   String
+  owner     User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name      String
+  template  String
+  vcpu      Int
+  memoryMib Int
+  diskMib   Int
+  forkedFrom String?
+  /// `suspending`, `restoring` or `deleting` while that call is in flight.
+  op        String?
+  opAt      DateTime?
+  createdAt DateTime  @default(now())
+
+  @@unique([ownerId, name])
+  @@index([ownerId])
+  @@map("machine")
+}

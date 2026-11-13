@@ -1,7 +1,9 @@
 import { Trans } from "@lingui/react/macro";
 import { Link, Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "./components/AppShell";
+import { AUTH_ENABLED, useSession } from "./lib/auth";
 import { ApiKeysPage } from "./pages/ApiKeysPage";
+import { LoginPage } from "./pages/LoginPage";
 import { MachinePage } from "./pages/MachinePage";
 import { MachinesPage } from "./pages/MachinesPage";
 import { SettingsPage } from "./pages/SettingsPage";
@@ -21,6 +23,10 @@ function NotFound() {
 }
 
 export function App() {
+  const session = useSession();
+  // With the real API, nothing but the sign-in screen shows until there is a session.
+  if (AUTH_ENABLED && session.isPending) return null;
+  if (AUTH_ENABLED && !session.data) return <LoginPage />;
   return (
     <AppShell>
       <div className="mx-auto w-full max-w-[1200px] px-4 py-6 md:px-8 md:py-7">
