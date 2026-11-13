@@ -1,0 +1,410 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2026-11-12 23:15-0300\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: en\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Plural-Forms: \n"
+
+#: src/components/SizeText.tsx
+msgid "{vcpu} vCPU · {memory} RAM · {disk} disk"
+msgstr "{vcpu} vCPU · {memory} RAM · {disk} disk"
+
+#: src/pages/MachinePage.tsx
+msgid "A deleted machine"
+msgstr "A deleted machine"
+
+#: src/pages/ApiKeysPage.tsx
+#: src/pages/MachinesPage.tsx
+msgid "Actions"
+msgstr "Actions"
+
+#: src/components/MachineActions.tsx
+msgid "Actions for {name}"
+msgstr "Actions for {name}"
+
+#: src/components/CreateMachineDialog.tsx
+msgid "Advanced"
+msgstr "Advanced"
+
+#: src/pages/ApiKeysPage.tsx
+msgid "Anything using this key stops working right away."
+msgstr "Anything using this key stops working right away."
+
+#: src/components/AppRail.tsx
+#: src/pages/ApiKeysPage.tsx
+msgid "API keys"
+msgstr "API keys"
+
+#: src/pages/SettingsPage.tsx
+msgid "Appearance"
+msgstr "Appearance"
+
+#: src/components/MachineActions.tsx
+#: src/pages/ApiKeysPage.tsx
+msgid "Cancel"
+msgstr "Cancel"
+
+#: src/components/CreateMachineDialog.tsx
+msgid "Coming soon"
+msgstr "Coming soon"
+
+#: src/pages/MachinePage.tsx
+msgid "Connect"
+msgstr "Connect"
+
+#: src/components/CopyButton.tsx
+msgid "Copied"
+msgstr "Copied"
+
+#: src/components/CopyButton.tsx
+msgid "Copy"
+msgstr "Copy"
+
+#: src/pages/ApiKeysPage.tsx
+msgid "Copy key"
+msgstr "Copy key"
+
+#: src/pages/ApiKeysPage.tsx
+msgid "Copy your key"
+msgstr "Copy your key"
+
+#: src/pages/ApiKeysPage.tsx
+msgid "Create key"
+msgstr "Create key"
+
+#: src/components/CreateMachineDialog.tsx
+msgid "Create machine"
+msgstr "Create machine"
+
+#: src/pages/ApiKeysPage.tsx
+#: src/pages/MachinePage.tsx
+#: src/pages/MachinesPage.tsx
+msgid "Created"
+msgstr "Created"
+
+#: src/components/StatusChip.tsx
+msgid "Creating"
+msgstr "Creating"
+
+#: src/pages/SettingsPage.tsx
+msgid "Dark"
+msgstr "Dark"
+
+#: src/pages/UsagePage.tsx
+msgid "Day"
+msgstr "Day"
+
+#: src/components/MachineActions.tsx
+#: src/pages/MachinePage.tsx
+msgid "Delete"
+msgstr "Delete"
+
+#: src/components/MachineActions.tsx
+msgid "Delete {name}?"
+msgstr "Delete {name}?"
+
+#: src/components/MachineActions.tsx
+msgid "Delete machine"
+msgstr "Delete machine"
+
+#: src/components/StatusChip.tsx
+msgid "Deleting"
+msgstr "Deleting"
+
+#: src/pages/MachinePage.tsx
+msgid "Desktop"
+msgstr "Desktop"
+
+#: src/components/CreateMachineDialog.tsx
+msgid "Disk (GiB)"
+msgstr "Disk (GiB)"
+
+#: src/pages/ApiKeysPage.tsx
+msgid "Done"
+msgstr "Done"
+
+#: src/components/StatusChip.tsx
+msgid "Failed"
+msgstr "Failed"
+
+#: src/pages/ApiKeysPage.tsx
+msgid "For example, production"
+msgstr "For example, production"
+
+#: src/components/MachineActions.tsx
+#: src/pages/MachinePage.tsx
+msgid "Fork"
+msgstr "Fork"
+
+#: src/pages/MachinePage.tsx
+msgid "Forked from"
+msgstr "Forked from"
+
+#: src/components/MachineActions.tsx
+msgid "Forked into {name}"
+msgstr "Forked into {name}"
+
+#: src/App.tsx
+msgid "Go to machines"
+msgstr "Go to machines"
+
+#: src/pages/MachinePage.tsx
+msgid "ID"
+msgstr "ID"
+
+#: src/components/MachineActions.tsx
+msgid "Its disk and saved memory are deleted. This can't be undone."
+msgstr "Its disk and saved memory are deleted. This can't be undone."
+
+#: src/pages/ApiKeysPage.tsx
+msgid "Key"
+msgstr "Key"
+
+#: src/pages/ApiKeysPage.tsx
+msgid "Keys didn't load."
+msgstr "Keys didn't load."
+
+#: src/pages/SettingsPage.tsx
+msgid "Language"
+msgstr "Language"
+
+#: src/components/CreateMachineDialog.tsx
+msgid "Large"
+msgstr "Large"
+
+#: src/pages/ApiKeysPage.tsx
+msgid "Last used"
+msgstr "Last used"
+
+#: src/pages/SettingsPage.tsx
+msgid "Light"
+msgstr "Light"
+
+#: src/components/CreateMachineDialog.tsx
+msgid "Linux with a desktop and a browser."
+msgstr "Linux with a desktop and a browser."
+
+#: src/components/CreateMachineDialog.tsx
+msgid "Linux with root access."
+msgstr "Linux with root access."
+
+#: src/pages/MachinesPage.tsx
+msgid "Loading"
+msgstr "Loading"
+
+#: src/pages/UsagePage.tsx
+msgid "Machine hours"
+msgstr "Machine hours"
+
+#: src/pages/UsagePage.tsx
+msgid "Machine hours per day"
+msgstr "Machine hours per day"
+
+#: src/pages/UsagePage.tsx
+msgid "Machine hours, last {DAYS} days"
+msgstr "Machine hours, last {DAYS} days"
+
+#: src/components/AppRail.tsx
+#: src/pages/MachinePage.tsx
+#: src/pages/MachinesPage.tsx
+msgid "Machines"
+msgstr "Machines"
+
+#: src/pages/MachinesPage.tsx
+msgid "Machines didn't load."
+msgstr "Machines didn't load."
+
+#: src/components/AppRail.tsx
+msgid "Main"
+msgstr "Main"
+
+#: src/components/CreateMachineDialog.tsx
+msgid "Medium"
+msgstr "Medium"
+
+#: src/components/CreateMachineDialog.tsx
+#: src/pages/ApiKeysPage.tsx
+#: src/pages/MachinesPage.tsx
+msgid "Name"
+msgstr "Name"
+
+#: src/pages/MachinePage.tsx
+msgid "Needs the desktop template, coming soon."
+msgstr "Needs the desktop template, coming soon."
+
+#: src/pages/ApiKeysPage.tsx
+msgid "Never"
+msgstr "Never"
+
+#: src/pages/ApiKeysPage.tsx
+msgid "New API key"
+msgstr "New API key"
+
+#: src/pages/ApiKeysPage.tsx
+msgid "New key"
+msgstr "New key"
+
+#: src/components/CreateMachineDialog.tsx
+#: src/pages/MachinesPage.tsx
+msgid "New machine"
+msgstr "New machine"
+
+#: src/pages/ApiKeysPage.tsx
+msgid "No keys yet"
+msgstr "No keys yet"
+
+#: src/pages/MachinesPage.tsx
+msgid "No machines yet"
+msgstr "No machines yet"
+
+#: src/pages/MachinePage.tsx
+msgid "Open desktop"
+msgstr "Open desktop"
+
+#: src/components/CreateMachineDialog.tsx
+msgid "Optional"
+msgstr "Optional"
+
+#: src/App.tsx
+msgid "Page not found"
+msgstr "Page not found"
+
+#: src/components/CreateMachineDialog.tsx
+msgid "RAM (GiB)"
+msgstr "RAM (GiB)"
+
+#: src/components/MachineActions.tsx
+#: src/pages/MachinePage.tsx
+msgid "Restore"
+msgstr "Restore"
+
+#: src/components/StatusChip.tsx
+msgid "Restoring"
+msgstr "Restoring"
+
+#: src/pages/ApiKeysPage.tsx
+msgid "Revoke"
+msgstr "Revoke"
+
+#: src/pages/ApiKeysPage.tsx
+msgid "Revoke {name}"
+msgstr "Revoke {name}"
+
+#: src/pages/ApiKeysPage.tsx
+msgid "Revoke {name}?"
+msgstr "Revoke {name}?"
+
+#: src/pages/ApiKeysPage.tsx
+msgid "Revoke key"
+msgstr "Revoke key"
+
+#: src/components/AppRail.tsx
+msgid "Rook Box home"
+msgstr "Rook Box home"
+
+#: src/components/StatusChip.tsx
+msgid "Running"
+msgstr "Running"
+
+#: src/pages/UsagePage.tsx
+msgid "Sample data"
+msgstr "Sample data"
+
+#: src/components/AppRail.tsx
+#: src/pages/SettingsPage.tsx
+msgid "Settings"
+msgstr "Settings"
+
+#: src/components/CreateMachineDialog.tsx
+#: src/pages/MachinePage.tsx
+#: src/pages/MachinesPage.tsx
+msgid "Size"
+msgstr "Size"
+
+#: src/components/CreateMachineDialog.tsx
+msgid "Small"
+msgstr "Small"
+
+#: src/pages/MachinesPage.tsx
+msgid "Status"
+msgstr "Status"
+
+#: src/components/MachineActions.tsx
+#: src/pages/MachinePage.tsx
+msgid "Suspend"
+msgstr "Suspend"
+
+#: src/components/StatusChip.tsx
+msgid "Suspended"
+msgstr "Suspended"
+
+#: src/components/StatusChip.tsx
+msgid "Suspending"
+msgstr "Suspending"
+
+#: src/pages/SettingsPage.tsx
+msgid "System"
+msgstr "System"
+
+#: src/components/CreateMachineDialog.tsx
+#: src/pages/MachinePage.tsx
+#: src/pages/MachinesPage.tsx
+msgid "Template"
+msgstr "Template"
+
+#: src/components/MachineActions.tsx
+msgid "That didn't work. Try again."
+msgstr "That didn't work. Try again."
+
+#: src/pages/ApiKeysPage.tsx
+msgid "The key wasn't created. Try again."
+msgstr "The key wasn't created. Try again."
+
+#: src/pages/ApiKeysPage.tsx
+msgid "The key wasn't revoked. Try again."
+msgstr "The key wasn't revoked. Try again."
+
+#: src/pages/MachinePage.tsx
+msgid "The machine didn't load."
+msgstr "The machine didn't load."
+
+#: src/components/CreateMachineDialog.tsx
+msgid "The machine wasn't created. Try again."
+msgstr "The machine wasn't created. Try again."
+
+#: src/pages/MachinePage.tsx
+msgid "This machine doesn't exist."
+msgstr "This machine doesn't exist."
+
+#: src/pages/MachinesPage.tsx
+msgid "Try again"
+msgstr "Try again"
+
+#: src/components/AppRail.tsx
+#: src/pages/UsagePage.tsx
+msgid "Usage"
+msgstr "Usage"
+
+#: src/pages/UsagePage.tsx
+msgid "Usage didn't load."
+msgstr "Usage didn't load."
+
+#: src/components/CreateMachineDialog.tsx
+msgid "Use lowercase letters, digits and dashes."
+msgstr "Use lowercase letters, digits and dashes."
+
+#: src/components/CreateMachineDialog.tsx
+msgid "vCPU"
+msgstr "vCPU"
+
+#: src/pages/ApiKeysPage.tsx
+msgid "You won't see it again."
+msgstr "You won't see it again."

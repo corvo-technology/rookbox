@@ -1,0 +1,183 @@
+---
+import { getCopy } from "../i18n/copy";
+import type { Locale } from "../i18n/locales";
+import { DEFAULT_LOCALE, isLocale, localeHomePath } from "../i18n/locales";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { DASHBOARD_URL, DOCS_URL } from "../site";
+import { SDK_DIFF, SNIPPETS } from "../snippets";
+import BoxMascot from "./BoxMascot.astro";
+import { CodeSnippet } from "./CodeSnippet";
+import Footer from "./Footer.astro";
+import Header from "./Header.astro";
+
+const locale: Locale = isLocale(Astro.currentLocale) ? Astro.currentLocale : DEFAULT_LOCALE;
+const copy = getCopy(locale);
+const { features: f, preview: p } = copy;
+
+// The preview shows the dashboard's list with made-up machines; sizes are its presets.
+const PREVIEW_ROWS = [
+  { name: "build-runner", status: "running", label: p.running, size: "4 vCPU · 8 GiB" },
+  { name: "research-agent", status: "suspended", label: p.suspended, size: "2 vCPU · 2 GiB" },
+  { name: "research-agent-fork", status: "creating", label: p.creating, size: "2 vCPU · 2 GiB" },
+] as const;
+---
+
+<BaseLayout
+  title={copy.meta.title}
+  description={copy.meta.description}
+  locale={locale}
+  skipLabel={copy.meta.skipToContent}
+>
+  <div class="page">
+    <Header copy={copy.nav} homeHref={localeHomePath(locale)} />
+
+    <main id="main">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero__copy">
+          <h1 id="hero-title" class="display">{copy.hero.title}</h1>
+          <p class="lead">{copy.hero.lead}</p>
+          <div class="actions">
+            <a class="pill pill--primary" href={DASHBOARD_URL}>{copy.hero.getStarted}</a>
+            <a class="pill pill--outline" href={DOCS_URL}>{copy.hero.readDocs}</a>
+          </div>
+        </div>
+        <div class="hero__code">
+          <CodeSnippet
+            client:visible
+            snippets={SNIPPETS}
+            label={copy.hero.snippetLabel}
+            copyLabel={copy.hero.copy}
+            copiedLabel={copy.hero.copied}
+          />
+        </div>
+      </section>
+
+      <section class="preview" aria-label={p.label}>
+        <div class="preview__frame">
+          <div class="preview__rail" aria-hidden="true">
+            <BoxMascot size={24} />
+            <span class="preview__rail-item preview__rail-item--on"></span>
+            <span class="preview__rail-item"></span>
+            <span class="preview__rail-item"></span>
+          </div>
+          <div class="preview__main">
+            <div class="preview__head">
+              <span class="preview__title">{p.machines}</span>
+              <span class="pill pill--primary pill--tiny" aria-hidden="true">+ {p.newMachine}</span>
+            </div>
+            <ul class="preview__rows">
+              {
+                PREVIEW_ROWS.map((row) => (
+                  <li class="preview__row">
+                    <span class="preview__name">{row.name}</span>
+                    <span class="chip">
+                      <i class={`chip__dot chip__dot--${row.status}`} />
+                      {row.label}
+                    </span>
+                    <span class="preview__meta">seed</span>
+                    <span class="preview__meta preview__meta--size">{row.size}</span>
+                  </li>
+                ))
+              }
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="features" class="features" aria-labelledby="features-heading">
+        <h2 id="features-heading" class="section-title">{f.heading}</h2>
+        <div class="features__grid">
+          <article class="card">
+            <h3>{f.linux.title}</h3>
+            <p>{f.linux.body}</p>
+            <div class="term" aria-hidden="true">
+              <code><b>$</b> whoami</code>
+              <code class="term__out">root</code>
+              <code><b>$</b> uname -s</code>
+              <code class="term__out">Linux</code>
+              <code><b>$</b> <span class="term__cursor"></span></code>
+            </div>
+          </article>
+
+          <article class="card">
+            <h3>{f.suspend.title}</h3>
+            <p>{f.suspend.body}</p>
+            <ol class="steps" aria-hidden="true">
+              <li>
+                <span class="chip"><i class="chip__dot chip__dot--running"></i>{f.suspend.running}</span>
+                <code>agent.py · step 41</code>
+              </li>
+              <li>
+                <span class="chip"><i class="chip__dot chip__dot--suspended"></i>{f.suspend.suspended}</span>
+                <span class="steps__note">{f.suspend.memorySaved}</span>
+              </li>
+              <li>
+                <span class="chip"><i class="chip__dot chip__dot--running"></i>{f.suspend.restored}</span>
+                <code>agent.py · step 42</code>
+              </li>
+            </ol>
+          </article>
+
+          <article class="card">
+            <h3>{f.fork.title}</h3>
+            <p>{f.fork.body}</p>
+            <div class="fork" aria-hidden="true">
+              <div class="fork__node"><BoxMascot size={22} />research-agent</div>
+              <svg class="fork__lines" viewBox="0 0 60 100" preserveAspectRatio="none">
+                <path d="M0 50 C 30 50, 30 20, 60 20" />
+                <path d="M0 50 C 30 50, 30 80, 60 80" />
+              </svg>
+              <div class="fork__targets">
+                <div class="fork__node"><BoxMascot size={22} />research-agent</div>
+                <div class="fork__node fork__node--new"><BoxMascot size={22} />research-agent-fork</div>
+              </div>
+            </div>
+            <p class="card__note"><span class="tag">{f.fork.diskCopied}</span> {f.fork.memoryFresh}</p>
+          </article>
+
+          <article class="card card--soon">
+            <h3>{f.desktop.title} <span class="tag">{f.desktop.soon}</span></h3>
+            <p>{f.desktop.body}</p>
+            <div class="window" aria-hidden="true">
+              <div class="window__bar"><i></i><i></i><i></i><span></span></div>
+              <div class="window__body">
+                <span class="window__line window__line--wide"></span>
+                <span class="window__line"></span>
+                <span class="window__line window__line--short"></span>
+                <svg class="window__cursor" viewBox="0 0 16 16"><path d="M2 1l11 7-5 1 3 5-2 1-3-5-4 3z" /></svg>
+              </div>
+            </div>
+          </article>
+
+          <article class="card card--wide">
+            <div>
+              <h3>{f.sdk.title}</h3>
+              <p>{f.sdk.body}</p>
+            </div>
+            <pre class="diff" aria-label="Python"><code>{
+              SDK_DIFF.map((row) => (
+                <span class:list={["diff__line", row.mark === "+" && "diff__line--add"]}><b>{row.mark}</b>{row.line}{"\n"}</span>
+              ))
+            }</code></pre>
+          </article>
+        </div>
+      </section>
+
+      <section class="cta" data-theme="dark" aria-labelledby="cta-title">
+        <div>
+          <h2 id="cta-title" class="display display--small">{copy.cta.title}</h2>
+          <div class="actions">
+            <a class="pill pill--primary" href={DASHBOARD_URL}>{copy.cta.getStarted}</a>
+          </div>
+        </div>
+        <div class="cta__boxes" aria-hidden="true">
+          <BoxMascot size={56} asleep />
+          <BoxMascot size={76} />
+          <BoxMascot size={56} />
+        </div>
+      </section>
+    </main>
+
+    <Footer locale={locale} copy={copy} />
+  </div>
+</BaseLayout>
