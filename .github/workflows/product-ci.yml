@@ -1,0 +1,46 @@
+name: Product CI
+
+# Lint, type-check, test and build the Rook Box site and dashboard in product/.
+# Unlike the upstream SPACE workflows, this one runs in this repository.
+
+on:
+  pull_request:
+    paths:
+      - "product/**"
+      - ".github/workflows/product-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "product/**"
+      - ".github/workflows/product-ci.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: product-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  product:
+    name: product
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: product
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+        with:
+          package_json_file: product/package.json
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: product/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm check
+      - run: pnpm test
+      - run: pnpm build

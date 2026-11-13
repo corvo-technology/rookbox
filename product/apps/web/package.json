@@ -1,0 +1,50 @@
+{
+  "name": "@rookbox/web",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --root ../.. apps/web/src",
+    "intl:extract": "lingui extract --clean"
+  },
+  "dependencies": {
+    "@lingui/core": "6.6.0",
+    "@lingui/react": "6.6.0",
+    "@orpc/client": "1.15.7",
+    "@orpc/contract": "1.15.7",
+    "@orpc/server": "1.15.7",
+    "@orpc/tanstack-query": "1.15.7",
+    "@rookbox/contracts": "workspace:*",
+    "@rookbox/ui-tokens": "workspace:*",
+    "@rookbox/ui-web": "workspace:*",
+    "@tanstack/react-query": "5.104.5",
+    "lucide-react": "1.60.0",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-router-dom": "7.18.4"
+  },
+  "devDependencies": {
+    "@babel/core": "7.29.7",
+    "@lingui/babel-plugin-lingui-macro": "6.6.0",
+    "@lingui/cli": "6.6.0",
+    "@lingui/conf": "6.6.0",
+    "@lingui/format-po": "6.6.0",
+    "@lingui/vite-plugin": "6.6.0",
+    "@rolldown/plugin-babel": "0.2.4",
+    "@tailwindcss/vite": "4.3.3",
+    "@types/babel__core": "7.20.5",
+    "@types/node": "24.19.2",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.7",
+    "@vitejs/plugin-react": "6.1.2",
+    "tailwindcss": "4.3.3",
+    "typescript": "7.0.2",
+    "vite": "8.3.5",
+    "vitest": "4.1.12"
+  }
+}

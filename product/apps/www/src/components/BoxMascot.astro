@@ -1,0 +1,35 @@
+---
+/**
+ * The Rook Box mascot: a small machine with two eyes and a status line. Ink and paper follow the
+ * theme; the status line is the one green. `asleep` closes its eyes, for a suspended machine.
+ */
+type Props = {
+  size: number;
+  asleep?: boolean;
+  class?: string;
+};
+
+const { size, asleep = false, class: className } = Astro.props;
+---
+
+<svg
+  class:list={["box-mascot", className]}
+  width={size}
+  height={size}
+  viewBox="0 0 32 32"
+  aria-hidden="true"
+  focusable="false"
+>
+  <rect x="2" y="2" width="28" height="28" rx="8" class="box-mascot__body" />
+  {
+    asleep ? (
+      <path d="M9.5 14.5h5M17.5 14.5h5" class="box-mascot__lid" />
+    ) : (
+      <g class="box-mascot__eyes">
+        <circle cx="12" cy="14.5" r="2.4" />
+        <circle cx="20" cy="14.5" r="2.4" />
+      </g>
+    )
+  }
+  <path d="M10 22h12" class="box-mascot__line" />
+</svg>
