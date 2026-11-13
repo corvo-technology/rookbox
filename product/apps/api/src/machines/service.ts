@@ -1,18 +1,21 @@
 import type {
+  ApiErrorCode,
+  Config,
   CreateMachineInput,
   ExecInput,
   ExecResult,
   ForkMachineInput,
   Machine,
+  MachineTemplate,
 } from "@rookbox/contracts";
 import {
-  AVAILABLE_TEMPLATES,
+  API_ERRORS,
   canPerform,
   DESKTOP_TEMPLATES,
   MACHINE_NAME_MAX_LENGTH,
 } from "@rookbox/contracts";
 import type { Logger } from "../logger.js";
-import type { SandboxInfo, SpaceClient } from "../space/client.js";
+import type { SandboxInfo, SpaceClient, SpaceErrorCode } from "../space/client.js";
 import { SpaceError, sandboxHost } from "../space/client.js";
 import { type MachineOp, mapStatus } from "./state.js";
 import { DuplicateNameError, type MachineRow, type MachineStore } from "./store.js";
@@ -20,14 +23,54 @@ import { DuplicateNameError, type MachineRow, type MachineStore } from "./store.
 /** The metadata key every sandbox is tagged with; list and ownership checks rely on it. */
 export const OWNER_TAG = "rookbox.owner";
 
+/** A failure the API reports to the client by code. The message is safe to send. */
 export class MachineError extends Error {
   constructor(
-    readonly code: "NOT_FOUND" | "CONFLICT",
-    message: string,
+    readonly code: ApiErrorCode,
+    message: string = API_ERRORS[code].message,
+    readonly data?: unknown,
   ) {
     super(message);
     this.name = "MachineError";
   }
+}
+
+const SPACE_CODES: Record<SpaceErrorCode, ApiErrorCode> = {
+  AUTH: "HOST_AUTH",
+  NOT_FOUND: "NOT_FOUND",
+  TEMPLATE_NOT_FOUND: "TEMPLATE_UNAVAILABLE",
+  CONFLICT: "CONFLICT",
+  BAD_REQUEST: "HOST_ERROR",
+  QUOTA: "HOST_QUOTA",
+  CAPACITY: "HOST_CAPACITY",
+  TIMEOUT: "HOST_TIMEOUT",
+  UNREACHABLE: "HOST_UNREACHABLE",
+  UPSTREAM: "HOST_ERROR",
+};
+
+/**
+ * Turns a SPACE failure into a coded error with a generic message, so what SPACE said (which may
+ * name internals) never reaches a client. Anything else comes back unchanged.
+ */
+export function toMachineError(error: unknown): unknown {
+  if (error instanceof SpaceError) return new MachineError(SPACE_CODES[error.code]);
+  return error;
+}
+
+/** Runs one task at a time per key, so a check and the write that follows it cannot interleave. */
+function keyedLock() {
+  const tails = new Map<string, Promise<unknown>>();
+  return async <T>(key: string, task: () => Promise<T>): Promise<T> => {
+    const previous = tails.get(key) ?? Promise.resolve();
+    const run = previous.catch(() => undefined).then(task);
+    const tail = run.catch(() => undefined);
+    tails.set(key, tail);
+    try {
+      return await run;
+    } finally {
+      if (tails.get(key) === tail) tails.delete(key);
+    }
+  };
 }
 
 export type MachineServiceOptions = {
@@ -37,7 +80,10 @@ export type MachineServiceOptions = {
   e2bDomain: string;
   /** Origin that serves the desktop proxy (the API itself). */
   apiOrigin: string;
-  idleTimeoutS: number;
+  /** Templates this deployment offers (`SPACE_TEMPLATES`). */
+  templates: readonly MachineTemplate[];
+  /** Idle seconds before a machine suspends, when the request does not choose. */
+  defaultIdleTimeoutS: number;
   maxMachinesPerUser: number;
   now?: () => Date;
   random?: () => number;
@@ -48,7 +94,8 @@ function randomSuffix(random: () => number): string {
 }
 
 export function createMachineService(options: MachineServiceOptions) {
-  const { store, space, logger, e2bDomain, apiOrigin, idleTimeoutS } = options;
+  const { store, space, logger, e2bDomain, apiOrigin } = options;
+  const lock = keyedLock();
   const now = options.now ?? (() => new Date());
   const random = options.random ?? Math.random;
 
@@ -83,6 +130,7 @@ export function createMachineService(options: MachineServiceOptions) {
       template: row.template,
       status,
       size: row.size,
+      idleTimeoutS: row.idleTimeoutS,
       createdAt: row.createdAt.toISOString(),
       forkedFrom: row.forkedFrom,
       access: {
@@ -112,20 +160,17 @@ export function createMachineService(options: MachineServiceOptions) {
     try {
       return await run();
     } catch (error) {
-      await store.setOp(id, null);
+      // A call that timed out or lost its connection may still finish on SPACE's side, so the
+      // operation stays marked (it expires on its own) and the status follows what SPACE shows.
+      const unsure =
+        error instanceof SpaceError && (error.code === "TIMEOUT" || error.code === "UNREACHABLE");
+      if (!unsure) await store.setOp(id, null);
       throw error;
     }
   }
 
   function wrap(error: unknown): never {
-    if (error instanceof MachineError) throw error;
-    if (error instanceof SpaceError) {
-      if (error.status === 404) throw new MachineError("NOT_FOUND", "No such machine.");
-      if (error.status === 409 || error.status === 412) {
-        throw new MachineError("CONFLICT", error.message);
-      }
-    }
-    throw error;
+    throw toMachineError(error);
   }
 
   async function view(ownerId: string, id: string): Promise<Machine> {
@@ -138,77 +183,94 @@ export function createMachineService(options: MachineServiceOptions) {
     return machine;
   }
 
+  async function listMachines(ownerId: string): Promise<Machine[]> {
+    const rows = await store.listByOwner(ownerId);
+    if (rows.length === 0) return [];
+    const listed = new Map(
+      (await space.list({ [OWNER_TAG]: ownerId })).map((info) => [info.id, info]),
+    );
+    const machines: Machine[] = [];
+    for (const row of rows) {
+      // A row SPACE did not list may be a fork that carries no tag; ask for it by id.
+      const info = listed.get(row.id) ?? (await space.get(row.id));
+      const tag = info?.metadata[OWNER_TAG];
+      const machine = info && (tag === undefined || tag === ownerId) ? toMachine(row, info) : null;
+      if (machine) machines.push(machine);
+      else if (!info) await store.remove(row.id);
+    }
+    return machines;
+  }
+
+  /** Rows the owner holds. When it looks full, rows whose sandbox is gone are dropped first. */
+  async function countMachines(ownerId: string): Promise<number> {
+    const rows = await store.listByOwner(ownerId);
+    if (rows.length < options.maxMachinesPerUser) return rows.length;
+    return (await listMachines(ownerId)).length;
+  }
+
   return {
-    async list(ownerId: string): Promise<Machine[]> {
-      const rows = await store.listByOwner(ownerId);
-      if (rows.length === 0) return [];
-      const listed = new Map(
-        (await space.list({ [OWNER_TAG]: ownerId })).map((info) => [info.id, info]),
-      );
-      const machines: Machine[] = [];
-      for (const row of rows) {
-        // A row SPACE did not list may be a fork that carries no tag; ask for it by id.
-        const info = listed.get(row.id) ?? (await space.get(row.id));
-        const tag = info?.metadata[OWNER_TAG];
-        const machine =
-          info && (tag === undefined || tag === ownerId) ? toMachine(row, info) : null;
-        if (machine) machines.push(machine);
-        else if (!info) await store.remove(row.id);
-      }
-      return machines;
-    },
+    list: listMachines,
 
     get: view,
 
-    async create(ownerId: string, input: CreateMachineInput): Promise<Machine> {
-      if (!AVAILABLE_TEMPLATES.includes(input.template)) {
-        throw new MachineError("CONFLICT", `The ${input.template} template is not available.`);
-      }
-      const existing = await store.listByOwner(ownerId);
-      if (existing.length >= options.maxMachinesPerUser) {
-        throw new MachineError(
-          "CONFLICT",
-          `You have ${existing.length} machines, the most this account may hold. Delete one first.`,
-        );
-      }
-      const name = input.name ?? (await uniqueName(ownerId, `machine-${randomSuffix(random)}`));
-      if (existing.some((row) => row.name === name)) {
-        throw new MachineError("CONFLICT", `You already have a machine named ${name}.`);
-      }
-      let created: { id: string };
-      try {
-        created = await space.create({
-          templateId: input.template,
-          metadata: { [OWNER_TAG]: ownerId, "rookbox.name": name },
-          timeoutS: idleTimeoutS,
-          size: input.size,
-        });
-      } catch (error) {
-        logger.warn("space create failed", { owner: ownerId, error });
-        if (error instanceof SpaceError && error.status >= 400 && error.status < 500) {
-          throw new MachineError("CONFLICT", error.message);
+    /** What this deployment offers, for the dashboard's create form. */
+    config(): Config {
+      return {
+        templates: [...options.templates],
+        maxMachines: options.maxMachinesPerUser,
+        defaultIdleTimeoutS: options.defaultIdleTimeoutS,
+        domain: e2bDomain,
+      };
+    },
+
+    create(ownerId: string, input: CreateMachineInput): Promise<Machine> {
+      // One create at a time per account, so two at once cannot both pass the machine cap.
+      return lock(ownerId, async () => {
+        if (!options.templates.includes(input.template)) {
+          throw new MachineError("TEMPLATE_UNAVAILABLE");
         }
-        throw error;
-      }
-      try {
-        const row = await store.insert({
-          id: created.id,
-          ownerId,
-          name,
-          template: input.template,
-          size: input.size,
-          forkedFrom: null,
-        });
-        logger.info("machine created", { owner: ownerId, machine: row.id, template: row.template });
-        return await view(ownerId, row.id);
-      } catch (error) {
-        // Do not leave a running sandbox nobody can see.
-        await space.kill(created.id).catch(() => undefined);
-        if (error instanceof DuplicateNameError) {
-          throw new MachineError("CONFLICT", `You already have a machine named ${name}.`);
+        if ((await countMachines(ownerId)) >= options.maxMachinesPerUser) {
+          throw new MachineError("MACHINE_LIMIT", undefined, { limit: options.maxMachinesPerUser });
         }
-        throw error;
-      }
+        const existing = await store.listByOwner(ownerId);
+        const name = input.name ?? (await uniqueName(ownerId, `machine-${randomSuffix(random)}`));
+        if (existing.some((row) => row.name === name)) throw new MachineError("NAME_TAKEN");
+        const idleTimeoutS = input.idleTimeoutS ?? options.defaultIdleTimeoutS;
+        let created: { id: string };
+        try {
+          created = await space.create({
+            templateId: input.template,
+            metadata: { [OWNER_TAG]: ownerId, "rookbox.name": name },
+            timeoutS: idleTimeoutS,
+            size: input.size,
+          });
+        } catch (error) {
+          logger.warn("space create failed", { owner: ownerId, template: input.template, error });
+          throw toMachineError(error);
+        }
+        try {
+          const row = await store.insert({
+            id: created.id,
+            ownerId,
+            name,
+            template: input.template,
+            size: input.size,
+            idleTimeoutS,
+            forkedFrom: null,
+          });
+          logger.info("machine created", {
+            owner: ownerId,
+            machine: row.id,
+            template: row.template,
+          });
+          return await view(ownerId, row.id);
+        } catch (error) {
+          // Do not leave a running sandbox nobody can see.
+          await space.kill(created.id).catch(() => undefined);
+          if (error instanceof DuplicateNameError) throw new MachineError("NAME_TAKEN");
+          throw toMachineError(error);
+        }
+      });
     },
 
     async suspend(ownerId: string, id: string): Promise<Machine> {
@@ -232,7 +294,7 @@ export function createMachineService(options: MachineServiceOptions) {
         throw new MachineError("CONFLICT", `A ${current.status} machine cannot be restored.`);
       }
       try {
-        await withOp(id, "restoring", () => space.restore(id, idleTimeoutS));
+        await withOp(id, "restoring", () => space.restore(id, current.idleTimeoutS));
       } catch (error) {
         wrap(error);
       }
@@ -241,43 +303,43 @@ export function createMachineService(options: MachineServiceOptions) {
       return view(ownerId, id);
     },
 
-    async fork(ownerId: string, input: ForkMachineInput): Promise<Machine> {
-      const source = await view(ownerId, input.id);
-      if (!canPerform(source.status, "fork")) {
-        throw new MachineError("CONFLICT", `A ${source.status} machine cannot be forked.`);
-      }
-      const rows = await store.listByOwner(ownerId);
-      if (rows.length >= options.maxMachinesPerUser) {
-        throw new MachineError("CONFLICT", "You have reached the machine limit. Delete one first.");
-      }
-      const name = input.name ?? (await uniqueName(ownerId, `${source.name}-fork`));
-      if (rows.some((row) => row.name === name)) {
-        throw new MachineError("CONFLICT", `You already have a machine named ${name}.`);
-      }
-      let child: { id: string };
-      try {
-        child = await space.fork(input.id, idleTimeoutS);
-      } catch (error) {
-        wrap(error);
-      }
-      try {
-        const row = await store.insert({
-          id: child.id,
-          ownerId,
-          name,
-          template: source.template,
-          size: source.size,
-          forkedFrom: source.id,
-        });
-        logger.info("machine forked", { owner: ownerId, machine: row.id, source: source.id });
-        return await view(ownerId, row.id);
-      } catch (error) {
-        await space.kill(child.id).catch(() => undefined);
-        if (error instanceof DuplicateNameError) {
-          throw new MachineError("CONFLICT", `You already have a machine named ${name}.`);
+    fork(ownerId: string, input: ForkMachineInput): Promise<Machine> {
+      return lock(ownerId, async () => {
+        const source = await view(ownerId, input.id);
+        if (!canPerform(source.status, "fork")) {
+          throw new MachineError("CONFLICT", `A ${source.status} machine cannot be forked.`);
         }
-        throw error;
-      }
+        if ((await countMachines(ownerId)) >= options.maxMachinesPerUser) {
+          throw new MachineError("MACHINE_LIMIT", undefined, { limit: options.maxMachinesPerUser });
+        }
+        const rows = await store.listByOwner(ownerId);
+        const name = input.name ?? (await uniqueName(ownerId, `${source.name}-fork`));
+        if (rows.some((row) => row.name === name)) throw new MachineError("NAME_TAKEN");
+        let child: { id: string };
+        try {
+          child = await space.fork(input.id, source.idleTimeoutS);
+        } catch (error) {
+          logger.warn("space fork failed", { owner: ownerId, machine: input.id, error });
+          throw toMachineError(error);
+        }
+        try {
+          const row = await store.insert({
+            id: child.id,
+            ownerId,
+            name,
+            template: source.template,
+            size: source.size,
+            idleTimeoutS: source.idleTimeoutS,
+            forkedFrom: source.id,
+          });
+          logger.info("machine forked", { owner: ownerId, machine: row.id, source: source.id });
+          return await view(ownerId, row.id);
+        } catch (error) {
+          await space.kill(child.id).catch(() => undefined);
+          if (error instanceof DuplicateNameError) throw new MachineError("NAME_TAKEN");
+          throw toMachineError(error);
+        }
+      });
     },
 
     async delete(ownerId: string, id: string): Promise<void> {
@@ -304,7 +366,7 @@ export function createMachineService(options: MachineServiceOptions) {
         throw new MachineError("CONFLICT", `The machine is ${machine.status}, not running.`);
       }
       if (!info.envdAccessToken) {
-        throw new MachineError("CONFLICT", "SPACE did not give access to the machine.");
+        throw new MachineError("CONFLICT", "The machine did not give access.");
       }
       try {
         const result = await space.exec(
@@ -334,7 +396,7 @@ export function createMachineService(options: MachineServiceOptions) {
         throw new MachineError("CONFLICT", `The machine is ${machine.status}, not running.`);
       }
       try {
-        return { id, trafficToken: await space.trafficToken(id, idleTimeoutS) };
+        return { id, trafficToken: await space.trafficToken(id, row.idleTimeoutS) };
       } catch (error) {
         wrap(error);
       }

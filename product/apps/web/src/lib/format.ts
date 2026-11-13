@@ -38,30 +38,12 @@ export function formatDate(iso: string, locale: string): string {
   );
 }
 
-/** A UTC calendar day, `YYYY-MM-DD`, as a short local date. */
-export function formatDay(date: string, locale: string): string {
-  return new Intl.DateTimeFormat(locale, {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    timeZone: "UTC",
-  }).format(new Date(`${date}T00:00:00Z`));
-}
-
-/** A UTC calendar day, `YYYY-MM-DD`, as "13 Nov" (the order follows the locale). */
-export function formatDayShort(date: string, locale: string): string {
-  return new Intl.DateTimeFormat(locale, {
-    day: "numeric",
-    month: "short",
-    timeZone: "UTC",
-  }).format(new Date(`${date}T00:00:00Z`));
-}
-
-/** The top of a bar chart's axis: the largest value rounded up to a multiple of 20 (at least 20), so four gridlines land on whole numbers. */
-export function chartCeiling(max: number): number {
-  return Math.max(20, Math.ceil(max / 20) * 20);
-}
-
-export function formatHours(hours: number, locale: string): string {
-  return new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(hours);
+/** 300 -> "5 min", 3600 -> "1 hr", 5400 -> "90 min": a duration, in the reader's language. */
+export function formatIdle(seconds: number, locale: string): string {
+  const whole = seconds % 3600 === 0;
+  return new Intl.NumberFormat(locale, {
+    style: "unit",
+    unit: whole ? "hour" : "minute",
+    unitDisplay: "short",
+  }).format(whole ? seconds / 3600 : Math.round(seconds / 60));
 }

@@ -21,8 +21,22 @@ describe("loadEnv", () => {
     expect(env.ROOKBOX_ALLOWED_EMAILS).toEqual(["owner@example.test", "second@example.test"]);
   });
 
+  it("offers every template by default, and takes an allowlist from the environment", () => {
+    expect(loadEnv(valid).SPACE_TEMPLATES).toEqual(["desktop", "corvo-computer", "seed"]);
+    expect(loadEnv({ ...valid, SPACE_TEMPLATES: " Seed , desktop" }).SPACE_TEMPLATES).toEqual([
+      "seed",
+      "desktop",
+    ]);
+    expect(() => loadEnv({ ...valid, SPACE_TEMPLATES: "seed,nope" })).toThrow(/SPACE_TEMPLATES/);
+    expect(() => loadEnv({ ...valid, SPACE_TEMPLATES: "" })).toThrow(/SPACE_TEMPLATES/);
+  });
+
+  it("starts without a SPACE key, so /health/space can report it missing", () => {
+    expect(loadEnv({ ...valid, SPACE_ECW_API_KEY: undefined }).SPACE_ECW_API_KEY).toBe("");
+  });
+
   it("fails loudly on a missing or weak value, naming it", () => {
-    expect(() => loadEnv({ ...valid, SPACE_ECW_API_KEY: undefined })).toThrow(/SPACE_ECW_API_KEY/);
+    expect(() => loadEnv({ ...valid, SPACE_ECW_API_URL: undefined })).toThrow(/SPACE_ECW_API_URL/);
     expect(() => loadEnv({ ...valid, BETTER_AUTH_SECRET: "short" })).toThrow(/BETTER_AUTH_SECRET/);
     expect(() => loadEnv({ ...valid, ROOKBOX_ALLOWED_EMAILS: "" })).toThrow(
       /ROOKBOX_ALLOWED_EMAILS/,

@@ -1,20 +1,25 @@
 import { Trans, useLingui } from "@lingui/react/macro";
-import { isDefinedError } from "@orpc/client";
 import type { ExecResult, Machine } from "@rookbox/contracts";
 import { canPerform, DESKTOP_TEMPLATES, isTransitional } from "@rookbox/contracts";
-import { Button, buttonVariants, Input, Skeleton } from "@rookbox/ui-web";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { Button, buttonVariants, Input, Skeleton, Spinner } from "@rookbox/ui-web";
+import { useIsMutating, useMutation, useQuery } from "@tanstack/react-query";
 import { GitFork, Monitor, Pause, Play, Trash2 } from "lucide-react";
 import type { FormEvent, ReactNode } from "react";
 import { useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { CodeBlock } from "../components/CodeBlock";
 import { CopyButton } from "../components/CopyButton";
-import { DeleteMachineDialog, useMachineActions } from "../components/MachineActions";
+import { ErrorNote, useErrorText } from "../components/ErrorNote";
+import {
+  DeleteMachineDialog,
+  MACHINE_ACTION_KEY,
+  MachineActionFailure,
+  useMachineActions,
+} from "../components/MachineActions";
 import { Panel, Tag } from "../components/Panel";
 import { StatusChip } from "../components/StatusChip";
 import { orpc, TRANSITION_POLL_MS } from "../lib/api";
-import { formatDate, formatMib } from "../lib/format";
+import { formatDate, formatIdle, formatMib } from "../lib/format";
 import { connectSnippet } from "../lib/snippets";
 
 const BUTTON = "h-11 px-[18px] text-body1 font-semibold";
@@ -45,61 +50,76 @@ function ForkedFrom({ id }: { id: string }) {
 }
 
 function Actions({ machine }: { machine: Machine }) {
-  const navigate = useNavigate();
-  const { run, pending } = useMachineActions();
+  const actions = useMachineActions(machine);
   const [confirming, setConfirming] = useState(false);
-  const can = (action: Parameters<typeof canPerform>[1]) => canPerform(machine.status, action);
+  const can = (action: Parameters<typeof canPerform>[1]) =>
+    canPerform(machine.status, action) && actions.busy === null;
+  const spin = (action: Parameters<typeof canPerform>[1], icon: ReactNode) =>
+    actions.busy === action ? <Spinner aria-hidden="true" /> : icon;
   return (
-    <div className="flex flex-wrap gap-2">
-      {can("restore") ? (
-        <Button className={BUTTON} onClick={() => run("restore", machine)} disabled={pending}>
-          <Play aria-hidden="true" />
-          <Trans>Restore</Trans>
-        </Button>
-      ) : (
+    <div className="flex flex-col items-start gap-2 sm:items-end">
+      <div className="flex flex-wrap gap-2">
+        {canPerform(machine.status, "restore") ? (
+          <Button
+            className={BUTTON}
+            onClick={() => actions.run("restore")}
+            disabled={!can("restore")}
+          >
+            {spin("restore", <Play aria-hidden="true" />)}
+            {actions.busy === "restore" ? <Trans>Restoring…</Trans> : <Trans>Restore</Trans>}
+          </Button>
+        ) : (
+          <Button
+            variant="outline"
+            className={BUTTON}
+            onClick={() => actions.run("suspend")}
+            disabled={!can("suspend")}
+          >
+            {spin("suspend", <Pause aria-hidden="true" />)}
+            {actions.busy === "suspend" ? <Trans>Suspending…</Trans> : <Trans>Suspend</Trans>}
+          </Button>
+        )}
         <Button
           variant="outline"
           className={BUTTON}
-          onClick={() => run("suspend", machine)}
-          disabled={!can("suspend") || pending}
+          onClick={() => actions.run("fork")}
+          disabled={!can("fork")}
         >
-          <Pause aria-hidden="true" />
-          <Trans>Suspend</Trans>
+          {spin("fork", <GitFork aria-hidden="true" />)}
+          {actions.busy === "fork" ? <Trans>Forking…</Trans> : <Trans>Fork</Trans>}
         </Button>
-      )}
-      <Button
-        variant="outline"
-        className={BUTTON}
-        onClick={() => run("fork", machine)}
-        disabled={!can("fork") || pending}
-      >
-        <GitFork aria-hidden="true" />
-        <Trans>Fork</Trans>
-      </Button>
-      <Button
-        variant="outline"
-        className={`${BUTTON} text-destructive`}
-        onClick={() => setConfirming(true)}
-        disabled={!can("delete")}
-      >
-        <Trash2 aria-hidden="true" />
-        <Trans>Delete</Trans>
-      </Button>
+        <Button
+          variant="outline"
+          className={`${BUTTON} text-destructive`}
+          onClick={() => setConfirming(true)}
+          disabled={!can("delete")}
+        >
+          <Trash2 aria-hidden="true" />
+          <Trans>Delete</Trans>
+        </Button>
+      </div>
+      {actions.busy === "suspend" ? (
+        <p role="status" className="text-label text-muted-foreground">
+          <Trans>Saving the machine's memory. This can take up to half a minute.</Trans>
+        </p>
+      ) : null}
+      <MachineActionFailure actions={actions} className="text-body2 text-destructive" />
       <DeleteMachineDialog
         machine={machine}
+        actions={actions}
         open={confirming}
         onOpenChange={setConfirming}
-        onDeleted={() => navigate("/machines")}
       />
     </div>
   );
 }
 
-type RunEntry = { command: string; result?: ExecResult; failed?: boolean };
+type RunEntry = { command: string; result?: ExecResult; error?: unknown };
 
 /** Runs one command at a time in the machine and keeps what came back. */
 function CommandRunner({ machine }: { machine: Machine }) {
   const { t } = useLingui();
+  const errorText = useErrorText();
   const [command, setCommand] = useState("");
   const [entries, setEntries] = useState<RunEntry[]>([]);
   const exec = useMutation(orpc.machines.exec.mutationOptions());
@@ -117,8 +137,8 @@ function CommandRunner({ machine }: { machine: Machine }) {
       );
     try {
       settle({ result: await exec.mutateAsync({ id: machine.id, command: text }) });
-    } catch {
-      settle({ failed: true });
+    } catch (error) {
+      settle({ error });
     }
   };
 
@@ -152,8 +172,10 @@ function CommandRunner({ machine }: { machine: Machine }) {
                   {entry.result.truncated ? ` · ${t`Output cut`}` : ""}
                 </div>
               </>
-            ) : entry.failed ? (
-              <div className="text-[#ff8a80]">{t`That didn't work. Try again.`}</div>
+            ) : entry.error !== undefined ? (
+              <div className="text-[#ff8a80]">
+                {errorText(entry.error).title} {errorText(entry.error).hint}
+              </div>
             ) : (
               <div className="text-[#a9a9ab]">…</div>
             )}
@@ -183,45 +205,59 @@ function CommandRunner({ machine }: { machine: Machine }) {
   );
 }
 
-const PORTS = [3000, 5173, 8080] as const;
-const SAMPLE_SNAPSHOTS = ["after-install", "before-refactor", "suspend-auto"] as const;
-const SAMPLE_EVENTS = [
-  {
-    dot: "bg-link",
-    title: <Trans>Created</Trans>,
-    note: <Trans>Booted from template seed in about 2 s</Trans>,
-  },
-  {
-    dot: "bg-muted-foreground",
-    title: <Trans>Port 3000 exposed</Trans>,
-    note: <Trans>HTTPS URL issued</Trans>,
-  },
-  {
-    dot: "bg-warning",
-    title: <Trans>Suspended</Trans>,
-    note: <Trans>Memory and state saved, worker released</Trans>,
-  },
-  {
-    dot: "bg-link",
-    title: <Trans>Restored</Trans>,
-    note: <Trans>Back to running in about 1 s</Trans>,
-  },
-  {
-    dot: "bg-muted-foreground",
-    title: <Trans>Forked</Trans>,
-    note: <Trans>Disk copied, memory not</Trans>,
-  },
-];
+/** The public address of one port. A browser tab can't open it: it needs a token header. */
+function PortPanel({ machine }: { machine: Machine }) {
+  const { t } = useLingui();
+  const [port, setPort] = useState(3000);
+  const valid = Number.isInteger(port) && port >= 1 && port <= 65_535;
+  const url = machine.access.portUrlTemplate.replace("{port}", String(valid ? port : 3000));
+  return (
+    <Panel title={<Trans>Ports</Trans>}>
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-1.5 text-body2 text-muted-foreground">
+          <label htmlFor="machine-port">
+            <Trans>Port</Trans>
+          </label>
+          <Input
+            id="machine-port"
+            type="number"
+            inputMode="numeric"
+            min={1}
+            max={65_535}
+            className="h-11 w-32"
+            value={Number.isNaN(port) ? "" : port}
+            aria-invalid={!valid || undefined}
+            onChange={(event) => setPort(event.currentTarget.valueAsNumber)}
+          />
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <span className="min-w-0 font-mono text-body2 break-all text-link">{url}</span>
+          <CopyButton value={url} label={t`Copy URL for port ${port}`} />
+        </div>
+        <p className="text-label text-muted-foreground">
+          <Trans>
+            Anything listening on a port inside the machine is served at this address. Requests need
+            the machine's access token, so a browser tab can't open it directly.
+          </Trans>
+        </p>
+      </div>
+    </Panel>
+  );
+}
 
 export function MachinePage() {
   const { t, i18n } = useLingui();
   const { id = "" } = useParams();
+  const acting = useIsMutating({ mutationKey: [MACHINE_ACTION_KEY, id] }) > 0;
+  const config = useQuery(orpc.config.get.queryOptions({ staleTime: 60_000 }));
   const machine = useQuery(
     orpc.machines.get.queryOptions({
       input: { id },
       retry: false,
       refetchInterval: (query) =>
-        query.state.data && isTransitional(query.state.data.status) ? TRANSITION_POLL_MS : false,
+        acting || (query.state.data && isTransitional(query.state.data.status))
+          ? TRANSITION_POLL_MS
+          : false,
     }),
   );
 
@@ -250,17 +286,13 @@ export function MachinePage() {
   }
 
   if (machine.isError) {
-    const missing = isDefinedError(machine.error) && machine.error.code === "NOT_FOUND";
     return (
       <div className="flex flex-col gap-6">
         {crumb()}
-        <p className="text-body1 text-muted-foreground">
-          {missing ? (
-            <Trans>This machine doesn't exist.</Trans>
-          ) : (
-            <Trans>The machine didn't load.</Trans>
-          )}
-        </p>
+        <ErrorNote error={machine.error} onRetry={() => machine.refetch()} />
+        <Link to="/machines" className="text-body1 text-link underline-offset-4 hover:underline">
+          <Trans>Go to machines</Trans>
+        </Link>
       </div>
     );
   }
@@ -291,8 +323,26 @@ export function MachinePage() {
             <CommandRunner machine={data} />
           </Panel>
 
-          <Panel title={<Trans>Connect</Trans>}>
-            <CodeBlock code={connectSnippet(data.id)} label="Python · E2B SDK" />
+          <Panel
+            title={<Trans>Connect</Trans>}
+            action={
+              <Tag>
+                <Trans>Soon</Trans>
+              </Tag>
+            }
+          >
+            <div className="flex flex-col gap-3">
+              <CodeBlock
+                code={connectSnippet(data.id, config.data?.domain)}
+                label="Python · E2B SDK"
+              />
+              <p className="text-label text-muted-foreground">
+                <Trans>
+                  Rookbox API keys do not work with the E2B SDK yet. This shows how a machine will
+                  be reached once they do. Until then, use the terminal and the desktop here.
+                </Trans>
+              </p>
+            </div>
           </Panel>
 
           {DESKTOP_TEMPLATES.includes(data.template) ? (
@@ -329,28 +379,6 @@ export function MachinePage() {
               </div>
             </Panel>
           ) : null}
-
-          <Panel
-            title={<Trans>Lifecycle</Trans>}
-            action={
-              <span className="text-label text-muted-foreground">
-                <Trans>Sample events</Trans>
-              </span>
-            }
-          >
-            <ol className="m-0 flex list-none flex-col gap-4.5 p-0">
-              {SAMPLE_EVENTS.map((event, index) => (
-                <li key={index} className="grid grid-cols-[14px_1fr_auto] items-start gap-3.5">
-                  <i className={`mt-1.5 size-2.5 rounded-full ${event.dot}`} />
-                  <div>
-                    <b className="block text-body1 font-semibold">{event.title}</b>
-                    <span className="text-body2 text-muted-foreground">{event.note}</span>
-                  </div>
-                  <time className="text-body2 text-muted-foreground">[time]</time>
-                </li>
-              ))}
-            </ol>
-          </Panel>
         </div>
 
         <div className="flex min-w-0 flex-col gap-5">
@@ -362,12 +390,8 @@ export function MachinePage() {
                 {formatMib(data.size.memoryMib, i18n.locale)}
               </Spec>
               <Spec label={<Trans>Disk</Trans>}>{formatMib(data.size.diskMib, i18n.locale)}</Spec>
-              <Spec label={<Trans>Kernel</Trans>}>
-                <Trans>Own, Firecracker microVM</Trans>
-              </Spec>
-              <Spec label={<Trans>Region</Trans>}>[REGION]</Spec>
-              <Spec label={<Trans>Sizing</Trans>}>
-                <span className="font-mono">space.resources</span>
+              <Spec label={<Trans>Suspends after</Trans>}>
+                <Trans>{formatIdle(data.idleTimeoutS, i18n.locale)} idle</Trans>
               </Spec>
               <Spec label={<Trans>Created</Trans>}>{formatDate(data.createdAt, i18n.locale)}</Spec>
               {data.forkedFrom ? (
@@ -378,72 +402,9 @@ export function MachinePage() {
             </dl>
           </Panel>
 
-          <Panel
-            title={<Trans>Ports</Trans>}
-            action={
-              <Button variant="outline" size="sm" disabled className="h-11 px-3">
-                <Trans>Expose a port</Trans>
-              </Button>
-            }
-          >
-            <ul className="m-0 flex list-none flex-col p-0">
-              {PORTS.map((port) => {
-                const url = data.access.portUrlTemplate.replace("{port}", String(port));
-                return (
-                  <li
-                    key={port}
-                    className="flex flex-wrap items-center justify-between gap-3 border-t border-border py-3 first:border-t-0"
-                  >
-                    <div className="min-w-0">
-                      <b className="block text-body1">{port}</b>
-                      <span className="font-mono text-body2 break-all text-link">{url}</span>
-                    </div>
-                    <CopyButton value={url} label={t`Copy URL for port ${port}`} />
-                  </li>
-                );
-              })}
-            </ul>
-            <p className="mt-2 text-label text-muted-foreground">
-              <Trans>
-                A port needs the machine's traffic access token in the e2b-traffic-access-token
-                header, so a browser tab cannot open it directly.
-              </Trans>
-            </p>
-          </Panel>
-
-          <Panel
-            title={<Trans>Snapshots</Trans>}
-            action={
-              <Button variant="outline" size="sm" disabled className="h-11 px-3">
-                <Trans>Take snapshot</Trans>
-              </Button>
-            }
-          >
-            <ul className="m-0 flex list-none flex-col p-0">
-              {SAMPLE_SNAPSHOTS.map((name) => (
-                <li
-                  key={name}
-                  className="flex flex-wrap items-center justify-between gap-3 border-t border-border py-3 first:border-t-0"
-                >
-                  <div>
-                    <b className="block text-body1">{name}</b>
-                    <span className="text-label text-muted-foreground">[SIZE] · [DATE]</span>
-                  </div>
-                  <Tag>
-                    <Trans>Soon</Trans>
-                  </Tag>
-                </li>
-              ))}
-            </ul>
-            <p className="mt-2 text-label text-muted-foreground">
-              <Trans>Sample snapshots. Snapshots are coming soon.</Trans>
-            </p>
-          </Panel>
+          <PortPanel machine={data} />
         </div>
       </div>
-      <p className="text-label text-muted-foreground">
-        <Trans>Sample data. Values in [brackets] are placeholders.</Trans>
-      </p>
     </div>
   );
 }

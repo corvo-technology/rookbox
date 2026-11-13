@@ -10,6 +10,7 @@ import { createLogger } from "./logger.js";
 import { createMachineService } from "./machines/service.js";
 import { createPrismaMachineStore } from "./machines/store.js";
 import { applyMigrations } from "./migrate.js";
+import { createRateLimiter } from "./rate-limit.js";
 import { createEcwClient } from "./space/client.js";
 
 const bootLogger = createLogger("info", { service: "rookbox-api" });
@@ -33,6 +34,7 @@ try {
     baseUrl: env.SPACE_ECW_API_URL,
     apiKey: env.SPACE_ECW_API_KEY,
     domain: env.E2B_DOMAIN,
+    timeoutMs: env.SPACE_TIMEOUT_MS,
   });
   const origin = apiOrigin(env);
   const machines = createMachineService({
@@ -41,7 +43,8 @@ try {
     logger,
     e2bDomain: env.E2B_DOMAIN,
     apiOrigin: origin,
-    idleTimeoutS: env.MACHINE_IDLE_TIMEOUT_S,
+    templates: env.SPACE_TEMPLATES,
+    defaultIdleTimeoutS: env.MACHINE_IDLE_TIMEOUT_S,
     maxMachinesPerUser: env.MAX_MACHINES_PER_USER,
   });
   const desktop = createDesktopProxy({
@@ -63,6 +66,11 @@ try {
     machines,
     apiKeys,
     desktop,
+    space,
+    signInLimiter: createRateLimiter({
+      max: env.SIGNIN_MAX_ATTEMPTS,
+      windowMs: env.SIGNIN_WINDOW_S * 1_000,
+    }),
     checkDb: async () => {
       await db.$queryRaw`SELECT 1`;
     },

@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "machine" ADD COLUMN "idleTimeoutS" INTEGER NOT NULL DEFAULT 900;

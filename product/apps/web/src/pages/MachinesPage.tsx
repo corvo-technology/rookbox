@@ -1,9 +1,11 @@
 import { Trans, useLingui } from "@lingui/react/macro";
+import type { Machine } from "@rookbox/contracts";
 import { isTransitional } from "@rookbox/contracts";
 import {
   Button,
   Input,
   Skeleton,
+  Spinner,
   Table,
   TableBody,
   TableCell,
@@ -11,12 +13,19 @@ import {
   TableHeader,
   TableRow,
 } from "@rookbox/ui-web";
-import { useQuery } from "@tanstack/react-query";
+import { useIsMutating, useMutationState, useQuery } from "@tanstack/react-query";
 import { Plus, Server } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { CreateMachineDialog } from "../components/CreateMachineDialog";
-import { MachineActionsMenu, MachineRowActions } from "../components/MachineActions";
+import { CreateMachineDialog, MACHINE_CREATE_KEY } from "../components/CreateMachineDialog";
+import { ErrorNote } from "../components/ErrorNote";
+import {
+  MACHINE_ACTION_KEY,
+  MachineActionFailure,
+  MachineActionsMenu,
+  MachineRowActions,
+  useMachineActions,
+} from "../components/MachineActions";
 import { PageHeader } from "../components/PageHeader";
 import { Segmented } from "../components/Segmented";
 import { useShortSizeText } from "../components/SizeText";
@@ -38,16 +47,83 @@ function Stat({ label, value }: { label: string; value: number }) {
   );
 }
 
-export function MachinesPage() {
-  const { t, i18n } = useLingui();
+function MachineRow({ machine }: { machine: Machine }) {
+  const { i18n } = useLingui();
   const sizeText = useShortSizeText();
+  const actions = useMachineActions(machine);
+  return (
+    <TableRow className="h-16">
+      <TableCell className="px-[18px]">
+        <Link
+          to={`/machines/${machine.id}`}
+          className="font-semibold text-foreground underline-offset-4 hover:text-link hover:underline"
+        >
+          {machine.name}
+        </Link>
+        <span className="block font-mono text-label text-muted-foreground">{machine.id}</span>
+        <MachineActionFailure actions={actions} />
+      </TableCell>
+      <TableCell>
+        <StatusChip status={machine.status} />
+      </TableCell>
+      <TableCell className="font-mono text-body2 text-muted-foreground max-md:hidden">
+        {machine.template}
+      </TableCell>
+      <TableCell className="text-body2 text-muted-foreground max-lg:hidden">
+        {sizeText(machine.size)}
+      </TableCell>
+      <TableCell className="text-body2 text-muted-foreground max-xl:hidden">
+        <time dateTime={machine.createdAt} title={formatDate(machine.createdAt, i18n.locale)}>
+          {formatRelative(machine.createdAt, i18n.locale)}
+        </time>
+      </TableCell>
+      <TableCell className="text-right">
+        <div className="max-md:hidden">
+          <MachineRowActions machine={machine} actions={actions} />
+        </div>
+        <div className="md:hidden">
+          <MachineActionsMenu machine={machine} actions={actions} />
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+}
+
+/** A machine that is still being created: the API answers once it is up, so it has no row yet. */
+function PreparingBanner() {
+  const starting = useMutationState({
+    filters: { mutationKey: MACHINE_CREATE_KEY, status: "pending" },
+    select: (mutation) => (mutation.state.variables as { name?: string } | undefined)?.name,
+  });
+  if (starting.length === 0) return null;
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 text-body1"
+    >
+      <Spinner aria-hidden="true" />
+      <span>
+        <Trans>Preparing the machine…</Trans>{" "}
+        <span className="text-muted-foreground">
+          <Trans>It appears here when it's ready.</Trans>
+        </span>
+      </span>
+    </div>
+  );
+}
+
+export function MachinesPage() {
+  const { t } = useLingui();
   const [creating, setCreating] = useState(false);
   const [query, setQuery] = useState("");
   const [state, setState] = useState<StateFilter>("all");
+  // While any action runs, keep asking: the API shows "suspending" and "restoring" as they happen.
+  const acting = useIsMutating({ mutationKey: [MACHINE_ACTION_KEY] }) > 0;
   const machines = useQuery(
     orpc.machines.list.queryOptions({
       refetchInterval: (query) =>
-        query.state.data?.some((machine) => isTransitional(machine.status))
+        acting || query.state.data?.some((machine) => isTransitional(machine.status))
           ? TRANSITION_POLL_MS
           : false,
     }),
@@ -66,6 +142,7 @@ export function MachinesPage() {
   return (
     <div className="flex flex-col gap-5">
       <PageHeader title={<Trans>Machines</Trans>} action={all.length ? newMachine : null} />
+      <PreparingBanner />
 
       {machines.isPending ? (
         <div className="flex flex-col gap-2" role="status" aria-busy="true" aria-label={t`Loading`}>
@@ -74,12 +151,7 @@ export function MachinesPage() {
           ))}
         </div>
       ) : machines.isError ? (
-        <p className="text-body1 text-muted-foreground">
-          <Trans>Machines didn't load.</Trans>{" "}
-          <Button variant="link" className="h-auto p-0" onClick={() => machines.refetch()}>
-            <Trans>Try again</Trans>
-          </Button>
-        </p>
+        <ErrorNote error={machines.error} onRetry={() => machines.refetch()} />
       ) : all.length === 0 ? (
         <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-border px-6 py-16 text-center">
           <Server className="size-10 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
@@ -149,44 +221,7 @@ export function MachinesPage() {
               </TableHeader>
               <TableBody>
                 {rows.map((machine) => (
-                  <TableRow key={machine.id} className="h-16">
-                    <TableCell className="px-[18px]">
-                      <Link
-                        to={`/machines/${machine.id}`}
-                        className="font-semibold text-foreground underline-offset-4 hover:text-link hover:underline"
-                      >
-                        {machine.name}
-                      </Link>
-                      <span className="block font-mono text-label text-muted-foreground">
-                        {machine.id}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <StatusChip status={machine.status} />
-                    </TableCell>
-                    <TableCell className="font-mono text-body2 text-muted-foreground max-md:hidden">
-                      {machine.template}
-                    </TableCell>
-                    <TableCell className="text-body2 text-muted-foreground max-lg:hidden">
-                      {sizeText(machine.size)}
-                    </TableCell>
-                    <TableCell className="text-body2 text-muted-foreground max-xl:hidden">
-                      <time
-                        dateTime={machine.createdAt}
-                        title={formatDate(machine.createdAt, i18n.locale)}
-                      >
-                        {formatRelative(machine.createdAt, i18n.locale)}
-                      </time>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="max-md:hidden">
-                        <MachineRowActions machine={machine} />
-                      </div>
-                      <div className="md:hidden">
-                        <MachineActionsMenu machine={machine} />
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                  <MachineRow key={machine.id} machine={machine} />
                 ))}
               </TableBody>
             </Table>
@@ -197,7 +232,7 @@ export function MachinesPage() {
             ) : null}
           </div>
           <p className="text-label text-muted-foreground">
-            <Trans>Sample data. Fork copies the disk, not memory.</Trans>
+            <Trans>Fork copies the disk, not memory.</Trans>
           </p>
         </>
       )}

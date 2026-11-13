@@ -8,7 +8,7 @@ separate from the Rust SPACE workspace around it.
 | `apps/www` | Marketing site: Astro, React islands, Tailwind v4, sitemap. English, Brazilian Portuguese (`/pt/`) and Spanish (`/es/`). |
 | `apps/web` | Dashboard: Vite, React, React Router, TanStack Query, shadcn/ui on Base UI, Tailwind v4, Lingui (en, pt-BR, es). |
 | `apps/api` | The product API: Hono, oRPC, Prisma + Postgres, better-auth. Runs machines on SPACE through its E2B-compatible API. See `DEPLOY.md` and `apps/api/.env.example`. |
-| `packages/contracts` | The dashboard's oRPC contract (machines, API keys, usage) and the machine lifecycle rules. |
+| `packages/contracts` | The dashboard's oRPC contract (machines, API keys) and the machine lifecycle rules. |
 | `packages/ui-tokens` | Semantic colour tokens; `src/index.ts` generates `src/tokens.css`. |
 | `packages/ui-web` | Vendored shadcn/ui components on Base UI, plus the shared theme CSS. |
 
@@ -52,8 +52,8 @@ installed Google Chrome through Playwright and writes PNGs to `.screenshots/` (i
   chooses the client: with `VITE_API_URL` set the dashboard talks to the real API in `apps/api`
   (and shows a sign-in screen); without it, it runs on this fake, with no sign-in. Fake machines
   run no commands and have no desktop.
-- **Sample data.** The fake starts with three made-up machines and one key. Usage numbers are
-  generated per day, in the fake and in the real API, and the page labels them "Sample data".
+- **Sample data.** The fake starts with three made-up machines and one key. The Usage page
+  shows no numbers: machine hours and billing are not measured yet.
 
 ## Run the real API locally
 
@@ -73,8 +73,7 @@ deployment and what is not done yet (Rookbox API keys are not E2B keys).
   (plans, prices, legal line, free-credit offer, fleet-count endpoint; see
   `apps/www/src/placeholders.ts`) and in the dashboard (workspace, plan, limits, credits, region,
   snapshot sizes). Sidebar entries without a screen (Snapshots, Secrets, Webhooks, CI, Members)
-  are marked "Soon" and are not links. The `desktop` template is coming soon and cannot be
-  selected; "Open desktop" is disabled. The landing's "machines running" counter is illustrative
+  are marked "Soon" and are not links. The desktop is available on the `desktop` template, and fake machines have none. The landing's "machines running" counter is illustrative
   demo data and says so.
 - **The logo.** Not chosen yet. `apps/www/src/components/Logo.astro` and
   `apps/web/src/components/Logo.tsx` hold a plain "Rookbox" wordmark, and both apps'

@@ -1,12 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  chartCeiling,
-  formatDay,
-  formatDayShort,
-  formatMib,
-  formatRelative,
-  sizeParts,
-} from "./format";
+import { formatIdle, formatMib, formatRelative, sizeParts } from "./format";
 
 describe("format", () => {
   it("shows memory and disk in GiB from 1 GiB up", () => {
@@ -31,18 +24,9 @@ describe("format", () => {
     expect(formatRelative("2026-03-10T11:59:50Z", "en", now)).toBe("now");
   });
 
-  it("reads a usage day in UTC", () => {
-    expect(formatDay("2026-03-10", "en")).toBe("Tue, Mar 10");
-    expect(formatDayShort("2026-03-10", "en")).toBe("Mar 10");
-    expect(formatDayShort("2026-03-10", "pt-BR")).toBe("10 de mar.");
-  });
-
-  it("rounds a chart ceiling up to a tidy step", () => {
-    expect(chartCeiling(33)).toBe(40);
-    expect(chartCeiling(40)).toBe(40);
-    expect(chartCeiling(0)).toBe(20);
-    expect(chartCeiling(7.2)).toBe(20);
-    expect(chartCeiling(91)).toBe(100);
-    expect(chartCeiling(41)).toBe(60);
+  it("writes an idle time in minutes or hours", () => {
+    expect(formatIdle(300, "en")).toBe("5 min");
+    expect(formatIdle(3600, "en")).toBe("1 hr");
+    expect(formatIdle(5400, "en")).toBe("90 min");
   });
 });

@@ -35,16 +35,33 @@ describe("fake api", () => {
     vi.useRealTimers();
   });
 
-  it("creates a machine that boots on its own", async () => {
-    const client = api();
-    const created = await call(
-      client.machines.create({ name: "worker", template: "seed", size: SIZE_PRESETS.small }),
-    );
-    expect(created.status).toBe("creating");
-    await settle();
-    const machine = await call(client.machines.get({ id: created.id }));
-    expect(machine.status).toBe("running");
-    expect(machine.size).toEqual(SIZE_PRESETS.small);
+  it("answers a create once the machine is up, like the real API", async () => {
+    const client = createFakeApi({ latencyMs: [0, 0], stepMs: STEP, createMs: 500 });
+    const pending = client.machines.create({
+      name: "worker",
+      template: "seed",
+      size: SIZE_PRESETS.small,
+      idleTimeoutS: 3600,
+    });
+    await vi.advanceTimersByTimeAsync(500);
+    const created = await pending;
+    expect(created.status).toBe("running");
+    expect(created.idleTimeoutS).toBe(3600);
+    expect(created.size).toEqual(SIZE_PRESETS.small);
+  });
+
+  it("fails a create with the chosen coded error", async () => {
+    const client = createFakeApi({ latencyMs: [0, 0], failCreateWith: "HOST_AUTH" });
+    const failure = await client.machines
+      .create({ template: "seed", size: SIZE_PRESETS.small })
+      .catch((error: unknown) => error);
+    expect(codeOf(failure)).toBe("HOST_AUTH");
+  });
+
+  it("offers templates and limits through config", async () => {
+    const config = await api().config.get();
+    expect(config.templates).toContain("seed");
+    expect(config.maxMachines).toBeGreaterThan(0);
   });
 
   it("suspends and restores through the transitional states", async () => {
@@ -52,15 +69,18 @@ describe("fake api", () => {
     const { id } = await call(
       client.machines.create({ template: "seed", size: SIZE_PRESETS.small }),
     );
-    await settle();
 
-    expect((await call(client.machines.suspend({ id }))).status).toBe("suspending");
+    const suspending = client.machines.suspend({ id });
+    await vi.advanceTimersByTimeAsync(0);
+    expect((await client.machines.get({ id })).status).toBe("suspending");
     await settle();
-    expect((await call(client.machines.get({ id }))).status).toBe("suspended");
+    expect((await suspending).status).toBe("suspended");
 
-    expect((await call(client.machines.restore({ id }))).status).toBe("restoring");
+    const restoring = client.machines.restore({ id });
+    await vi.advanceTimersByTimeAsync(0);
+    expect((await client.machines.get({ id })).status).toBe("restoring");
     await settle();
-    expect((await call(client.machines.get({ id }))).status).toBe("running");
+    expect((await restoring).status).toBe("running");
   });
 
   it("refuses an action the state does not allow, with the contract's error", async () => {
@@ -79,7 +99,7 @@ describe("fake api", () => {
     );
     await settle();
     const fork = await call(client.machines.fork({ id: source.id }));
-    expect(fork).toMatchObject({ name: "base-fork", forkedFrom: source.id, status: "creating" });
+    expect(fork).toMatchObject({ name: "base-fork", forkedFrom: source.id, status: "running" });
     expect(fork.size).toEqual(SIZE_PRESETS.large);
     const second = await call(client.machines.fork({ id: source.id }));
     expect(second.name).toBe("base-fork-2");
@@ -113,6 +133,9 @@ describe("fake api", () => {
     const created = await call(
       client.machines.create({ template: "seed", size: SIZE_PRESETS.small }),
     );
+    const done = client.machines.suspend({ id: created.id });
+    await settle();
+    await done;
     const early = await call(client.machines.exec({ id: created.id, command: "uname" })).catch(
       (error: unknown) => error,
     );
@@ -140,16 +163,6 @@ describe("fake api", () => {
     expect(JSON.stringify(listed)).not.toContain(secret);
     await call(client.apiKeys.revoke({ id: key.id }));
     expect(await call(client.apiKeys.list())).toEqual([]);
-  });
-
-  it("labels usage as sample data and totals the days", async () => {
-    const client = api(true);
-    const usage = await call(client.usage.summary({ days: 7 }));
-    expect(usage.sample).toBe(true);
-    expect(usage.days).toHaveLength(7);
-    expect(usage.days.at(-1)?.date).toBe("2026-03-10");
-    const total = usage.days.reduce((sum, day) => sum + day.machineHours, 0);
-    expect(usage.totalMachineHours).toBeCloseTo(total, 5);
   });
 
   it("seeds sample machines newest first", async () => {

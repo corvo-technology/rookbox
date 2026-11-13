@@ -8,6 +8,7 @@ export type MachineRow = {
   name: string;
   template: MachineTemplate;
   size: MachineSize;
+  idleTimeoutS: number;
   forkedFrom: string | null;
   op: MachineOp | null;
   opAt: Date | null;
@@ -36,6 +37,7 @@ function toRow(row: {
   vcpu: number;
   memoryMib: number;
   diskMib: number;
+  idleTimeoutS: number;
   forkedFrom: string | null;
   op: string | null;
   opAt: Date | null;
@@ -47,6 +49,7 @@ function toRow(row: {
     name: row.name,
     template: row.template as MachineTemplate,
     size: { vcpu: row.vcpu, memoryMib: row.memoryMib, diskMib: row.diskMib },
+    idleTimeoutS: row.idleTimeoutS,
     forkedFrom: row.forkedFrom,
     op: row.op as MachineOp | null,
     opAt: row.opAt,
@@ -78,6 +81,7 @@ export function createPrismaMachineStore(db: Db): MachineStore {
             vcpu: row.size.vcpu,
             memoryMib: row.size.memoryMib,
             diskMib: row.size.diskMib,
+            idleTimeoutS: row.idleTimeoutS,
             forkedFrom: row.forkedFrom,
             ...(row.createdAt ? { createdAt: row.createdAt } : {}),
           },

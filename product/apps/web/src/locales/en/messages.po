@@ -13,29 +13,31 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/pages/UsagePage.tsx
-msgid "[CREDITS] remaining"
-msgstr "[CREDITS] remaining"
+#. placeholder {0}: formatIdle(data.idleTimeoutS, i18n.locale)
+#: src/pages/MachinePage.tsx
+msgid "{0} idle"
+msgstr "{0} idle"
 
-#: src/components/AppShell.tsx
-msgid "[PLAN NAME] plan. [LIMIT] machines running of [LIMIT]."
-msgstr "[PLAN NAME] plan. [LIMIT] machines running of [LIMIT]."
+#. placeholder {0}: machine.name
+#: src/components/CreateMachineDialog.tsx
+msgid "{0} is ready."
+msgstr "{0} is ready."
 
-#: src/pages/UsagePage.tsx
-msgid "[PRICE] per month plus usage. Renews [DATE]."
-msgstr "[PRICE] per month plus usage. Renews [DATE]."
-
-#: src/pages/UsagePage.tsx
-msgid "{days} days"
-msgstr "{days} days"
+#: src/components/CreateMachineDialog.tsx
+msgid "{elapsed} s"
+msgstr "{elapsed} s"
 
 #: src/components/MachineActions.tsx
 msgid "{name} deleted"
 msgstr "{name} deleted"
 
-#: src/pages/UsagePage.tsx
-msgid "{period} day total"
-msgstr "{period} day total"
+#: src/components/MachineActions.tsx
+msgid "{name} is running again."
+msgstr "{name} is running again."
+
+#: src/components/MachineActions.tsx
+msgid "{name} is suspended. Its memory was saved."
+msgstr "{name} is suspended. Its memory was saved."
 
 #: src/components/SizeText.tsx
 msgid "{vcpu} vCPU · {memory} RAM · {disk} disk"
@@ -49,9 +51,25 @@ msgstr "{vcpu} vCPU / {memory}"
 msgid "A deleted machine"
 msgstr "A deleted machine"
 
-#: src/pages/MachinePage.tsx
-msgid "A port needs the machine's traffic access token in the e2b-traffic-access-token header, so a browser tab cannot open it directly."
-msgstr "A port needs the machine's traffic access token in the e2b-traffic-access-token header, so a browser tab cannot open it directly."
+#: src/components/ErrorNote.tsx
+msgid "A limit on the machine service was reached."
+msgstr "A limit on the machine service was reached."
+
+#: src/components/CreateMachineDialog.tsx
+msgid "A Linux desktop with Chromium you can open in a tab, plus a terminal."
+msgstr "A Linux desktop with Chromium you can open in a tab, plus a terminal."
+
+#: src/components/CreateMachineDialog.tsx
+msgid "A machine with no activity for this long is suspended and keeps its memory. Restore it any time."
+msgstr "A machine with no activity for this long is suspended and keeps its memory. Restore it any time."
+
+#: src/components/ErrorNote.tsx
+msgid "A machine with that name already exists."
+msgstr "A machine with that name already exists."
+
+#: src/components/CreateMachineDialog.tsx
+msgid "A private Linux machine that starts in seconds."
+msgstr "A private Linux machine that starts in seconds."
 
 #: src/pages/SettingsPage.tsx
 msgid "Account"
@@ -66,21 +84,13 @@ msgstr "Actions"
 msgid "Actions for {name}"
 msgstr "Actions for {name}"
 
-#: src/pages/UsagePage.tsx
-msgid "Active"
-msgstr "Active"
-
-#: src/pages/UsagePage.tsx
-msgid "Add credits"
-msgstr "Add credits"
-
-#: src/components/CreateMachineDialog.tsx
-msgid "Advanced"
-msgstr "Advanced"
-
 #: src/pages/MachinesPage.tsx
 msgid "All"
 msgstr "All"
+
+#: src/pages/MachinePage.tsx
+msgid "Anything listening on a port inside the machine is served at this address. Requests need the machine's access token, so a browser tab can't open it directly."
+msgstr "Anything listening on a port inside the machine is served at this address. Requests need the machine's access token, so a browser tab can't open it directly."
 
 #: src/pages/ApiKeysPage.tsx
 msgid "Anything using this key stops working right away."
@@ -96,24 +106,12 @@ msgid "Appearance"
 msgstr "Appearance"
 
 #: src/pages/MachinePage.tsx
-msgid "Back to running in about 1 s"
-msgstr "Back to running in about 1 s"
-
-#: src/pages/UsagePage.tsx
-msgid "Bar chart of running machine-hours per day over {count} days. Lowest day {low}, highest day {high}."
-msgstr "Bar chart of running machine-hours per day over {count} days. Lowest day {low}, highest day {high}."
-
-#: src/pages/MachinePage.tsx
-msgid "Booted from template seed in about 2 s"
-msgstr "Booted from template seed in about 2 s"
-
-#: src/pages/MachinePage.tsx
 msgid "Breadcrumb"
 msgstr "Breadcrumb"
 
-#: src/pages/UsagePage.tsx
-msgid "By machine"
-msgstr "By machine"
+#: src/components/ErrorNote.tsx
+msgid "Can't reach Rookbox."
+msgstr "Can't reach Rookbox."
 
 #: src/pages/LoginPage.tsx
 msgid "Can't reach Rookbox. Check your connection and try again."
@@ -123,6 +121,10 @@ msgstr "Can't reach Rookbox. Check your connection and try again."
 #: src/pages/ApiKeysPage.tsx
 msgid "Cancel"
 msgstr "Cancel"
+
+#: src/components/ErrorNote.tsx
+msgid "Check your connection and try again."
+msgstr "Check your connection and try again."
 
 #: src/pages/MachinePage.tsx
 msgid "Chromium over VNC, in a new tab."
@@ -136,13 +138,17 @@ msgstr "CI"
 msgid "Close menu"
 msgstr "Close menu"
 
-#: src/components/CreateMachineDialog.tsx
+#: src/pages/UsagePage.tsx
 msgid "Coming soon"
 msgstr "Coming soon"
 
 #: src/pages/MachinePage.tsx
 msgid "Command"
 msgstr "Command"
+
+#: src/components/CreateMachineDialog.tsx
+msgid "Computer-use desktop"
+msgstr "Computer-use desktop"
 
 #: src/pages/MachinePage.tsx
 msgid "Connect"
@@ -168,10 +174,6 @@ msgstr "Copy URL for port {port}"
 msgid "Copy your key now"
 msgstr "Copy your key now"
 
-#: src/pages/UsagePage.tsx
-msgid "Cost"
-msgstr "Cost"
-
 #: src/pages/ApiKeysPage.tsx
 msgid "Create API key"
 msgstr "Create API key"
@@ -194,9 +196,9 @@ msgstr "Created"
 msgid "Creating"
 msgstr "Creating"
 
-#: src/pages/UsagePage.tsx
-msgid "Credits"
-msgstr "Credits"
+#: src/components/CreateMachineDialog.tsx
+msgid "Custom size"
+msgstr "Custom size"
 
 #: src/pages/SettingsPage.tsx
 msgid "Dark"
@@ -215,21 +217,29 @@ msgstr "Delete {name}"
 msgid "Delete {name}?"
 msgstr "Delete {name}?"
 
+#: src/components/ErrorNote.tsx
+msgid "Delete a machine you no longer need, then try again."
+msgstr "Delete a machine you no longer need, then try again."
+
 #: src/components/MachineActions.tsx
 msgid "Delete machine"
 msgstr "Delete machine"
+
+#: src/components/ErrorNote.tsx
+msgid "Delete machines you don't need, or try again later."
+msgstr "Delete machines you don't need, or try again later."
 
 #: src/components/StatusChip.tsx
 msgid "Deleting"
 msgstr "Deleting"
 
-#: src/pages/ApiKeysPage.tsx
-msgid "Demo key, generated locally."
-msgstr "Demo key, generated locally."
-
 #: src/pages/MachinePage.tsx
 msgid "Desktop"
 msgstr "Desktop"
+
+#: src/components/CreateMachineDialog.tsx
+msgid "Desktop with browser"
+msgstr "Desktop with browser"
 
 #: src/pages/MachinePage.tsx
 msgid "Disk"
@@ -238,10 +248,6 @@ msgstr "Disk"
 #: src/components/CreateMachineDialog.tsx
 msgid "Disk (GiB)"
 msgstr "Disk (GiB)"
-
-#: src/pages/MachinePage.tsx
-msgid "Disk copied, memory not"
-msgstr "Disk copied, memory not"
 
 #: src/components/AppShell.tsx
 msgid "Docs"
@@ -264,10 +270,6 @@ msgstr "Email or password is wrong."
 msgid "Exit code {0}"
 msgstr "Exit code {0}"
 
-#: src/pages/MachinePage.tsx
-msgid "Expose a port"
-msgstr "Expose a port"
-
 #: src/components/StatusChip.tsx
 msgid "Failed"
 msgstr "Failed"
@@ -289,29 +291,31 @@ msgstr "Fork"
 msgid "Fork {name}"
 msgstr "Fork {name}"
 
-#: src/pages/MachinePage.tsx
-msgid "Forked"
-msgstr "Forked"
+#: src/pages/MachinesPage.tsx
+msgid "Fork copies the disk, not memory."
+msgstr "Fork copies the disk, not memory."
 
 #: src/pages/MachinePage.tsx
 msgid "Forked from"
 msgstr "Forked from"
 
 #: src/components/MachineActions.tsx
-msgid "Forked into {name}. The disk was copied, not memory."
-msgstr "Forked into {name}. The disk was copied, not memory."
+msgid "Forked into {forked}. The disk was copied, not memory."
+msgstr "Forked into {forked}. The disk was copied, not memory."
+
+#: src/components/MachineActions.tsx
+#: src/pages/MachinePage.tsx
+msgid "Forking…"
+msgstr "Forking…"
 
 #: src/App.tsx
+#: src/pages/MachinePage.tsx
 msgid "Go to machines"
 msgstr "Go to machines"
 
 #: src/pages/LoginPage.tsx
 msgid "Hide password"
 msgstr "Hide password"
-
-#: src/pages/MachinePage.tsx
-msgid "HTTPS URL issued"
-msgstr "HTTPS URL issued"
 
 #: src/pages/ApiKeysPage.tsx
 msgid "I have saved it"
@@ -321,26 +325,27 @@ msgstr "I have saved it"
 msgid "Integrations"
 msgstr "Integrations"
 
+#: src/pages/MachinesPage.tsx
+msgid "It appears here when it's ready."
+msgstr "It appears here when it's ready."
+
+#: src/components/ErrorNote.tsx
+msgid "It may have been deleted. The list will refresh."
+msgstr "It may have been deleted. The list will refresh."
+
 #: src/components/MachineActions.tsx
 msgid "Its disk and saved memory are deleted. This can't be undone."
 msgstr "Its disk and saved memory are deleted. This can't be undone."
 
-#: src/pages/MachinePage.tsx
-msgid "Kernel"
-msgstr "Kernel"
+#: src/components/CreateMachineDialog.tsx
+msgid "Keep working, tell me when it's ready"
+msgstr "Keep working, tell me when it's ready"
 
 #: src/pages/ApiKeysPage.tsx
 msgid "Key"
 msgstr "Key"
 
-#: src/pages/ApiKeysPage.tsx
-msgid "Keys authenticate the E2B SDK. Set one as your API key and point <0>E2B_DOMAIN</0> at your Rookbox domain. We store only a hash, so a key is shown once."
-msgstr "Keys authenticate the E2B SDK. Set one as your API key and point <0>E2B_DOMAIN</0> at your Rookbox domain. We store only a hash, so a key is shown once."
-
-#: src/pages/ApiKeysPage.tsx
-msgid "Keys didn't load."
-msgstr "Keys didn't load."
-
+#: src/components/LanguageSelect.tsx
 #: src/pages/SettingsPage.tsx
 msgid "Language"
 msgstr "Language"
@@ -353,44 +358,36 @@ msgstr "Large"
 msgid "Last used"
 msgstr "Last used"
 
-#: src/pages/MachinePage.tsx
-msgid "Lifecycle"
-msgstr "Lifecycle"
+#: src/components/CreateMachineDialog.tsx
+msgid "Leave it empty and Rookbox picks one."
+msgstr "Leave it empty and Rookbox picks one."
 
 #: src/pages/SettingsPage.tsx
 msgid "Light"
 msgstr "Light"
 
 #: src/components/CreateMachineDialog.tsx
-msgid "Linux with a desktop and a browser."
-msgstr "Linux with a desktop and a browser."
+msgid "Linux with root access and no screen. The fastest to start."
+msgstr "Linux with root access and no screen. The fastest to start."
 
-#: src/components/CreateMachineDialog.tsx
-msgid "Linux with root access."
-msgstr "Linux with root access."
-
+#: src/App.tsx
 #: src/pages/MachinesPage.tsx
 msgid "Loading"
 msgstr "Loading"
 
 #: src/pages/UsagePage.tsx
-msgid "Machine"
-msgstr "Machine"
+msgid "Machine hours and billing"
+msgstr "Machine hours and billing"
 
 #: src/pages/UsagePage.tsx
-msgid "Machine-hours per day. Billed per second, shown per day."
-msgstr "Machine-hours per day. Billed per second, shown per day."
+msgid "Machine hours, plans and invoices are coming soon. Nothing is measured or billed yet, so there are no numbers to show here."
+msgstr "Machine hours, plans and invoices are coming soon. Nothing is measured or billed yet, so there are no numbers to show here."
 
 #: src/components/AppShell.tsx
 #: src/pages/MachinePage.tsx
 #: src/pages/MachinesPage.tsx
-#: src/pages/UsagePage.tsx
 msgid "Machines"
 msgstr "Machines"
-
-#: src/pages/MachinesPage.tsx
-msgid "Machines didn't load."
-msgstr "Machines didn't load."
 
 #: src/components/CreateMachineDialog.tsx
 msgid "Medium"
@@ -403,10 +400,6 @@ msgstr "Members"
 #: src/pages/MachinePage.tsx
 msgid "Memory"
 msgstr "Memory"
-
-#: src/pages/MachinePage.tsx
-msgid "Memory and state saved, worker released"
-msgstr "Memory and state saved, worker released"
 
 #: src/components/CreateMachineDialog.tsx
 #: src/pages/ApiKeysPage.tsx
@@ -448,16 +441,12 @@ msgid "Open menu"
 msgstr "Open menu"
 
 #: src/components/CreateMachineDialog.tsx
-msgid "Optional"
-msgstr "Optional"
+msgid "Optional, for example research-agent"
+msgstr "Optional, for example research-agent"
 
 #: src/pages/MachinePage.tsx
 msgid "Output cut"
 msgstr "Output cut"
-
-#: src/pages/MachinePage.tsx
-msgid "Own, Firecracker microVM"
-msgstr "Own, Firecracker microVM"
 
 #: src/App.tsx
 msgid "Page not found"
@@ -467,29 +456,30 @@ msgstr "Page not found"
 msgid "Password"
 msgstr "Password"
 
-#: src/pages/UsagePage.tsx
-msgid "Period"
-msgstr "Period"
+#: src/components/ErrorNote.tsx
+msgid "Pick another name."
+msgstr "Pick another name."
 
-#: src/pages/UsagePage.tsx
-msgid "Plan"
-msgstr "Plan"
+#: src/components/ErrorNote.tsx
+msgid "Pick another template."
+msgstr "Pick another template."
 
 #: src/pages/MachinePage.tsx
-msgid "Port 3000 exposed"
-msgstr "Port 3000 exposed"
+msgid "Port"
+msgstr "Port"
 
 #: src/pages/MachinePage.tsx
 msgid "Ports"
 msgstr "Ports"
 
 #: src/components/CreateMachineDialog.tsx
+#: src/pages/MachinesPage.tsx
+msgid "Preparing the machine…"
+msgstr "Preparing the machine…"
+
+#: src/components/CreateMachineDialog.tsx
 msgid "RAM (GiB)"
 msgstr "RAM (GiB)"
-
-#: src/pages/MachinePage.tsx
-msgid "Region"
-msgstr "Region"
 
 #: src/components/MachineActions.tsx
 #: src/pages/MachinePage.tsx
@@ -500,17 +490,14 @@ msgstr "Restore"
 msgid "Restore {name}"
 msgstr "Restore {name}"
 
-#: src/pages/MachinePage.tsx
-msgid "Restored"
-msgstr "Restored"
-
 #: src/components/StatusChip.tsx
 msgid "Restoring"
 msgstr "Restoring"
 
 #: src/components/MachineActions.tsx
-msgid "Restoring {name}"
-msgstr "Restoring {name}"
+#: src/pages/MachinePage.tsx
+msgid "Restoring…"
+msgstr "Restoring…"
 
 #: src/pages/ApiKeysPage.tsx
 msgid "Revoke"
@@ -528,9 +515,33 @@ msgstr "Revoke {name}?"
 msgid "Revoke key"
 msgstr "Revoke key"
 
+#: src/pages/UsagePage.tsx
+msgid "Right now"
+msgstr "Right now"
+
+#: src/pages/MachinePage.tsx
+msgid "Rookbox API keys do not work with the E2B SDK yet. This shows how a machine will be reached once they do. Until then, use the terminal and the desktop here."
+msgstr "Rookbox API keys do not work with the E2B SDK yet. This shows how a machine will be reached once they do. Until then, use the terminal and the desktop here."
+
+#: src/components/ErrorNote.tsx
+msgid "Rookbox can't reach the machine service right now (credentials)."
+msgstr "Rookbox can't reach the machine service right now (credentials)."
+
+#: src/components/ErrorNote.tsx
+msgid "Rookbox can't reach the machine service right now."
+msgstr "Rookbox can't reach the machine service right now."
+
+#: src/pages/LoginPage.tsx
+msgid "Rookbox had a problem. Try again in a minute."
+msgstr "Rookbox had a problem. Try again in a minute."
+
 #: src/components/AppShell.tsx
 msgid "Rookbox home"
 msgstr "Rookbox home"
+
+#: src/pages/ApiKeysPage.tsx
+msgid "Rookbox keys start with <0>rbx_</0> and work with the Rookbox API only. Send one as <1>Authorization: Bearer rbx_…</1>."
+msgstr "Rookbox keys start with <0>rbx_</0> and work with the Rookbox API only. Send one as <1>Authorization: Bearer rbx_…</1>."
 
 #: src/pages/MachinePage.tsx
 msgid "Run"
@@ -542,56 +553,17 @@ msgstr "Run a command to see its output here."
 
 #: src/components/StatusChip.tsx
 #: src/pages/MachinesPage.tsx
+#: src/pages/UsagePage.tsx
 msgid "Running"
 msgstr "Running"
-
-#: src/pages/UsagePage.tsx
-msgid "Running at once"
-msgstr "Running at once"
-
-#: src/pages/UsagePage.tsx
-msgid "Running time"
-msgstr "Running time"
 
 #: src/pages/MachinePage.tsx
 msgid "Runs in a shell as root"
 msgstr "Runs in a shell as root"
 
-#: src/pages/UsagePage.tsx
-msgid "Sample data, not real usage."
-msgstr "Sample data, not real usage."
-
-#: src/pages/UsagePage.tsx
-msgid "Sample data."
-msgstr "Sample data."
-
-#: src/pages/MachinesPage.tsx
-msgid "Sample data. Fork copies the disk, not memory."
-msgstr "Sample data. Fork copies the disk, not memory."
-
-#: src/pages/ApiKeysPage.tsx
-msgid "Sample data. Key format is a placeholder."
-msgstr "Sample data. Key format is a placeholder."
-
-#: src/pages/UsagePage.tsx
-msgid "Sample data. Rates and totals are placeholders."
-msgstr "Sample data. Rates and totals are placeholders."
-
 #: src/pages/MachinePage.tsx
-msgid "Sample data. Values in [brackets] are placeholders."
-msgstr "Sample data. Values in [brackets] are placeholders."
-
-#: src/pages/MachinePage.tsx
-msgid "Sample events"
-msgstr "Sample events"
-
-#: src/pages/MachinePage.tsx
-msgid "Sample snapshots. Snapshots are coming soon."
-msgstr "Sample snapshots. Snapshots are coming soon."
-
-#: src/pages/UsagePage.tsx
-msgid "Sample: 62 percent of credits remaining"
-msgstr "Sample: 62 percent of credits remaining"
+msgid "Saving the machine's memory. This can take up to half a minute."
+msgstr "Saving the machine's memory. This can take up to half a minute."
 
 #: src/components/AppShell.tsx
 msgid "Search"
@@ -614,6 +586,10 @@ msgstr "Show password"
 msgid "Sign in"
 msgstr "Sign in"
 
+#: src/components/ErrorNote.tsx
+msgid "Sign in again to continue."
+msgstr "Sign in again to continue."
+
 #: src/pages/SettingsPage.tsx
 msgid "Sign out"
 msgstr "Sign out"
@@ -627,19 +603,17 @@ msgstr "Signed in as"
 msgid "Size"
 msgstr "Size"
 
-#: src/pages/MachinePage.tsx
-msgid "Sizing"
-msgstr "Sizing"
-
 #: src/components/CreateMachineDialog.tsx
 msgid "Small"
 msgstr "Small"
 
 #: src/components/AppShell.tsx
-#: src/pages/MachinePage.tsx
-#: src/pages/UsagePage.tsx
 msgid "Snapshots"
 msgstr "Snapshots"
+
+#: src/components/ErrorNote.tsx
+msgid "Something went wrong."
+msgstr "Something went wrong."
 
 #: src/components/AppShell.tsx
 #: src/pages/MachinePage.tsx
@@ -662,6 +636,10 @@ msgstr "State filter"
 msgid "Status"
 msgstr "Status"
 
+#: src/components/CreateMachineDialog.tsx
+msgid "Still working. It's almost there."
+msgstr "Still working. It's almost there."
+
 #: src/components/MachineActions.tsx
 #: src/pages/MachinePage.tsx
 msgid "Suspend"
@@ -671,23 +649,28 @@ msgstr "Suspend"
 msgid "Suspend {name}"
 msgstr "Suspend {name}"
 
+#: src/components/CreateMachineDialog.tsx
+msgid "Suspend when idle"
+msgstr "Suspend when idle"
+
 #: src/components/StatusChip.tsx
-#: src/pages/MachinePage.tsx
 #: src/pages/MachinesPage.tsx
+#: src/pages/UsagePage.tsx
 msgid "Suspended"
 msgstr "Suspended"
-
-#: src/pages/UsagePage.tsx
-msgid "Suspended time"
-msgstr "Suspended time"
 
 #: src/components/StatusChip.tsx
 msgid "Suspending"
 msgstr "Suspending"
 
 #: src/components/MachineActions.tsx
-msgid "Suspending {name}, memory is being saved"
-msgstr "Suspending {name}, memory is being saved"
+#: src/pages/MachinePage.tsx
+msgid "Suspending…"
+msgstr "Suspending…"
+
+#: src/pages/MachinePage.tsx
+msgid "Suspends after"
+msgstr "Suspends after"
 
 #: src/components/AppShell.tsx
 msgid "Switch to dark theme"
@@ -702,11 +685,6 @@ msgid "System"
 msgstr "System"
 
 #: src/pages/MachinePage.tsx
-msgid "Take snapshot"
-msgstr "Take snapshot"
-
-#: src/components/CreateMachineDialog.tsx
-#: src/pages/MachinePage.tsx
 #: src/pages/MachinesPage.tsx
 msgid "Template"
 msgstr "Template"
@@ -715,68 +693,105 @@ msgstr "Template"
 msgid "Terminal"
 msgstr "Terminal"
 
-#: src/components/MachineActions.tsx
-#: src/pages/MachinePage.tsx
-msgid "That didn't work. Try again."
-msgstr "That didn't work. Try again."
+#: src/components/CreateMachineDialog.tsx
+msgid "Terminal only"
+msgstr "Terminal only"
+
+#: src/components/ErrorNote.tsx
+msgid "That machine doesn't exist anymore."
+msgstr "That machine doesn't exist anymore."
+
+#: src/components/ErrorNote.tsx
+msgid "That template isn't available."
+msgstr "That template isn't available."
 
 #: src/components/CreateMachineDialog.tsx
-msgid "The computer-use image."
-msgstr "The computer-use image."
+msgid "The desktop image built for AI agents that use a screen."
+msgstr "The desktop image built for AI agents that use a screen."
 
-#: src/pages/ApiKeysPage.tsx
-msgid "The key wasn't created. Try again."
-msgstr "The key wasn't created. Try again."
-
-#: src/pages/ApiKeysPage.tsx
-msgid "The key wasn't revoked. Try again."
-msgstr "The key wasn't revoked. Try again."
-
-#: src/pages/MachinePage.tsx
-msgid "The machine didn't load."
-msgstr "The machine didn't load."
+#: src/components/CreateMachineDialog.tsx
+msgid "The first start of a template can take about 15 seconds."
+msgstr "The first start of a template can take about 15 seconds."
 
 #: src/pages/MachinePage.tsx
 msgid "The machine has to be running."
 msgstr "The machine has to be running."
 
-#: src/components/CreateMachineDialog.tsx
-msgid "The machine wasn't created. Try again."
-msgstr "The machine wasn't created. Try again."
+#: src/components/ErrorNote.tsx
+msgid "The machine may still be getting ready. Look at the list in a moment before you try again."
+msgstr "The machine may still be getting ready. Look at the list in a moment before you try again."
+
+#: src/components/ErrorNote.tsx
+msgid "The machine service had a problem."
+msgstr "The machine service had a problem."
+
+#: src/components/ErrorNote.tsx
+msgid "The machine service is busy right now."
+msgstr "The machine service is busy right now."
+
+#: src/components/ErrorNote.tsx
+msgid "The machine service took too long to answer."
+msgstr "The machine service took too long to answer."
+
+#: src/components/ErrorNote.tsx
+msgid "The machine's state doesn't allow that right now."
+msgstr "The machine's state doesn't allow that right now."
+
+#: src/components/ErrorNote.tsx
+msgid "There's no room for another machine at the moment. Try again in a minute."
+msgstr "There's no room for another machine at the moment. Try again in a minute."
+
+#: src/pages/ApiKeysPage.tsx
+msgid "These keys do not work with the E2B SDK yet. Support for it is coming soon. We store only a hash of each key, so a key is shown once."
+msgstr "These keys do not work with the E2B SDK yet. Support for it is coming soon. We store only a hash of each key, so a key is shown once."
+
+#: src/components/ErrorNote.tsx
+msgid "This is a setup problem on our side, not yours. Try again in a minute. If it keeps happening, tell the administrator."
+msgstr "This is a setup problem on our side, not yours. Try again in a minute. If it keeps happening, tell the administrator."
 
 #: src/pages/ApiKeysPage.tsx
 msgid "This is the only time it is shown. If you lose it, revoke it and create a new one."
 msgstr "This is the only time it is shown. If you lose it, revoke it and create a new one."
 
 #: src/pages/MachinePage.tsx
-msgid "This machine doesn't exist."
-msgstr "This machine doesn't exist."
-
-#: src/pages/MachinePage.tsx
 msgid "Timed out"
 msgstr "Timed out"
 
+#: src/pages/LoginPage.tsx
+msgid "Too many attempts. Try again in {minutes} min."
+msgstr "Too many attempts. Try again in {minutes} min."
+
 #: src/pages/MachinesPage.tsx
+#: src/pages/UsagePage.tsx
 msgid "Total"
 msgstr "Total"
 
-#: src/pages/MachinesPage.tsx
+#: src/App.tsx
+#: src/components/ErrorNote.tsx
+#: src/components/MachineActions.tsx
 msgid "Try again"
 msgstr "Try again"
 
-#: src/components/AppShell.tsx
-#: src/pages/UsagePage.tsx
-msgid "Upgrade plan"
-msgstr "Upgrade plan"
+#: src/components/ErrorNote.tsx
+msgid "Try again in a minute."
+msgstr "Try again in a minute."
+
+#: src/components/ErrorNote.tsx
+msgid "Try again. If it keeps happening, tell the administrator."
+msgstr "Try again. If it keeps happening, tell the administrator."
+
+#: src/components/CreateMachineDialog.tsx
+msgid "Type"
+msgstr "Type"
 
 #: src/components/AppShell.tsx
 #: src/pages/UsagePage.tsx
 msgid "Usage and billing"
 msgstr "Usage and billing"
 
-#: src/pages/UsagePage.tsx
-msgid "Usage didn't load."
-msgstr "Usage didn't load."
+#: src/pages/ApiKeysPage.tsx
+msgid "Use it as a bearer token against the Rookbox API. It does not work with the E2B SDK yet."
+msgstr "Use it as a bearer token against the Rookbox API. It does not work with the E2B SDK yet."
 
 #: src/components/CreateMachineDialog.tsx
 msgid "Use lowercase letters, digits and dashes."
@@ -786,13 +801,13 @@ msgstr "Use lowercase letters, digits and dashes."
 msgid "Use the account you were given."
 msgstr "Use the account you were given."
 
-#: src/pages/UsagePage.tsx
-msgid "Used first, then the card on file is charged. Sample meter."
-msgstr "Used first, then the card on file is charged. Sample meter."
-
 #: src/components/CreateMachineDialog.tsx
 msgid "vCPU"
 msgstr "vCPU"
+
+#: src/components/ErrorNote.tsx
+msgid "Wait for it to finish what it's doing, then try again."
+msgstr "Wait for it to finish what it's doing, then try again."
 
 #: src/components/AppShell.tsx
 msgid "Webhooks"
@@ -802,6 +817,18 @@ msgstr "Webhooks"
 msgid "Workspace"
 msgstr "Workspace"
 
-#: src/components/AppShell.tsx
-msgid "Workspace switcher, coming soon"
-msgstr "Workspace switcher, coming soon"
+#: src/components/ErrorNote.tsx
+msgid "You've reached your limit of {limit} machines."
+msgstr "You've reached your limit of {limit} machines."
+
+#: src/components/ErrorNote.tsx
+msgid "You've reached your machine limit."
+msgstr "You've reached your machine limit."
+
+#: src/components/ErrorNote.tsx
+msgid "Your session ended."
+msgstr "Your session ended."
+
+#: src/pages/LoginPage.tsx
+msgid "Your session ended. Sign in again to continue."
+msgstr "Your session ended. Sign in again to continue."

@@ -1,10 +1,10 @@
-import type { ExecResult } from "@rookbox/contracts";
+import type { ExecResult, MachineTemplate } from "@rookbox/contracts";
 import type { ApiKeyRow, ApiKeyStore } from "./api-keys.js";
 import { silentLogger } from "./logger.js";
 import { createMachineService } from "./machines/service.js";
 import type { MachineOp } from "./machines/state.js";
 import { DuplicateNameError, type MachineRow, type MachineStore } from "./machines/store.js";
-import type { SandboxInfo, SpaceClient, SpaceState } from "./space/client.js";
+import type { SandboxInfo, SpaceClient, SpaceProbe, SpaceState } from "./space/client.js";
 import { SpaceError } from "./space/client.js";
 
 export function memoryMachineStore(): MachineStore & { rows: Map<string, MachineRow> } {
@@ -63,6 +63,7 @@ export function fakeSpace() {
     calls: typeof calls;
     execResult: ExecResult;
     killOutcome: "deleted" | "queued";
+    probeResult: SpaceProbe;
   } = {
     sandboxes,
     calls,
@@ -107,6 +108,16 @@ export function fakeSpace() {
       sandboxes.set(child, { ...source, id: child, state: "running", metadata: {} });
       return { id: child };
     },
+    probeResult: {
+      keyConfigured: true,
+      reachable: true,
+      statusClass: "2xx",
+      auth: "ok",
+      ms: 1,
+    },
+    async probe() {
+      return space.probeResult;
+    },
     async kill(id) {
       record("kill", id);
       if (!sandboxes.has(id)) return "missing";
@@ -125,7 +136,9 @@ export function fakeSpace() {
   return space;
 }
 
-export function newMachineService(overrides: { maxMachinesPerUser?: number } = {}) {
+export function newMachineService(
+  overrides: { maxMachinesPerUser?: number; templates?: MachineTemplate[] } = {},
+) {
   const store = memoryMachineStore();
   const space = fakeSpace();
   const service = createMachineService({
@@ -134,7 +147,8 @@ export function newMachineService(overrides: { maxMachinesPerUser?: number } = {
     logger: silentLogger,
     e2bDomain: "box.example.test",
     apiOrigin: "https://api.example.test",
-    idleTimeoutS: 900,
+    templates: overrides.templates ?? ["desktop", "corvo-computer", "seed"],
+    defaultIdleTimeoutS: 900,
     maxMachinesPerUser: overrides.maxMachinesPerUser ?? 10,
     random: () => 0.5,
   });

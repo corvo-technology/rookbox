@@ -1,5 +1,6 @@
 import { SIZE_PRESETS } from "@rookbox/contracts";
 import { describe, expect, it } from "vitest";
+import { SpaceError } from "../space/client.js";
 import { newMachineService } from "../test-support.js";
 import { MachineError, OWNER_TAG } from "./service.js";
 
@@ -47,7 +48,70 @@ describe("create", () => {
       service.create("alice", { name: "two", template: "seed", size: small }),
     );
     expect(error).toBeInstanceOf(MachineError);
-    expect((error as MachineError).code).toBe("CONFLICT");
+    expect((error as MachineError).code).toBe("MACHINE_LIMIT");
+    expect((error as MachineError).data).toEqual({ limit: 1 });
+  });
+
+  it("refuses a name the account already uses", async () => {
+    const { service } = newMachineService();
+    await service.create("alice", { name: "one", template: "seed", size: small });
+    const error = await failure(
+      service.create("alice", { name: "one", template: "seed", size: small }),
+    );
+    expect((error as MachineError).code).toBe("NAME_TAKEN");
+  });
+
+  it("holds two creates at once to the machine cap", async () => {
+    const { service, space } = newMachineService({ maxMachinesPerUser: 1 });
+    const results = await Promise.allSettled([
+      service.create("alice", { name: "a", template: "seed", size: small }),
+      service.create("alice", { name: "b", template: "seed", size: small }),
+    ]);
+    expect(results.map((r) => r.status).sort()).toEqual(["fulfilled", "rejected"]);
+    expect(space.calls.filter((c) => c.op === "create")).toHaveLength(1);
+  });
+
+  it("frees the cap when a machine's sandbox is already gone", async () => {
+    const { service, space } = newMachineService({ maxMachinesPerUser: 1 });
+    const first = await service.create("alice", { name: "a", template: "seed", size: small });
+    space.sandboxes.delete(first.id);
+    const second = await service.create("alice", { name: "b", template: "seed", size: small });
+    expect(second.name).toBe("b");
+  });
+
+  it("only offers the templates the deployment allows", async () => {
+    const { service, space } = newMachineService({ templates: ["seed"] });
+    const error = await failure(
+      service.create("alice", { name: "d", template: "desktop", size: small }),
+    );
+    expect((error as MachineError).code).toBe("TEMPLATE_UNAVAILABLE");
+    expect(space.calls.some((c) => c.op === "create")).toBe(false);
+    expect(service.config().templates).toEqual(["seed"]);
+  });
+
+  it("applies the requested idle timeout, and keeps it for restore and fork", async () => {
+    const { service, space } = newMachineService();
+    const machine = await service.create("alice", {
+      name: "m",
+      template: "seed",
+      size: small,
+      idleTimeoutS: 3600,
+    });
+    expect(machine.idleTimeoutS).toBe(3600);
+    const create = space.calls.find((c) => c.op === "create")?.args[0] as { timeoutS: number };
+    expect(create.timeoutS).toBe(3600);
+    await service.suspend("alice", machine.id);
+    await service.restore("alice", machine.id);
+    expect(space.calls.find((c) => c.op === "restore")?.args[1]).toBe(3600);
+    const fork = await service.fork("alice", { id: machine.id });
+    expect(fork.idleTimeoutS).toBe(3600);
+    expect(space.calls.find((c) => c.op === "fork")?.args[1]).toBe(3600);
+  });
+
+  it("uses the deployment's idle timeout when the request has none", async () => {
+    const { service } = newMachineService();
+    const machine = await service.create("alice", { name: "m", template: "seed", size: small });
+    expect(machine.idleTimeoutS).toBe(900);
   });
 
   it("kills the sandbox when it cannot be recorded", async () => {
@@ -60,7 +124,7 @@ describe("create", () => {
       service.create("alice", { name: "dup", template: "seed", size: small }),
     );
     store.listByOwner = original;
-    expect((error as MachineError).code).toBe("CONFLICT");
+    expect((error as MachineError).code).toBe("NAME_TAKEN");
     expect(space.calls.some((c) => c.op === "kill")).toBe(true);
   });
 });
@@ -105,6 +169,7 @@ describe("owner filtering", () => {
       name: "stolen",
       template: "seed",
       size: small,
+      idleTimeoutS: 900,
       forkedFrom: null,
     });
     space.sandboxes.set(bobs.id + "x", { ...space.sandboxes.get(bobs.id)!, id: bobs.id + "x" });
@@ -172,6 +237,54 @@ describe("state mapping and lifecycle", () => {
     space.killOutcome = "queued";
     await service.delete("alice", b.id);
     expect((await service.get("alice", b.id)).status).toBe("deleting");
+  });
+});
+
+describe("SPACE failures", () => {
+  const cases: [SpaceError, string][] = [
+    [new SpaceError(401, "Invalid or missing API key"), "HOST_AUTH"],
+    [new SpaceError(403, "forbidden"), "HOST_AUTH"],
+    [new SpaceError(0, "down", "UNREACHABLE"), "HOST_UNREACHABLE"],
+    [new SpaceError(0, "slow", "TIMEOUT"), "HOST_TIMEOUT"],
+    [new SpaceError(504, "gateway"), "HOST_TIMEOUT"],
+    [new SpaceError(503, "no room"), "HOST_CAPACITY"],
+    [new SpaceError(429, "slow down"), "HOST_CAPACITY"],
+    [new SpaceError(429, "sandbox quota reached"), "HOST_QUOTA"],
+    [new SpaceError(404, "no template", "TEMPLATE_NOT_FOUND"), "TEMPLATE_UNAVAILABLE"],
+    [new SpaceError(500, "boom at 10.0.0.7"), "HOST_ERROR"],
+  ];
+
+  it.each(cases)("maps %s to a coded error with a generic message", async (upstream, code) => {
+    const { space, service } = newMachineService();
+    space.create = async () => {
+      throw upstream;
+    };
+    const error = (await failure(
+      service.create("alice", { name: "m", template: "seed", size: small }),
+    )) as MachineError;
+    expect(error).toBeInstanceOf(MachineError);
+    expect(error.code).toBe(code);
+    expect(error.message).not.toContain(upstream.message);
+  });
+
+  it("keeps a timed-out suspend marked in flight, since SPACE may still finish it", async () => {
+    const { space, service } = newMachineService();
+    const machine = await service.create("alice", { name: "m", template: "seed", size: small });
+    space.suspend = async () => {
+      throw new SpaceError(0, "slow", "TIMEOUT");
+    };
+    await failure(service.suspend("alice", machine.id));
+    expect((await service.get("alice", machine.id)).status).toBe("suspending");
+  });
+
+  it("clears the in-flight mark when SPACE refuses outright", async () => {
+    const { space, service } = newMachineService();
+    const machine = await service.create("alice", { name: "m", template: "seed", size: small });
+    space.suspend = async () => {
+      throw new SpaceError(500, "boom");
+    };
+    await failure(service.suspend("alice", machine.id));
+    expect((await service.get("alice", machine.id)).status).toBe("running");
   });
 });
 

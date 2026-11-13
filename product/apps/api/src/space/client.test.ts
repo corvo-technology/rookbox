@@ -9,12 +9,20 @@ type Call = {
   signal: AbortSignal | null | undefined;
 };
 
-function client(respond: (call: Call) => Response) {
+function client(
+  respond: (call: Call) => Response | Promise<Response>,
+  extra: Partial<Parameters<typeof createEcwClient>[0]> = {},
+) {
   const calls: Call[] = [];
+  const waits: number[] = [];
   const space = createEcwClient({
+    sleep: async (ms) => {
+      waits.push(ms);
+    },
     baseUrl: "https://api.box.example.test/",
     apiKey: "service-key",
     domain: "box.example.test",
+    ...extra,
     fetch: async (url, init) => {
       const call = {
         url: String(url),
@@ -27,7 +35,7 @@ function client(respond: (call: Call) => Response) {
       return respond(call);
     },
   });
-  return { space, calls };
+  return { space, calls, waits };
 }
 
 const json = (body: unknown, init: ResponseInit = {}) =>
@@ -126,6 +134,130 @@ function frame(flags: number, payload: unknown) {
   return Buffer.concat([head, body]);
 }
 const b64 = (text: string) => Buffer.from(text).toString("base64");
+
+describe("failures and retries", () => {
+  it("classifies SPACE statuses", () => {
+    expect(new SpaceError(401, "Invalid or missing API key").code).toBe("AUTH");
+    expect(new SpaceError(409, "x").code).toBe("CONFLICT");
+    expect(new SpaceError(503, "x").code).toBe("CAPACITY");
+    expect(new SpaceError(429, "x").code).toBe("CAPACITY");
+    expect(new SpaceError(429, "quota exceeded").code).toBe("QUOTA");
+    expect(new SpaceError(504, "x").code).toBe("TIMEOUT");
+    expect(new SpaceError(500, "x").code).toBe("UPSTREAM");
+  });
+
+  it("reads a missing template from a 404 on create", async () => {
+    const { space } = client(() => json({ message: "template not found" }, { status: 404 }));
+    await expect(
+      space.create({
+        templateId: "nope",
+        metadata: {},
+        timeoutS: 900,
+        size: { vcpu: 1, memoryMib: 512, diskMib: 1024 },
+      }),
+    ).rejects.toMatchObject({ code: "TEMPLATE_NOT_FOUND" });
+  });
+
+  it("retries a read after a 503, waiting for Retry-After", async () => {
+    let n = 0;
+    const { space, calls, waits } = client(() =>
+      ++n < 3
+        ? json({ message: "busy" }, { status: 503, headers: { "retry-after": "1" } })
+        : json({ sandboxID: "s", state: "running", templateID: "seed" }),
+    );
+    expect((await space.get("s"))?.state).toBe("running");
+    expect(calls).toHaveLength(3);
+    expect(waits).toEqual([1000, 1000]);
+  });
+
+  it("gives up after the bounded retries, with the last error", async () => {
+    const { space, calls } = client(() => json({ message: "busy" }, { status: 502 }), {
+      retries: 2,
+    });
+    await expect(space.get("s")).rejects.toMatchObject({ status: 502, code: "UPSTREAM" });
+    expect(calls).toHaveLength(3);
+  });
+
+  it("retries a network failure on a read, then reports SPACE as unreachable", async () => {
+    let n = 0;
+    const { space } = client(() => {
+      n += 1;
+      throw new TypeError("fetch failed");
+    });
+    await expect(space.get("s")).rejects.toMatchObject({ code: "UNREACHABLE", status: 0 });
+    expect(n).toBe(3);
+  });
+
+  it("does not retry a call that is not safe to repeat", async () => {
+    const { space, calls } = client(() => json({ message: "busy" }, { status: 503 }));
+    await expect(space.suspend("s")).rejects.toMatchObject({ code: "CAPACITY" });
+    await expect(
+      space.create({
+        templateId: "seed",
+        metadata: {},
+        timeoutS: 900,
+        size: { vcpu: 1, memoryMib: 512, diskMib: 1024 },
+      }),
+    ).rejects.toMatchObject({ code: "CAPACITY" });
+    expect(calls).toHaveLength(2);
+  });
+
+  it("does not retry a refusal such as bad credentials", async () => {
+    const { space, calls } = client(() =>
+      json({ message: "Invalid or missing API key" }, { status: 401 }),
+    );
+    await expect(space.get("s")).rejects.toMatchObject({ code: "AUTH" });
+    expect(calls).toHaveLength(1);
+  });
+
+  it("times out a slow answer and reports it as a timeout", async () => {
+    const { space } = client(
+      (call) =>
+        new Promise<Response>((_, reject) => {
+          call.signal?.addEventListener("abort", () => reject(call.signal?.reason));
+        }),
+      { readTimeoutMs: 20, retries: 0 },
+    );
+    await expect(space.get("s")).rejects.toMatchObject({ code: "TIMEOUT" });
+  });
+
+  it("forks with one idempotency key across retries", async () => {
+    let n = 0;
+    const { space, calls } = client(() =>
+      ++n === 1 ? json({}, { status: 503 }) : json([{ sandboxID: "child" }], { status: 201 }),
+    );
+    expect(await space.fork("s", 900)).toEqual({ id: "child" });
+    const keys = calls.map((c) => c.headers.get("idempotency-key"));
+    expect(keys[0]).toBeTruthy();
+    expect(keys[1]).toBe(keys[0]);
+  });
+
+  it("probes with the key and reports only the status class", async () => {
+    const { space, calls } = client(() =>
+      json({ message: "Invalid or missing API key" }, { status: 401 }),
+    );
+    expect(await space.probe()).toMatchObject({
+      keyConfigured: true,
+      reachable: true,
+      statusClass: "4xx",
+      auth: "rejected",
+    });
+    expect(calls[0]!.headers.get("x-api-key")).toBe("service-key");
+  });
+
+  it("probes without a key and says it is missing", async () => {
+    const { space, calls } = client(() => json({}, { status: 401 }), { apiKey: "" });
+    expect(await space.probe()).toMatchObject({ keyConfigured: false, auth: "missing" });
+    expect(calls[0]!.headers.has("x-api-key")).toBe(false);
+  });
+
+  it("probes an unreachable SPACE without throwing", async () => {
+    const { space } = client(() => {
+      throw new TypeError("fetch failed");
+    });
+    expect(await space.probe()).toMatchObject({ reachable: false, statusClass: null });
+  });
+});
 
 describe("exec through envd", () => {
   it("sends a Connect frame to the process service and gathers output and exit code", async () => {
