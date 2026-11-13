@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import "../styles/landing.css";
 import type { Locale } from "../i18n/locales";
 import {
   LOCALES,
@@ -65,5 +66,8 @@ const image = new URL("/og.png", site).toString();
   <body>
     <a class="skip-link" href="#main">{skipLabel}</a>
     <slot />
+    <script>
+      import "../scripts/page";
+    </script>
   </body>
 </html>

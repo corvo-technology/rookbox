@@ -9,19 +9,32 @@ export type Copy = {
     home: string;
     menu: string;
     product: string;
+    desktop: string;
     lifecycle: string;
     e2b: string;
-    docs: string;
-    getStarted: string;
+    quickstart: string;
+    dashboard: string;
   };
   hero: {
     eyebrow: string;
     title: string;
     lead: string;
     start: string;
-    watch: string;
-    /** Measured facts, shown under the buttons. */
-    facts: string;
+    quickstart: string;
+    /** Three short facts shown under the buttons. */
+    facts: [string, string, string];
+  };
+  /** The machines-list picture next to the headline. Every name in it is made up. */
+  visual: {
+    illustration: string;
+    title: string;
+    newMachine: string;
+    running: string;
+    suspended: string;
+    starting: string;
+    columns: { name: string; status: string; size: string; created: string };
+    ages: [string, string, string, string];
+    publicUrl: string;
   };
   demo: {
     eyebrow: string;
@@ -32,9 +45,30 @@ export type Copy = {
     steps: { label: string; note: string }[];
     note: string;
     /** Comments inside the sample session. */
-    session: { ready: string; pause: string; saved: string };
+    session: { ready: string; pause: string; saved: string; resumed: string };
+  };
+  desktop: {
+    eyebrow: string;
+    title: string;
+    lead: string;
+    illustration: string;
+    points: [string, string, string];
+    terminal: string;
+    browser: string;
+    viewer: string;
   };
   features: {
+    eyebrow: string;
+    title: string;
+    items: { title: string; body: string }[];
+  };
+  lifecycle: {
+    eyebrow: string;
+    title: string;
+    lead: string;
+    cards: { state: string; value: string; title: string; body: string }[];
+  };
+  usecases: {
     eyebrow: string;
     title: string;
     items: { title: string; body: string }[];
@@ -50,32 +84,34 @@ export type Copy = {
     keyLine: string;
     keyLink: string;
   };
-  lifecycle: {
+  quickstart: {
     eyebrow: string;
     title: string;
     lead: string;
-    cards: { value: string; title: string; body: string }[];
+    languageLabel: string;
+    steps: { title: string; body: string }[];
+    keyLine: string;
+    keyLink: string;
+    note: string;
   };
   cta: {
     eyebrow: string;
     title: string;
     lead: string;
     start: string;
-    docs: string;
+    quickstart: string;
   };
   footer: {
     languages: string;
     nav: string;
     tagline: string;
-    builtOn: string;
-    spaceName: string;
-    license: string;
     product: string;
     howItWorks: string;
+    desktop: string;
     lifecycle: string;
     dashboard: string;
     developers: string;
-    docs: string;
-    github: string;
+    quickstart: string;
+    e2b: string;
   };
 };
