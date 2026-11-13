@@ -4,18 +4,21 @@ import type { Locale } from "../i18n/locales";
 import { DEFAULT_LOCALE, isLocale, localeHomePath } from "../i18n/locales";
 import { rich } from "../i18n/rich";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { DASHBOARD_URL, DOCS_URL, SDK_DOMAIN } from "../site";
-import { buildE2bSnippets, buildSessions } from "../snippets";
+import { DASHBOARD_URL, SDK_DOMAIN } from "../site";
+import { buildE2bSnippets, buildQuickstart, buildSessions } from "../snippets";
 import { E2bSnippet } from "./E2bSnippet";
 import Footer from "./Footer.astro";
 import Header from "./Header.astro";
+import { MachinesMock } from "./MachinesMock";
+import { Quickstart } from "./Quickstart";
 import { SessionDemo } from "./SessionDemo";
 
 const locale: Locale = isLocale(Astro.currentLocale) ? Astro.currentLocale : DEFAULT_LOCALE;
 const copy = getCopy(locale);
-const { hero, demo, features, e2b, lifecycle, cta } = copy;
+const { hero, visual, demo, desktop, features, lifecycle, usecases, e2b, quickstart, cta } = copy;
 const sessions = buildSessions(SDK_DOMAIN, demo.session);
 const e2bSnippets = buildE2bSnippets(SDK_DOMAIN);
+const quickstartCode = buildQuickstart(SDK_DOMAIN);
 
 const ICONS = [
   // Own kernel
@@ -28,10 +31,9 @@ const ICONS = [
   '<circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c3 3 3 13 0 16M12 4c-3 3-3 13 0 16"/>',
   // Exec
   '<path d="M5 7l5 5-5 5M12 18h7"/>',
-  // Desktop
-  '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',
+  // Size
+  '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
 ];
-const LIFECYCLE_BARS = [100, 60, 50, 75];
 ---
 
 <BaseLayout
@@ -47,46 +49,99 @@ const LIFECYCLE_BARS = [100, 60, 50, 75];
     <section class="hero" aria-labelledby="hero-title">
       <div class="wrap hero__wrap">
         <div class="hero__copy">
-          <p class="eyebrow">{hero.eyebrow}</p>
-          <h1 id="hero-title" class="hd">{hero.title}</h1>
-          <p class="lead">{hero.lead}</p>
-          <div class="ctas">
+          <p class="eyebrow hero__in" style="--i:0"><span class="live-dot" aria-hidden="true"></span>{hero.eyebrow}</p>
+          <h1 id="hero-title" class="hd hero__in" style="--i:1">{hero.title}</h1>
+          <p class="lead hero__in" style="--i:2">{hero.lead}</p>
+          <div class="ctas hero__in" style="--i:3">
             <a class="btn btn--pri" href={DASHBOARD_URL}>{hero.start}</a>
-            <a class="btn" href="#how">{hero.watch}</a>
+            <a class="btn" href="#start">{hero.quickstart}</a>
           </div>
-          <p class="hero__facts">{hero.facts}</p>
+          <ul class="facts hero__in" style="--i:4">
+            {hero.facts.map((fact) => <li>{fact}</li>)}
+          </ul>
+        </div>
+        <div class="hero__visual hero__in" style="--i:2">
+          <MachinesMock client:load copy={visual} />
         </div>
       </div>
     </section>
 
     <section class="sec sec--alt" id="how" aria-labelledby="how-title">
       <div class="wrap">
-        <div class="shead">
+        <div class="shead" data-reveal>
           <p class="eyebrow">{demo.eyebrow}</p>
           <h2 id="how-title" class="sh">{demo.title}</h2>
           <p class="lead">{demo.lead}</p>
         </div>
-        <SessionDemo
-          client:visible
-          sessions={sessions}
-          steps={demo.steps}
-          languageLabel={demo.languageLabel}
-          terminalLabel={demo.terminalLabel}
-        />
+        <div data-reveal>
+          <SessionDemo
+            client:visible
+            sessions={sessions}
+            steps={demo.steps}
+            languageLabel={demo.languageLabel}
+            terminalLabel={demo.terminalLabel}
+          />
+        </div>
         <p class="fine demo-note">{demo.note}</p>
       </div>
     </section>
 
-    <section class="sec" id="features" aria-labelledby="features-title">
+    <section class="sec" id="desktop" aria-labelledby="desktop-title">
+      <div class="wrap desk">
+        <div class="desk__copy" data-reveal>
+          <p class="eyebrow">{desktop.eyebrow}</p>
+          <h2 id="desktop-title" class="sh">{desktop.title}</h2>
+          <p class="lead">{desktop.lead}</p>
+          <ul class="ticks">
+            {desktop.points.map((point) => <li>{point}</li>)}
+          </ul>
+        </div>
+        <figure class="dk" data-reveal style="--d:120ms">
+          <div class="dk__frame" role="img" aria-label={desktop.illustration}>
+            <div class="mm__bar">
+              <span class="mm__dots" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span class="mm__url mono">{desktop.viewer}</span>
+              <span class="pill">{visual.illustration}</span>
+            </div>
+            <div class="dk__screen" aria-hidden="true">
+              <div class="dk__task">
+                <span class="dk__apps"><i></i><i></i><i></i></span>
+                <span class="dk__clock">09:41</span>
+              </div>
+              <div class="dk__win dk__win--term">
+                <div class="dk__title"><span>{desktop.terminal}</span></div>
+                <div class="dk__term mono">
+                  <div><span class="mm__prompt">$</span> python3 -m http.server 3000</div>
+                  <div class="dim">Serving HTTP on 0.0.0.0 port 3000</div>
+                  <div><span class="mm__prompt">$</span> <span class="cursor"></span></div>
+                </div>
+              </div>
+              <div class="dk__win dk__win--web">
+                <div class="dk__title"><span>{desktop.browser}</span></div>
+                <div class="dk__url mono">localhost:3000</div>
+                <div class="dk__load"><span></span></div>
+                <div class="dk__page">
+                  <b></b><i></i><i></i><i class="short"></i>
+                </div>
+              </div>
+              <svg class="dk__cursor" width="18" height="18" viewBox="0 0 24 24"><path d="M5 3l14 8-6 1.5L9.5 19z" fill="#0a0a0a" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"></path></svg>
+            </div>
+          </div>
+          <figcaption class="fine">{desktop.illustration}</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="sec sec--alt" id="features" aria-labelledby="features-title">
       <div class="wrap">
-        <div class="shead">
+        <div class="shead" data-reveal>
           <p class="eyebrow">{features.eyebrow}</p>
           <h2 id="features-title" class="sh">{features.title}</h2>
         </div>
         <div class="cards">
           {
             features.items.map((item, i) => (
-              <article class="card">
+              <article class="card" data-reveal style={`--d:${(i % 3) * 70}ms`}>
                 <div class="ico">
                   <svg
                     width="22"
@@ -110,44 +165,78 @@ const LIFECYCLE_BARS = [100, 60, 50, 75];
       </div>
     </section>
 
-    <section class="sec sec--alt" id="e2b" aria-labelledby="e2b-title">
-      <div class="wrap">
-        <div class="env">
-          <div>
-            <p class="eyebrow">{e2b.eyebrow}</p>
-            <h2 id="e2b-title" class="sh">{e2b.title}</h2>
-            <p class="lead">{e2b.lead}</p>
-            <p class="fine env__note" set:html={rich(e2b.envLine)} />
-            <p class="fine env__note">{e2b.keyLine} <a class="env__link" href={DASHBOARD_URL}>{e2b.keyLink}</a></p>
-          </div>
-          <E2bSnippet
-            client:visible
-            snippets={e2bSnippets}
-            languageLabel={e2b.languageLabel}
-            before={e2b.before}
-            after={e2b.after}
-          />
-        </div>
-      </div>
-    </section>
-
     <section class="sec" id="lifecycle" aria-labelledby="lifecycle-title">
       <div class="wrap">
-        <div class="shead">
+        <div class="shead" data-reveal>
           <p class="eyebrow">{lifecycle.eyebrow}</p>
           <h2 id="lifecycle-title" class="sh">{lifecycle.title}</h2>
           <p class="lead">{lifecycle.lead}</p>
         </div>
-        <div class="lc">
+        <ol class="lt" data-reveal data-track>
           {
             lifecycle.cards.map((card, i) => (
-              <article class="lcc">
-                <span class="lcc__t">{card.value}</span>
-                <h3>{card.title}</h3>
-                <p>{card.body}</p>
-                <div class="bar" aria-hidden="true">
-                  <span style={`width:${LIFECYCLE_BARS[i]}%`} />
+              <li class={`lt__item lt__item--${i}`} style={`--k:${i}`}>
+                <div class="lt__rail" aria-hidden="true">
+                  <span class="lt__node"></span>
+                  <span class="lt__line"></span>
                 </div>
+                <span class="lt__state">{card.state}</span>
+                <article class="lcc">
+                  <span class="lcc__t">{card.value}</span>
+                  <h3>{card.title}</h3>
+                  <p>{card.body}</p>
+                </article>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+    </section>
+
+    <section class="sec sec--alt" id="usecases" aria-labelledby="usecases-title">
+      <div class="wrap">
+        <div class="shead" data-reveal>
+          <p class="eyebrow">{usecases.eyebrow}</p>
+          <h2 id="usecases-title" class="sh">{usecases.title}</h2>
+        </div>
+        <div class="uc">
+          {
+            usecases.items.map((item, i) => (
+              <article class="ucc" data-reveal style={`--d:${(i % 2) * 70}ms`}>
+                <div class={`ucv ucv--${i}`} aria-hidden="true">
+                  {i === 0 && (
+                    <div class="ucv__win">
+                      <div class="ucv__bar"><i></i><i></i><i></i><span></span></div>
+                      <div class="ucv__page"><b></b><i></i><i class="short"></i><em></em></div>
+                    </div>
+                  )}
+                  {i === 1 && (
+                    <div class="ucv__code mono">
+                      <div><span class="mm__prompt">$</span> python run.py</div>
+                      <div class="dim">3 passed</div>
+                      <div class="ok">exit 0</div>
+                    </div>
+                  )}
+                  {i === 2 && (
+                    <div class="ucv__time">
+                      <span class="seg seg--on"></span>
+                      <span class="seg seg--off"></span>
+                      <span class="seg seg--on seg--short"></span>
+                      <span class="seg seg--off seg--short"></span>
+                      <span class="seg seg--on"></span>
+                    </div>
+                  )}
+                  {i === 3 && (
+                    <div class="ucv__tree">
+                      <span class="n n--root"></span>
+                      <span class="n n--a"></span>
+                      <span class="n n--b"></span>
+                      <span class="n n--c"></span>
+                    </div>
+                  )}
+                </div>
+                <h3>{item.title}</h3>
+                <p>{item.body}</p>
               </article>
             ))
           }
@@ -155,15 +244,59 @@ const LIFECYCLE_BARS = [100, 60, 50, 75];
       </div>
     </section>
 
-    <section class="sec sec--cta" id="start" aria-labelledby="cta-title">
+    <section class="sec" id="e2b" aria-labelledby="e2b-title">
       <div class="wrap">
-        <div class="cta">
+        <div class="env">
+          <div data-reveal>
+            <p class="eyebrow">{e2b.eyebrow}</p>
+            <h2 id="e2b-title" class="sh">{e2b.title}</h2>
+            <p class="lead">{e2b.lead}</p>
+            <p class="fine env__note" set:html={rich(e2b.envLine)} />
+            <p class="fine env__note">{e2b.keyLine} <a class="env__link" href={DASHBOARD_URL}>{e2b.keyLink}</a></p>
+          </div>
+          <div data-reveal style="--d:100ms">
+            <E2bSnippet
+              client:visible
+              snippets={e2bSnippets}
+              languageLabel={e2b.languageLabel}
+              before={e2b.before}
+              after={e2b.after}
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec sec--alt" id="start" aria-labelledby="start-title">
+      <div class="wrap">
+        <div class="shead" data-reveal>
+          <p class="eyebrow">{quickstart.eyebrow}</p>
+          <h2 id="start-title" class="sh">{quickstart.title}</h2>
+          <p class="lead">{quickstart.lead}</p>
+        </div>
+        <div data-reveal>
+          <Quickstart
+            client:visible
+            code={quickstartCode}
+            steps={quickstart.steps}
+            languageLabel={quickstart.languageLabel}
+          />
+        </div>
+        <p class="fine demo-note">
+          {quickstart.keyLine} <a class="env__link" href={DASHBOARD_URL}>{quickstart.keyLink}</a>. {quickstart.note}
+        </p>
+      </div>
+    </section>
+
+    <section class="sec sec--cta" id="pricing" aria-labelledby="cta-title">
+      <div class="wrap">
+        <div class="cta" data-reveal>
           <p class="cta__eyebrow">{cta.eyebrow}</p>
           <h2 id="cta-title" class="sh">{cta.title}</h2>
-          <p set:html={rich(cta.lead)} />
+          <p>{cta.lead}</p>
           <div class="cta__actions">
             <a class="btn btn--accent" href={DASHBOARD_URL}>{cta.start}</a>
-            <a class="btn btn--ghost" href={DOCS_URL}>{cta.docs}</a>
+            <a class="btn btn--ghost" href="#start">{cta.quickstart}</a>
           </div>
         </div>
       </div>

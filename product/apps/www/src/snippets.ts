@@ -21,6 +21,8 @@ export function buildSessions(domain: string, s: Copy["demo"]["session"]): Sessi
       [2, host, "o"],
       [3, `sbx.pause()  # ${s.pause}`, "c"],
       [3, `# ${s.saved}`, "m"],
+      [4, "sbx = Sandbox.connect(sbx.sandbox_id)", "c"],
+      [4, `# ${s.resumed}`, "m"],
     ],
     ts: [
       [0, 'const sbx = await Sandbox.create("seed")', "c"],
@@ -31,6 +33,8 @@ export function buildSessions(domain: string, s: Copy["demo"]["session"]): Sessi
       [2, host, "o"],
       [3, `await sbx.pause()  // ${s.pause}`, "c"],
       [3, `// ${s.saved}`, "m"],
+      [4, "await Sandbox.connect(sbx.sandboxId)", "c"],
+      [4, `// ${s.resumed}`, "m"],
     ],
   };
 }
@@ -48,5 +52,29 @@ export function buildE2bSnippets(domain: string): E2bSnippets {
       before: "const sbx = await Sandbox.create({\n  apiKey: API_KEY,\n})",
       after: `const sbx = await Sandbox.create({\n  domain: "${domain}",\n  apiKey: API_KEY,\n})`,
     },
+  };
+}
+
+/** One code block per quickstart step, in the order of `copy.quickstart.steps`. */
+export type QuickstartCode = Record<"py" | "ts", string[]>;
+
+/** Only calls that exist in the E2B SDK: create, commands.run, get_host / getHost. */
+export function buildQuickstart(domain: string): QuickstartCode {
+  const env = `export E2B_DOMAIN=${domain}\nexport E2B_API_KEY=your-api-key`;
+  return {
+    py: [
+      "pip install e2b",
+      env,
+      'from e2b import Sandbox\n\nsbx = Sandbox.create(template="seed")',
+      'result = sbx.commands.run("echo hello from a machine")\nprint(result.stdout)',
+      'sbx.commands.run("python3 -m http.server 3000", background=True)\nprint(sbx.get_host(3000))',
+    ],
+    ts: [
+      "npm install e2b",
+      env,
+      'import { Sandbox } from "e2b"\n\nconst sbx = await Sandbox.create("seed")',
+      'const result = await sbx.commands.run("echo hello from a machine")\nconsole.log(result.stdout)',
+      'await sbx.commands.run("python3 -m http.server 3000", { background: true })\nconsole.log(sbx.getHost(3000))',
+    ],
   };
 }

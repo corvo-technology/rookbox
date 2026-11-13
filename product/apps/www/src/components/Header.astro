@@ -1,6 +1,6 @@
 ---
 import type { Copy } from "../i18n/copy";
-import { DASHBOARD_URL, DOCS_URL } from "../site";
+import { DASHBOARD_URL } from "../site";
 import Logo from "./Logo.astro";
 
 type Props = {
@@ -12,26 +12,29 @@ const { copy, homeHref } = Astro.props;
 
 const NAV_LINKS = [
   { href: "#how", label: copy.product },
+  { href: "#desktop", label: copy.desktop },
   { href: "#lifecycle", label: copy.lifecycle },
   { href: "#e2b", label: copy.e2b },
-  { href: DOCS_URL, label: copy.docs },
+  { href: "#start", label: copy.quickstart },
 ];
 ---
 
-<header class="nav">
+<header class="nav" data-nav>
   <div class="wrap nav__row">
     <Logo href={homeHref} label={copy.home} />
     <nav class="nav__links" aria-label={copy.primary}>
       {NAV_LINKS.map((link) => <a href={link.href}>{link.label}</a>)}
     </nav>
     <div class="nav__actions">
-      <a class="btn btn--pri" href={DASHBOARD_URL}>{copy.getStarted}</a>
+      <a class="btn btn--pri" href={DASHBOARD_URL}>{copy.dashboard}</a>
       <details class="site-menu" data-site-menu>
         <summary class="site-menu__toggle" aria-label={copy.menu}>
-          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7h14M3 13h14"></path></svg>
+          <svg class="mi mi--open" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7h14M3 13h14"></path></svg>
+          <svg class="mi mi--close" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15"></path></svg>
         </summary>
         <nav class="site-menu__panel" aria-label={copy.primary}>
           {NAV_LINKS.map((link) => <a href={link.href}>{link.label}</a>)}
+          <a class="site-menu__cta" href={DASHBOARD_URL}>{copy.dashboard}</a>
         </nav>
       </details>
     </div>
