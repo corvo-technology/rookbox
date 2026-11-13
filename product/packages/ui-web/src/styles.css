@@ -1,0 +1,43 @@
+@import "tw-animate-css";
+@import "./shadcn.css";
+@import "./theme.css";
+
+@source "./**/*.{ts,tsx}";
+
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+/* Native <details> fold-outs slide open and closed instead of snapping. */
+@media (prefers-reduced-motion: no-preference) {
+  :root {
+    interpolate-size: allow-keywords;
+  }
+  details::details-content {
+    block-size: 0;
+    overflow: clip;
+    /* Keep focus rings of full-width controls visible. */
+    overflow-clip-margin: 4px;
+    transition:
+      block-size 150ms ease-out,
+      content-visibility 150ms allow-discrete;
+  }
+  details[open]::details-content {
+    block-size: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse,
+  .animate-bounce {
+    animation: none;
+  }
+
+  /* A spinner keeps turning, slowly, because it is the only sign that work is running. */
+  .animate-spin {
+    animation-duration: 2.5s;
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalPassThroughEnv": ["WWW_URL", "WEB_URL", "PLAYWRIGHT_CHANNEL"],
+  "tasks": {
+    "generate": {
+      "cache": false
+    },
+    "build": {
+      "dependsOn": ["^build", "^generate"],
+      "env": ["PUBLIC_DASHBOARD_URL"],
+      "outputs": ["dist/**"]
+    },
+    "check": {
+      "dependsOn": ["^check", "^generate", "generate"]
+    },
+    "test": {
+      "dependsOn": ["^generate"],
+      "outputs": ["coverage/**"]
+    },
+    "dev": {
+      "cache": false,
+      "env": ["PUBLIC_DASHBOARD_URL"],
+      "persistent": true
+    }
+  }
+}

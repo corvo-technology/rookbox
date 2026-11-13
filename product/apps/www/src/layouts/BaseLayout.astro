@@ -1,0 +1,60 @@
+---
+import "../styles/global.css";
+import type { Locale } from "../i18n/locales";
+import {
+  LOCALES,
+  LOCALE_HREFLANG,
+  LOCALE_HTML_LANG,
+  LOCALE_OG,
+  localeHomePath,
+} from "../i18n/locales";
+import { SITE_NAME } from "../site";
+
+type Props = {
+  title: string;
+  description: string;
+  locale: Locale;
+  skipLabel: string;
+};
+
+const { title, description, locale, skipLabel } = Astro.props;
+const site = Astro.site ?? new URL("https://box.example.com");
+const canonical = new URL(Astro.url.pathname, site).toString();
+---
+
+<!doctype html>
+<html lang={LOCALE_HTML_LANG[locale]}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0b0b0c" media="(prefers-color-scheme: dark)" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:locale" content={LOCALE_OG[locale]} />
+    <link rel="canonical" href={canonical} />
+    {
+      LOCALES.map((item) => (
+        <link
+          rel="alternate"
+          hreflang={LOCALE_HREFLANG[item]}
+          href={new URL(localeHomePath(item), site).toString()}
+        />
+      ))
+    }
+    <link rel="alternate" hreflang="x-default" href={new URL("/", site).toString()} />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href="/fonts/instrument-sans-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <title>{title}</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">{skipLabel}</a>
+    <slot />
+  </body>
+</html>
