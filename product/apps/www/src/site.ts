@@ -9,7 +9,3 @@ const DASHBOARD_BASE: string = import.meta.env.PUBLIC_DASHBOARD_URL ?? "https://
 export const DASHBOARD_URL = new URL(
   DASHBOARD_BASE.endsWith("/") ? DASHBOARD_BASE : `${DASHBOARD_BASE}/`,
 ).href;
-
-export const REPO_URL = "https://github.com/corvo-technology/rookbox";
-export const DOCS_URL = `${REPO_URL}/tree/main/docs`;
-export const SPACE_URL = "https://github.com/perplexityai/SPACE";
