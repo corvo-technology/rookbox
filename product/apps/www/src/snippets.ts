@@ -13,7 +13,7 @@ export function buildSessions(domain: string, s: Copy["demo"]["session"]): Sessi
   const host = `3000-<sandbox-id>.${domain}`;
   return {
     py: [
-      [0, 'sbx = Sandbox.create(template="base")', "c"],
+      [0, 'sbx = Sandbox.create(template="seed")', "c"],
       [0, `# ${s.ready}`, "m"],
       [1, 'sbx.commands.run("uname -sr").stdout', "c"],
       [1, "Linux", "o"],
@@ -23,7 +23,7 @@ export function buildSessions(domain: string, s: Copy["demo"]["session"]): Sessi
       [3, `# ${s.saved}`, "m"],
     ],
     ts: [
-      [0, 'const sbx = await Sandbox.create("base")', "c"],
+      [0, 'const sbx = await Sandbox.create("seed")', "c"],
       [0, `// ${s.ready}`, "m"],
       [1, 'await sbx.commands.run("uname -sr")', "c"],
       [1, "Linux", "o"],
