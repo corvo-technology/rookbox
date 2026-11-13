@@ -84,19 +84,23 @@ export function createFakeApi(options: FakeApiOptions = {}): AppClient {
 
   const add = (fields: {
     name: string;
+    template?: Machine["template"];
     size: MachineSize;
     status: Machine["status"];
     createdAt: Date;
     forkedFrom?: string | null;
   }) => {
+    const machineId = id("m");
     const machine: Machine = {
-      id: id("m"),
+      id: machineId,
       name: uniqueName(fields.name),
-      template: "seed",
+      template: fields.template ?? "seed",
       status: fields.status,
       size: { ...fields.size },
       createdAt: fields.createdAt.toISOString(),
       forkedFrom: fields.forkedFrom ?? null,
+      // The fake has no real host, so there is no desktop to open.
+      access: { desktopUrl: null, portUrlTemplate: `https://{port}-${machineId}.box.example.com` },
     };
     machines.set(machine.id, machine);
     return machine;
@@ -157,6 +161,7 @@ export function createFakeApi(options: FakeApiOptions = {}): AppClient {
           });
         }
         const machine = add({
+          template: input.template,
           name: input.name ?? `machine-${id("x").slice(2, 6)}`,
           size: input.size,
           status: "creating",
@@ -192,6 +197,7 @@ export function createFakeApi(options: FakeApiOptions = {}): AppClient {
         if (!canPerform(source.status, "fork")) throw errors.CONFLICT();
         // Only the disk is copied: the fork boots fresh, whatever the source was doing.
         const fork = add({
+          template: source.template,
           name: input.name ?? `${source.name}-fork`,
           size: source.size,
           status: "creating",
@@ -200,6 +206,21 @@ export function createFakeApi(options: FakeApiOptions = {}): AppClient {
         });
         later(fork.id, "creating", "running");
         return fork;
+      }),
+      exec: os.machines.exec.handler(async ({ input, errors }) => {
+        await latency();
+        const machine = find(input.id);
+        if (!machine) throw errors.NOT_FOUND();
+        if (machine.status !== "running") {
+          throw errors.CONFLICT({ message: "The machine is not running." });
+        }
+        // The fake runs nothing: it echoes the command so the runner can be tried.
+        return {
+          stdout: `(fake) would run: ${input.command}\n`,
+          stderr: "",
+          exitCode: 0,
+          truncated: false,
+        };
       }),
       delete: os.machines.delete.handler(async ({ input, errors }) => {
         await latency();

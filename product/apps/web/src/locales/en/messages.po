@@ -49,6 +49,14 @@ msgstr "{vcpu} vCPU / {memory}"
 msgid "A deleted machine"
 msgstr "A deleted machine"
 
+#: src/pages/MachinePage.tsx
+msgid "A port needs the machine's traffic access token in the e2b-traffic-access-token header, so a browser tab cannot open it directly."
+msgstr "A port needs the machine's traffic access token in the e2b-traffic-access-token header, so a browser tab cannot open it directly."
+
+#: src/pages/SettingsPage.tsx
+msgid "Account"
+msgstr "Account"
+
 #: src/pages/ApiKeysPage.tsx
 #: src/pages/MachinesPage.tsx
 msgid "Actions"
@@ -107,14 +115,18 @@ msgstr "Breadcrumb"
 msgid "By machine"
 msgstr "By machine"
 
+#: src/pages/LoginPage.tsx
+msgid "Can't reach Rookbox. Check your connection and try again."
+msgstr "Can't reach Rookbox. Check your connection and try again."
+
 #: src/components/MachineActions.tsx
 #: src/pages/ApiKeysPage.tsx
 msgid "Cancel"
 msgstr "Cancel"
 
 #: src/pages/MachinePage.tsx
-msgid "Chromium over VNC will appear here."
-msgstr "Chromium over VNC will appear here."
+msgid "Chromium over VNC, in a new tab."
+msgstr "Chromium over VNC, in a new tab."
 
 #: src/components/AppShell.tsx
 msgid "CI"
@@ -125,9 +137,12 @@ msgid "Close menu"
 msgstr "Close menu"
 
 #: src/components/CreateMachineDialog.tsx
-#: src/pages/MachinePage.tsx
 msgid "Coming soon"
 msgstr "Coming soon"
+
+#: src/pages/MachinePage.tsx
+msgid "Command"
+msgstr "Command"
 
 #: src/pages/MachinePage.tsx
 msgid "Connect"
@@ -236,6 +251,19 @@ msgstr "Docs"
 msgid "e.g. ci-runner"
 msgstr "e.g. ci-runner"
 
+#: src/pages/LoginPage.tsx
+msgid "Email"
+msgstr "Email"
+
+#: src/pages/LoginPage.tsx
+msgid "Email or password is wrong."
+msgstr "Email or password is wrong."
+
+#. placeholder {0}: entry.result.exitCode
+#: src/pages/MachinePage.tsx
+msgid "Exit code {0}"
+msgstr "Exit code {0}"
+
 #: src/pages/MachinePage.tsx
 msgid "Expose a port"
 msgstr "Expose a port"
@@ -276,6 +304,10 @@ msgstr "Forked into {name}. The disk was copied, not memory."
 #: src/App.tsx
 msgid "Go to machines"
 msgstr "Go to machines"
+
+#: src/pages/LoginPage.tsx
+msgid "Hide password"
+msgstr "Hide password"
 
 #: src/pages/MachinePage.tsx
 msgid "HTTPS URL issued"
@@ -386,10 +418,6 @@ msgstr "Name"
 msgid "Name it after where it will run, so you can revoke the right one later."
 msgstr "Name it after where it will run, so you can revoke the right one later."
 
-#: src/pages/MachinePage.tsx
-msgid "Needs the desktop template, coming soon."
-msgstr "Needs the desktop template, coming soon."
-
 #: src/pages/ApiKeysPage.tsx
 msgid "Never"
 msgstr "Never"
@@ -424,12 +452,20 @@ msgid "Optional"
 msgstr "Optional"
 
 #: src/pages/MachinePage.tsx
+msgid "Output cut"
+msgstr "Output cut"
+
+#: src/pages/MachinePage.tsx
 msgid "Own, Firecracker microVM"
 msgstr "Own, Firecracker microVM"
 
 #: src/App.tsx
 msgid "Page not found"
 msgstr "Page not found"
+
+#: src/pages/LoginPage.tsx
+msgid "Password"
+msgstr "Password"
 
 #: src/pages/UsagePage.tsx
 msgid "Period"
@@ -446,10 +482,6 @@ msgstr "Port 3000 exposed"
 #: src/pages/MachinePage.tsx
 msgid "Ports"
 msgstr "Ports"
-
-#: src/pages/MachinePage.tsx
-msgid "Preview. Connects over exec."
-msgstr "Preview. Connects over exec."
 
 #: src/components/CreateMachineDialog.tsx
 msgid "RAM (GiB)"
@@ -500,6 +532,14 @@ msgstr "Revoke key"
 msgid "Rookbox home"
 msgstr "Rookbox home"
 
+#: src/pages/MachinePage.tsx
+msgid "Run"
+msgstr "Run"
+
+#: src/pages/MachinePage.tsx
+msgid "Run a command to see its output here."
+msgstr "Run a command to see its output here."
+
 #: src/components/StatusChip.tsx
 #: src/pages/MachinesPage.tsx
 msgid "Running"
@@ -512,6 +552,10 @@ msgstr "Running at once"
 #: src/pages/UsagePage.tsx
 msgid "Running time"
 msgstr "Running time"
+
+#: src/pages/MachinePage.tsx
+msgid "Runs in a shell as root"
+msgstr "Runs in a shell as root"
 
 #: src/pages/UsagePage.tsx
 msgid "Sample data, not real usage."
@@ -542,10 +586,6 @@ msgid "Sample events"
 msgstr "Sample events"
 
 #: src/pages/MachinePage.tsx
-msgid "Sample ports. Exposing a port is coming soon."
-msgstr "Sample ports. Exposing a port is coming soon."
-
-#: src/pages/MachinePage.tsx
 msgid "Sample snapshots. Snapshots are coming soon."
 msgstr "Sample snapshots. Snapshots are coming soon."
 
@@ -565,6 +605,22 @@ msgstr "Secrets"
 #: src/pages/SettingsPage.tsx
 msgid "Settings"
 msgstr "Settings"
+
+#: src/pages/LoginPage.tsx
+msgid "Show password"
+msgstr "Show password"
+
+#: src/pages/LoginPage.tsx
+msgid "Sign in"
+msgstr "Sign in"
+
+#: src/pages/SettingsPage.tsx
+msgid "Sign out"
+msgstr "Sign out"
+
+#: src/pages/SettingsPage.tsx
+msgid "Signed in as"
+msgstr "Signed in as"
 
 #: src/components/CreateMachineDialog.tsx
 #: src/pages/MachinesPage.tsx
@@ -593,6 +649,10 @@ msgstr "Soon"
 #: src/pages/MachinePage.tsx
 msgid "Specs"
 msgstr "Specs"
+
+#: src/pages/MachinePage.tsx
+msgid "Start the machine to run commands."
+msgstr "Start the machine to run commands."
 
 #: src/pages/MachinesPage.tsx
 msgid "State filter"
@@ -656,8 +716,13 @@ msgid "Terminal"
 msgstr "Terminal"
 
 #: src/components/MachineActions.tsx
+#: src/pages/MachinePage.tsx
 msgid "That didn't work. Try again."
 msgstr "That didn't work. Try again."
+
+#: src/components/CreateMachineDialog.tsx
+msgid "The computer-use image."
+msgstr "The computer-use image."
 
 #: src/pages/ApiKeysPage.tsx
 msgid "The key wasn't created. Try again."
@@ -671,6 +736,10 @@ msgstr "The key wasn't revoked. Try again."
 msgid "The machine didn't load."
 msgstr "The machine didn't load."
 
+#: src/pages/MachinePage.tsx
+msgid "The machine has to be running."
+msgstr "The machine has to be running."
+
 #: src/components/CreateMachineDialog.tsx
 msgid "The machine wasn't created. Try again."
 msgstr "The machine wasn't created. Try again."
@@ -682,6 +751,10 @@ msgstr "This is the only time it is shown. If you lose it, revoke it and create 
 #: src/pages/MachinePage.tsx
 msgid "This machine doesn't exist."
 msgstr "This machine doesn't exist."
+
+#: src/pages/MachinePage.tsx
+msgid "Timed out"
+msgstr "Timed out"
 
 #: src/pages/MachinesPage.tsx
 msgid "Total"
@@ -708,6 +781,10 @@ msgstr "Usage didn't load."
 #: src/components/CreateMachineDialog.tsx
 msgid "Use lowercase letters, digits and dashes."
 msgstr "Use lowercase letters, digits and dashes."
+
+#: src/pages/LoginPage.tsx
+msgid "Use the account you were given."
+msgstr "Use the account you were given."
 
 #: src/pages/UsagePage.tsx
 msgid "Used first, then the card on file is charged. Sample meter."

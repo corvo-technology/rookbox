@@ -2,13 +2,23 @@ import * as z from "zod";
 
 export const MachineId = z.string().min(1).max(64);
 
-/** `seed` is the general Linux template. `desktop` (Xvfb, noVNC and Chromium) is not offered yet. */
-export const TEMPLATES = ["seed", "desktop"] as const;
+/**
+ * `seed` is the general Linux template. `desktop` adds Xvfb, noVNC and Chromium. `corvo-computer`
+ * is the computer-use image.
+ */
+export const TEMPLATES = ["seed", "desktop", "corvo-computer"] as const;
 export const MachineTemplate = z.enum(TEMPLATES);
 export type MachineTemplate = z.infer<typeof MachineTemplate>;
 
 /** Templates a machine can be created from today. */
-export const AVAILABLE_TEMPLATES: readonly MachineTemplate[] = ["seed"];
+export const AVAILABLE_TEMPLATES: readonly MachineTemplate[] = [
+  "seed",
+  "desktop",
+  "corvo-computer",
+];
+
+/** Templates that serve a VNC desktop on port 6080. */
+export const DESKTOP_TEMPLATES: readonly MachineTemplate[] = ["desktop", "corvo-computer"];
 
 /**
  * Lifecycle, in SPACE vocabulary: `suspend` keeps the machine's memory and releases the worker,
@@ -69,6 +79,15 @@ export const MachineName = z
   .max(MACHINE_NAME_MAX_LENGTH)
   .regex(/^[a-z0-9][a-z0-9-]*$/, "Use lowercase letters, digits and dashes.");
 
+/** How to reach a machine from outside. */
+export const MachineAccessSchema = z.object({
+  /** Opens the machine's desktop in a browser tab; null unless it is running and has one. */
+  desktopUrl: z.string().nullable(),
+  /** Public URL of a port on the machine: replace `{port}`. */
+  portUrlTemplate: z.string(),
+});
+export type MachineAccess = z.infer<typeof MachineAccessSchema>;
+
 export const MachineSchema = z.object({
   id: MachineId,
   name: MachineName,
@@ -78,6 +97,7 @@ export const MachineSchema = z.object({
   createdAt: z.iso.datetime(),
   /** The machine whose disk this one was copied from. */
   forkedFrom: MachineId.nullable(),
+  access: MachineAccessSchema,
 });
 export type Machine = z.infer<typeof MachineSchema>;
 
@@ -96,6 +116,33 @@ export const ForkMachineInput = z.object({
   name: MachineName.optional(),
 });
 export type ForkMachineInput = z.infer<typeof ForkMachineInput>;
+
+export const EXEC_LIMITS = {
+  commandMaxLength: 8_192,
+  timeoutMs: { min: 1_000, max: 120_000, default: 30_000 },
+} as const;
+
+export const ExecInput = z.object({
+  id: MachineId,
+  command: z.string().min(1).max(EXEC_LIMITS.commandMaxLength),
+  timeoutMs: z
+    .number()
+    .int()
+    .min(EXEC_LIMITS.timeoutMs.min)
+    .max(EXEC_LIMITS.timeoutMs.max)
+    .default(EXEC_LIMITS.timeoutMs.default),
+});
+export type ExecInput = z.infer<typeof ExecInput>;
+
+export const ExecResultSchema = z.object({
+  stdout: z.string(),
+  stderr: z.string(),
+  /** Null when the command was cut off by the timeout. */
+  exitCode: z.number().int().nullable(),
+  /** True when output was longer than the API keeps. */
+  truncated: z.boolean(),
+});
+export type ExecResult = z.infer<typeof ExecResultSchema>;
 
 export const MACHINE_ACTIONS = ["suspend", "restore", "fork", "delete"] as const;
 export type MachineAction = (typeof MACHINE_ACTIONS)[number];

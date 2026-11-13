@@ -112,6 +112,7 @@ export function CreateMachineDialog({
   const templates: { value: MachineTemplate; description: string }[] = [
     { value: "seed", description: t`Linux with root access.` },
     { value: "desktop", description: t`Linux with a desktop and a browser.` },
+    { value: "corvo-computer", description: t`The computer-use image.` },
   ];
 
   return (

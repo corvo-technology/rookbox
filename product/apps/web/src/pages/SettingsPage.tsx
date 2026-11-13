@@ -2,6 +2,7 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import type { AppearancePreference } from "@rookbox/ui-tokens";
 import { APPEARANCE_PREFERENCES, resolveAppearancePreference } from "@rookbox/ui-tokens";
 import {
+  Button,
   Field,
   FieldLabel,
   Select,
@@ -10,9 +11,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@rookbox/ui-web";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { PageHeader } from "../components/PageHeader";
 import { setAppearance } from "../lib/appearance";
+import { AUTH_ENABLED, SESSION_KEY, signOut, useSession } from "../lib/auth";
 import { setUiLocale } from "../lib/i18n";
 import type { UiLocale } from "../lib/ui-locale";
 import { normalizeUiLocale, UI_LOCALE_LABELS, UI_LOCALES } from "../lib/ui-locale";
@@ -82,7 +85,39 @@ export function SettingsPage() {
             </SelectContent>
           </Select>
         </Field>
+        {AUTH_ENABLED ? <Account /> : null}
       </div>
     </div>
+  );
+}
+
+/** Who is signed in, and the way out. Only with the real API: the fake has no accounts. */
+function Account() {
+  const queryClient = useQueryClient();
+  const session = useSession();
+  const [busy, setBusy] = useState(false);
+  return (
+    <section className="flex flex-col gap-3 border-t border-border pt-5">
+      <h2 className="text-body1 font-semibold">
+        <Trans>Account</Trans>
+      </h2>
+      <p className="text-body1 text-muted-foreground">
+        <Trans>Signed in as</Trans> <span className="text-foreground">{session.data?.email}</span>
+      </p>
+      <Button
+        variant="outline"
+        className="h-11 w-fit px-[18px] text-body1 font-semibold"
+        disabled={busy}
+        onClick={async () => {
+          setBusy(true);
+          await signOut();
+          queryClient.clear();
+          queryClient.setQueryData(SESSION_KEY, null);
+          setBusy(false);
+        }}
+      >
+        <Trans>Sign out</Trans>
+      </Button>
+    </section>
   );
 }
