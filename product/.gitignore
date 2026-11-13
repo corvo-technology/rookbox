@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.turbo/
+.astro/
+coverage/
+.screenshots/
+playwright-report/
+test-results/
+*.tsbuildinfo
+.DS_Store
+.env
+.env.*
+# Lingui compiled catalogs (the Vite plugin compiles .po on the fly)
+apps/web/src/locales/**/*.mjs
+apps/web/src/locales/**/*.js

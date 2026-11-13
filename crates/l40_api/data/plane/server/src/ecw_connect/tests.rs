@@ -202,3 +202,51 @@ async fn incremental_connect_stream_decoder_rejects_large_messages() {
         .unwrap_err();
     assert_eq!(error.status, StatusCode::BAD_REQUEST);
 }
+
+async fn connect_error_response(error: fn() -> EcwProxyError) -> (StatusCode, Value) {
+    use tower::ServiceExt;
+
+    let app = axum::Router::new()
+        .route(
+            "/",
+            axum::routing::post(move || async move { Err::<(), _>(error()) }),
+        )
+        .route_layer(axum::middleware::from_fn(connect_error_code));
+    let response = app
+        .oneshot(
+            axum::http::Request::post("/")
+                .body(Body::empty())
+                .expect("request"),
+        )
+        .await
+        .expect("response");
+    let status = response.status();
+    let body = to_bytes(response.into_body(), 1024 * 1024)
+        .await
+        .expect("body");
+    (status, serde_json::from_slice(&body).expect("JSON body"))
+}
+
+/// A missing path is a 404 from the guest. A Connect client derives
+/// `unimplemented` from a bare 404, so the body must name `not_found`.
+#[tokio::test]
+async fn connect_route_not_found_names_the_not_found_code() {
+    let (status, body) = connect_error_response(|| {
+        tonic_status_to_ecw_error(tonic::Status::not_found(
+            "No such file or directory (os error 2)",
+        ))
+    })
+    .await;
+    assert_eq!(status, StatusCode::NOT_FOUND);
+    assert_eq!(body["code"], "not_found");
+    assert_eq!(body["message"], "No such file or directory (os error 2)");
+}
+
+#[tokio::test]
+async fn connect_route_other_errors_keep_the_numeric_code() {
+    let (status, body) =
+        connect_error_response(|| tonic_status_to_ecw_error(tonic::Status::invalid_argument("x")))
+            .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert_eq!(body["code"], 400);
+}
