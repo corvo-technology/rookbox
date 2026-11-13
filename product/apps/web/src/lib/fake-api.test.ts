@@ -99,12 +99,24 @@ describe("fake api", () => {
     expect(await call(client.machines.list())).toEqual([]);
   });
 
-  it("will not create from a template that is not offered yet", async () => {
+  it("creates from any offered template and keeps it", async () => {
     const client = api();
-    const failure = await call(
+    const created = await call(
       client.machines.create({ template: "desktop", size: SIZE_PRESETS.small }),
-    ).catch((error: unknown) => error);
-    expect(codeOf(failure)).toBe("CONFLICT");
+    );
+    expect(created.template).toBe("desktop");
+    expect(created.access.portUrlTemplate).toContain("{port}");
+  });
+
+  it("runs commands only in running machines", async () => {
+    const client = api();
+    const created = await call(
+      client.machines.create({ template: "seed", size: SIZE_PRESETS.small }),
+    );
+    const early = await call(client.machines.exec({ id: created.id, command: "uname" })).catch(
+      (error: unknown) => error,
+    );
+    expect(codeOf(early)).toBe("CONFLICT");
   });
 
   it("validates input against the contract", async () => {

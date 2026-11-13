@@ -10,3 +10,12 @@ export function useSizeText() {
     return t`${vcpu} vCPU · ${memory} RAM · ${disk} disk`;
   };
 }
+
+/** "4 vCPU / 8 GiB", for table rows. */
+export function useShortSizeText() {
+  const { t, i18n } = useLingui();
+  return (size: MachineSize) => {
+    const { vcpu, memory } = sizeParts(size, i18n.locale);
+    return t`${vcpu} vCPU / ${memory}`;
+  };
+}

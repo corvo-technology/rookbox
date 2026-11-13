@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { formatDay, formatMib, formatRelative, sizeParts } from "./format";
+import {
+  chartCeiling,
+  formatDay,
+  formatDayShort,
+  formatMib,
+  formatRelative,
+  sizeParts,
+} from "./format";
 
 describe("format", () => {
   it("shows memory and disk in GiB from 1 GiB up", () => {
@@ -26,5 +33,16 @@ describe("format", () => {
 
   it("reads a usage day in UTC", () => {
     expect(formatDay("2026-03-10", "en")).toBe("Tue, Mar 10");
+    expect(formatDayShort("2026-03-10", "en")).toBe("Mar 10");
+    expect(formatDayShort("2026-03-10", "pt-BR")).toBe("10 de mar.");
+  });
+
+  it("rounds a chart ceiling up to a tidy step", () => {
+    expect(chartCeiling(33)).toBe(40);
+    expect(chartCeiling(40)).toBe(40);
+    expect(chartCeiling(0)).toBe(20);
+    expect(chartCeiling(7.2)).toBe(20);
+    expect(chartCeiling(91)).toBe(100);
+    expect(chartCeiling(41)).toBe(60);
   });
 });

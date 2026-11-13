@@ -7,6 +7,7 @@ separate from the Rust SPACE workspace around it.
 | --- | --- |
 | `apps/www` | Marketing site: Astro, React islands, Tailwind v4, sitemap. English, Brazilian Portuguese (`/pt/`) and Spanish (`/es/`). |
 | `apps/web` | Dashboard: Vite, React, React Router, TanStack Query, shadcn/ui on Base UI, Tailwind v4, Lingui (en, pt-BR, es). |
+| `apps/api` | The product API: Hono, oRPC, Prisma + Postgres, better-auth. Runs machines on SPACE through its E2B-compatible API. See `DEPLOY.md` and `apps/api/.env.example`. |
 | `packages/contracts` | The dashboard's oRPC contract (machines, API keys, usage) and the machine lifecycle rules. |
 | `packages/ui-tokens` | Semantic colour tokens; `src/index.ts` generates `src/tokens.css`. |
 | `packages/ui-web` | Vendored shadcn/ui components on Base UI, plus the shared theme CSS. |
@@ -48,20 +49,42 @@ installed Google Chrome through Playwright and writes PNGs to `.screenshots/` (i
   them. Calls answer after a simulated 180 to 520 ms, and machines move through the lifecycle on
   their own (`creating` to `running`, `suspending` to `suspended`, `restoring` to `running`,
   `deleting` to gone). State resets on reload. `apps/web/src/lib/api.ts` is the only place that
-  chooses the client: swap it for `createORPCClient(new RPCLink(...))` once the Hono/oRPC API
-  exists.
-- **Sample data.** The dashboard starts with three made-up machines and one key. Usage numbers
-  are generated per day and the page labels them "Sample data".
-- **No auth, no database, no backend server** in this round.
+  chooses the client: with `VITE_API_URL` set the dashboard talks to the real API in `apps/api`
+  (and shows a sign-in screen); without it, it runs on this fake, with no sign-in. Fake machines
+  run no commands and have no desktop.
+- **Sample data.** The fake starts with three made-up machines and one key. Usage numbers are
+  generated per day, in the fake and in the real API, and the page labels them "Sample data".
+
+## Run the real API locally
+
+Needs a Postgres and a SPACE (or any ECW-compatible endpoint). Copy `apps/api/.env.example` to
+`apps/api/.env`, fill it in, then:
+
+```bash
+pnpm --filter @rookbox/api dev                     # http://127.0.0.1:3000, runs migrations first
+VITE_API_URL=http://127.0.0.1:3000 pnpm --filter @rookbox/web dev
+```
+
+Set `ROOKBOX_SEED_OWNER_PASSWORD` once to create the owner account. `DEPLOY.md` covers the
+deployment and what is not done yet (Rookbox API keys are not E2B keys).
 - **Placeholders:** the domain `box.example.com` (SDK snippets, site URL, sitemap), the
-  `ROOKBOX_API_KEY` variable name, and the Docs, Pricing, Changelog, About, Privacy and Terms
-  links (anchors until those pages exist). The `desktop` template is shown as coming soon and
-  cannot be selected; "Open desktop" is disabled.
+  `ROOKBOX_API_KEY` variable name, the Docs, Changelog, Status, API reference, Rook, Privacy and
+  Terms links (anchors until those pages exist), and every `[BRACKETED]` value on the landing
+  (plans, prices, legal line, free-credit offer, fleet-count endpoint; see
+  `apps/www/src/placeholders.ts`) and in the dashboard (workspace, plan, limits, credits, region,
+  snapshot sizes). Sidebar entries without a screen (Snapshots, Secrets, Webhooks, CI, Members)
+  are marked "Soon" and are not links. The `desktop` template is coming soon and cannot be
+  selected; "Open desktop" is disabled. The landing's "machines running" counter is illustrative
+  demo data and says so.
+- **The logo.** Not chosen yet. `apps/www/src/components/Logo.astro` and
+  `apps/web/src/components/Logo.tsx` hold a plain "Rookbox" wordmark, and both apps'
+  `public/favicon.svg` is a placeholder "R". Replace those files to ship a mark.
 
 ## Design
 
 Follows Rook's `DESIGN.md`: monochrome ink and paper, one green (the dark theme's primary),
-Instrument Sans, hairline borders, no gradients or glow, light and dark following the system.
+Instrument Sans, hairline borders, no gradients or glow. The dashboard follows the system theme
+and has a toggle in the top bar; the landing is light.
 Components use semantic tokens only.
 
 ## Origin and licences
