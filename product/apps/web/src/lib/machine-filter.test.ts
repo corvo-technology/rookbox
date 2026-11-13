@@ -10,6 +10,7 @@ function machine(id: string, name: string, status: Machine["status"]): Machine {
     template: "seed",
     status,
     size: { ...SIZE_PRESETS.small },
+    idleTimeoutS: 900,
     createdAt: "2026-01-01T00:00:00.000Z",
     forkedFrom: null,
     access: { desktopUrl: null, portUrlTemplate: "https://{port}-x.box.example.com" },

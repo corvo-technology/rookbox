@@ -101,6 +101,8 @@ model Machine {
   vcpu      Int
   memoryMib Int
   diskMib   Int
+  /// Seconds without activity before SPACE suspends the machine.
+  idleTimeoutS Int @default(900)
   forkedFrom String?
   /// `suspending`, `restoring` or `deleting` while that call is in flight.
   op        String?

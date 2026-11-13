@@ -1,8 +1,8 @@
-import { createRouterClient, implement } from "@orpc/server";
-import type { ApiKey, AppClient, Machine, MachineSize, UsageDay } from "@rookbox/contracts";
+import { createRouterClient, implement, ORPCError } from "@orpc/server";
+import type { ApiErrorCode, ApiKey, AppClient, Machine, MachineSize } from "@rookbox/contracts";
 import {
+  API_ERRORS,
   API_KEY_PREFIX,
-  AVAILABLE_TEMPLATES,
   appContract,
   canPerform,
   MACHINE_NAME_MAX_LENGTH,
@@ -18,8 +18,12 @@ import {
 export type FakeApiOptions = {
   /** Range of the delay before each answer, in milliseconds. */
   latencyMs?: readonly [number, number];
-  /** How long a machine stays in a transitional state. */
+  /** How long a machine stays in a transitional state (suspending, restoring, deleting). */
   stepMs?: number;
+  /** How long a create waits before it answers, like a template's first boot. */
+  createMs?: number;
+  /** Fail every create with this error, to see how the screens report it. */
+  failCreateWith?: ApiErrorCode;
   now?: () => Date;
   random?: () => number;
   /** Start with a few sample machines and a key. */
@@ -28,25 +32,18 @@ export type FakeApiOptions = {
 
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
+const MAX_MACHINES = 10;
 
 function sleep(ms: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms));
-}
-
-/** A steady number in [0, 1) from a string, so the sample usage is the same on every load. */
-function hash01(value: string) {
-  let hash = 2166136261;
-  for (let i = 0; i < value.length; i += 1) {
-    hash ^= value.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
-  }
-  return (hash >>> 0) / 2 ** 32;
 }
 
 export function createFakeApi(options: FakeApiOptions = {}): AppClient {
   const {
     latencyMs = [180, 520],
     stepMs = 1_600,
+    createMs = 0,
+    failCreateWith,
     now = () => new Date(),
     random = Math.random,
     seed = false,
@@ -89,6 +86,7 @@ export function createFakeApi(options: FakeApiOptions = {}): AppClient {
     status: Machine["status"];
     createdAt: Date;
     forkedFrom?: string | null;
+    idleTimeoutS?: number;
   }) => {
     const machineId = id("m");
     const machine: Machine = {
@@ -97,6 +95,7 @@ export function createFakeApi(options: FakeApiOptions = {}): AppClient {
       template: fields.template ?? "seed",
       status: fields.status,
       size: { ...fields.size },
+      idleTimeoutS: fields.idleTimeoutS ?? 900,
       createdAt: fields.createdAt.toISOString(),
       forkedFrom: fields.forkedFrom ?? null,
       // The fake has no real host, so there is no desktop to open.
@@ -153,42 +152,53 @@ export function createFakeApi(options: FakeApiOptions = {}): AppClient {
         if (!machine) throw errors.NOT_FOUND();
         return machine;
       }),
-      create: os.machines.create.handler(async ({ input, errors }) => {
+      create: os.machines.create.handler(async ({ input }) => {
         await latency();
-        if (!AVAILABLE_TEMPLATES.includes(input.template)) {
-          throw errors.CONFLICT({
-            message: `The ${input.template} template is not available yet.`,
+        if (failCreateWith) {
+          throw new ORPCError(failCreateWith, { status: API_ERRORS[failCreateWith].status });
+        }
+        if (machines.size >= MAX_MACHINES) {
+          throw new ORPCError("MACHINE_LIMIT", {
+            status: API_ERRORS.MACHINE_LIMIT.status,
+            data: { limit: MAX_MACHINES },
           });
         }
-        const machine = add({
+        const name = input.name ?? `machine-${id("x").slice(2, 6)}`;
+        if ([...machines.values()].some((machine) => machine.name === name)) {
+          throw new ORPCError("NAME_TAKEN", { status: API_ERRORS.NAME_TAKEN.status });
+        }
+        // Like the real API, the answer comes once the machine is up.
+        if (createMs > 0) await sleep(createMs);
+        return add({
           template: input.template,
-          name: input.name ?? `machine-${id("x").slice(2, 6)}`,
+          name,
           size: input.size,
-          status: "creating",
+          idleTimeoutS: input.idleTimeoutS,
+          status: "running",
           createdAt: now(),
         });
-        later(machine.id, "creating", "running");
-        return machine;
       }),
       suspend: os.machines.suspend.handler(async ({ input, errors }) => {
         await latency();
         const machine = find(input.id);
         if (!machine) throw errors.NOT_FOUND();
         if (!canPerform(machine.status, "suspend")) throw errors.CONFLICT();
-        const next = { ...machine, status: "suspending" as const };
-        machines.set(next.id, next);
-        later(next.id, "suspending", "suspended");
-        return next;
+        machines.set(machine.id, { ...machine, status: "suspending" });
+        await sleep(stepMs);
+        const done = { ...machine, status: "suspended" as const };
+        machines.set(done.id, done);
+        return done;
       }),
       restore: os.machines.restore.handler(async ({ input, errors }) => {
         await latency();
         const machine = find(input.id);
         if (!machine) throw errors.NOT_FOUND();
         if (!canPerform(machine.status, "restore")) throw errors.CONFLICT();
-        const next = { ...machine, status: "restoring" as const };
-        machines.set(next.id, next);
-        later(next.id, "restoring", "running");
-        return next;
+        machines.set(machine.id, { ...machine, status: "restoring" });
+        await sleep(stepMs);
+        const done = { ...machine, status: "running" as const };
+        machines.set(done.id, done);
+        return done;
       }),
       fork: os.machines.fork.handler(async ({ input, errors }) => {
         await latency();
@@ -200,11 +210,11 @@ export function createFakeApi(options: FakeApiOptions = {}): AppClient {
           template: source.template,
           name: input.name ?? `${source.name}-fork`,
           size: source.size,
-          status: "creating",
+          idleTimeoutS: source.idleTimeoutS,
+          status: "running",
           createdAt: now(),
           forkedFrom: source.id,
         });
-        later(fork.id, "creating", "running");
         return fork;
       }),
       exec: os.machines.exec.handler(async ({ input, errors }) => {
@@ -258,18 +268,15 @@ export function createFakeApi(options: FakeApiOptions = {}): AppClient {
         return { ok: true as const };
       }),
     },
-    usage: {
-      summary: os.usage.summary.handler(async ({ input }) => {
+    config: {
+      get: os.config.get.handler(async () => {
         await latency();
-        const today = Date.UTC(now().getUTCFullYear(), now().getUTCMonth(), now().getUTCDate());
-        const days: UsageDay[] = Array.from({ length: input.days }, (_, index) => {
-          const date = new Date(today - (input.days - 1 - index) * DAY).toISOString().slice(0, 10);
-          const weekday = new Date(`${date}T00:00:00Z`).getUTCDay();
-          const quiet = weekday === 0 || weekday === 6 ? 0.35 : 1;
-          return { date, machineHours: Math.round(hash01(date) * 48 * quiet * 10) / 10 };
-        });
-        const total = days.reduce((sum, day) => sum + day.machineHours, 0);
-        return { days, totalMachineHours: Math.round(total * 10) / 10, sample: true };
+        return {
+          templates: ["desktop", "corvo-computer", "seed"],
+          maxMachines: MAX_MACHINES,
+          defaultIdleTimeoutS: 900,
+          domain: "box.example.com",
+        };
       }),
     },
   });

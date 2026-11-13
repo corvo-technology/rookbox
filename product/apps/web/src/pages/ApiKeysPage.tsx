@@ -28,12 +28,12 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-  toast,
 } from "@rookbox/ui-web";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { CopyButton } from "../components/CopyButton";
+import { ErrorNote, useToastError } from "../components/ErrorNote";
 import { PageHeader } from "../components/PageHeader";
 import { orpc } from "../lib/api";
 import { formatDate, formatRelative } from "../lib/format";
@@ -46,11 +46,12 @@ function CreateKeyDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const { t } = useLingui();
+  const toastError = useToastError();
   const queryClient = useQueryClient();
   const [name, setName] = useState("");
   const create = useMutation(
     orpc.apiKeys.create.mutationOptions({
-      onError: () => toast.error(t`The key wasn't created. Try again.`),
+      onError: toastError,
       onSettled: () => queryClient.invalidateQueries({ queryKey: orpc.apiKeys.key() }),
     }),
   );
@@ -86,7 +87,10 @@ function CreateKeyDialog({
               <CopyButton value={secret} label={t`Copy key`} />
             </div>
             <p className="text-label text-muted-foreground">
-              <Trans>Demo key, generated locally.</Trans>
+              <Trans>
+                Use it as a bearer token against the Rookbox API. It does not work with the E2B SDK
+                yet.
+              </Trans>
             </p>
             <DialogFooter>
               <Button onClick={() => close(false)}>
@@ -140,11 +144,12 @@ function CreateKeyDialog({
 
 function RevokeKey({ apiKey }: { apiKey: ApiKey }) {
   const { t } = useLingui();
+  const toastError = useToastError();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const revoke = useMutation(
     orpc.apiKeys.revoke.mutationOptions({
-      onError: () => toast.error(t`The key wasn't revoked. Try again.`),
+      onError: toastError,
       onSettled: () => queryClient.invalidateQueries({ queryKey: orpc.apiKeys.key() }),
     }),
   );
@@ -206,20 +211,26 @@ export function ApiKeysPage() {
           </Button>
         }
       />
-      <p className="max-w-[640px] text-muted-foreground">
-        <Trans>
-          Keys authenticate the E2B SDK. Set one as your API key and point{" "}
-          <span className="font-mono text-foreground">E2B_DOMAIN</span> at your Rookbox domain. We
-          store only a hash, so a key is shown once.
-        </Trans>
-      </p>
+      <div className="flex max-w-[640px] flex-col gap-2 text-muted-foreground">
+        <p>
+          <Trans>
+            Rookbox keys start with <span className="font-mono text-foreground">rbx_</span> and work
+            with the Rookbox API only. Send one as{" "}
+            <span className="font-mono text-foreground">Authorization: Bearer rbx_…</span>.
+          </Trans>
+        </p>
+        <p className="rounded-xl border border-border bg-card p-3 text-body2 text-foreground">
+          <Trans>
+            These keys do not work with the E2B SDK yet. Support for it is coming soon. We store
+            only a hash of each key, so a key is shown once.
+          </Trans>
+        </p>
+      </div>
 
       {keys.isPending ? (
         <Skeleton className="h-24 w-full rounded-lg" />
       ) : keys.isError ? (
-        <p className="text-body1 text-muted-foreground">
-          <Trans>Keys didn't load.</Trans>
-        </p>
+        <ErrorNote error={keys.error} onRetry={() => keys.refetch()} />
       ) : keys.data.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-border px-6 py-12 text-center text-body1 text-muted-foreground">
           <Trans>No keys yet</Trans>
@@ -275,9 +286,6 @@ export function ApiKeysPage() {
         </div>
       )}
 
-      <p className="text-label text-muted-foreground">
-        <Trans>Sample data. Key format is a placeholder.</Trans>
-      </p>
       <CreateKeyDialog open={creating} onOpenChange={setCreating} />
     </div>
   );

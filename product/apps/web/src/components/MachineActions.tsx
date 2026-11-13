@@ -16,69 +16,110 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  Spinner,
   toast,
 } from "@rookbox/ui-web";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Ellipsis, GitFork, Pause, Play, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { orpc } from "../lib/api";
+import { api, orpc } from "../lib/api";
+import { useErrorText } from "./ErrorNote";
 
-/** Suspend, restore, fork and delete, each refreshing every machine screen when it lands. */
-export function useMachineActions() {
+/** Every machine action shares this key prefix, so screens can tell one is in flight and poll. */
+export const MACHINE_ACTION_KEY = "machine-action";
+
+export type MachineActionsState = ReturnType<typeof useMachineActions>;
+
+/**
+ * Suspend, restore, fork and delete for one machine. Each call can take a while (a suspend takes
+ * 18 to 24 seconds), so the hook reports which action is in flight, and a failure stays on the
+ * machine with a way to try again instead of vanishing in a toast.
+ */
+export function useMachineActions(machine: Machine) {
   const { t } = useLingui();
   const queryClient = useQueryClient();
-  const refresh = () => queryClient.invalidateQueries({ queryKey: orpc.machines.key() });
-  const failed = () => toast.error(t`That didn't work. Try again.`);
+  const [failure, setFailure] = useState<{ action: MachineAction; error: unknown } | null>(null);
+  const { name } = machine;
 
-  const suspend = useMutation(
-    orpc.machines.suspend.mutationOptions({
-      onSettled: refresh,
-      onError: failed,
-      onSuccess: ({ name }) => toast.success(t`Suspending ${name}, memory is being saved`),
-    }),
-  );
-  const restore = useMutation(
-    orpc.machines.restore.mutationOptions({
-      onSettled: refresh,
-      onError: failed,
-      onSuccess: ({ name }) => toast.success(t`Restoring ${name}`),
-    }),
-  );
-  const fork = useMutation(
-    orpc.machines.fork.mutationOptions({
-      onSettled: refresh,
-      onError: failed,
-      onSuccess: ({ name }) =>
-        toast.success(t`Forked into ${name}. The disk was copied, not memory.`),
-    }),
-  );
-  const remove = useMutation(
-    orpc.machines.delete.mutationOptions({ onSettled: refresh, onError: failed }),
-  );
+  const mutation = useMutation({
+    mutationKey: [MACHINE_ACTION_KEY, machine.id],
+    mutationFn: async (action: MachineAction): Promise<unknown> => {
+      const input = { id: machine.id };
+      switch (action) {
+        case "suspend":
+          return api.machines.suspend(input);
+        case "restore":
+          return api.machines.restore(input);
+        case "fork":
+          return api.machines.fork(input);
+        case "delete":
+          return api.machines.delete(input);
+      }
+    },
+    onMutate: () => setFailure(null),
+    onError: (error, action) => setFailure({ action, error }),
+    onSuccess: (result, action) => {
+      if (action === "suspend") toast.success(t`${name} is suspended. Its memory was saved.`);
+      if (action === "restore") toast.success(t`${name} is running again.`);
+      if (action === "delete") toast.success(t`${name} deleted`);
+      if (action === "fork") {
+        const forked = (result as Machine).name;
+        toast.success(t`Forked into ${forked}. The disk was copied, not memory.`);
+      }
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: orpc.machines.key() }),
+  });
 
-  const run = (action: Exclude<MachineAction, "delete">, machine: Machine) => {
-    if (action === "suspend") suspend.mutate({ id: machine.id });
-    if (action === "restore") restore.mutate({ id: machine.id });
-    if (action === "fork") fork.mutate({ id: machine.id });
+  return {
+    run: (action: MachineAction) => mutation.mutate(action),
+    /** The action in flight, if any. */
+    busy: mutation.isPending ? (mutation.variables ?? null) : null,
+    failure,
+    clearFailure: () => setFailure(null),
   };
+}
 
-  return { run, remove, pending: suspend.isPending || restore.isPending || fork.isPending };
+/** What a failed action says, with the way to try it again. */
+export function MachineActionFailure({
+  actions,
+  className,
+}: {
+  actions: MachineActionsState;
+  className?: string;
+}) {
+  const text = useErrorText();
+  const { failure } = actions;
+  if (!failure) return null;
+  const { title, hint, retryable } = text(failure.error);
+  const action = failure.action;
+  return (
+    <p role="alert" className={className ?? "mt-1 text-label text-destructive"}>
+      {title} <span className="text-muted-foreground">{hint}</span>{" "}
+      {retryable ? (
+        <Button
+          variant="link"
+          className="h-auto p-0 text-label"
+          onClick={() => actions.run(action)}
+        >
+          <Trans>Try again</Trans>
+        </Button>
+      ) : null}
+    </p>
+  );
 }
 
 /** The "Delete" dialog says what is lost, so a confirm button is not a reflex. */
 export function DeleteMachineDialog({
   machine,
+  actions,
   open,
   onOpenChange,
-  onDeleted,
 }: {
   machine: Machine;
+  actions: MachineActionsState;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onDeleted?: () => void;
 }) {
-  const { t } = useLingui();
-  const { remove } = useMachineActions();
   const { name } = machine;
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -98,15 +139,7 @@ export function DeleteMachineDialog({
           <AlertDialogAction
             variant="destructive"
             onClick={() => {
-              remove.mutate(
-                { id: machine.id },
-                {
-                  onSuccess: () => {
-                    toast.success(t`${name} deleted`);
-                    onDeleted?.();
-                  },
-                },
-              );
+              actions.run("delete");
               onOpenChange(false);
             }}
           >
@@ -118,12 +151,17 @@ export function DeleteMachineDialog({
   );
 }
 
-/** The row menu on the machines list. */
-export function MachineActionsMenu({ machine }: { machine: Machine }) {
+/** The row menu on the machines list, for narrow screens. */
+export function MachineActionsMenu({
+  machine,
+  actions,
+}: {
+  machine: Machine;
+  actions: MachineActionsState;
+}) {
   const { t } = useLingui();
-  const { run } = useMachineActions();
   const [confirming, setConfirming] = useState(false);
-  const can = (action: MachineAction) => canPerform(machine.status, action);
+  const can = (action: MachineAction) => canPerform(machine.status, action) && !actions.busy;
   const { name } = machine;
 
   return (
@@ -133,21 +171,21 @@ export function MachineActionsMenu({ machine }: { machine: Machine }) {
           aria-label={t`Actions for ${name}`}
           render={<Button variant="ghost" size="icon-sm" className="text-muted-foreground" />}
         >
-          <Ellipsis />
+          {actions.busy ? <Spinner aria-hidden="true" /> : <Ellipsis />}
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-auto min-w-40">
-          {can("restore") ? (
-            <DropdownMenuItem onClick={() => run("restore", machine)}>
+          {canPerform(machine.status, "restore") ? (
+            <DropdownMenuItem disabled={!can("restore")} onClick={() => actions.run("restore")}>
               <Play />
               <Trans>Restore</Trans>
             </DropdownMenuItem>
           ) : (
-            <DropdownMenuItem disabled={!can("suspend")} onClick={() => run("suspend", machine)}>
+            <DropdownMenuItem disabled={!can("suspend")} onClick={() => actions.run("suspend")}>
               <Pause />
               <Trans>Suspend</Trans>
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem disabled={!can("fork")} onClick={() => run("fork", machine)}>
+          <DropdownMenuItem disabled={!can("fork")} onClick={() => actions.run("fork")}>
             <GitFork />
             <Trans>Fork</Trans>
           </DropdownMenuItem>
@@ -162,19 +200,31 @@ export function MachineActionsMenu({ machine }: { machine: Machine }) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <DeleteMachineDialog machine={machine} open={confirming} onOpenChange={setConfirming} />
+      <DeleteMachineDialog
+        machine={machine}
+        actions={actions}
+        open={confirming}
+        onOpenChange={setConfirming}
+      />
     </>
   );
 }
 
 /** Suspend or restore, fork and delete as buttons in the row, for screens wide enough. */
-export function MachineRowActions({ machine }: { machine: Machine }) {
+export function MachineRowActions({
+  machine,
+  actions,
+}: {
+  machine: Machine;
+  actions: MachineActionsState;
+}) {
   const { t } = useLingui();
-  const { run } = useMachineActions();
   const [confirming, setConfirming] = useState(false);
   const can = (action: MachineAction) => canPerform(machine.status, action);
   const { name } = machine;
   const button = "h-11 px-3 text-body2 font-semibold";
+  const spin = (action: MachineAction) =>
+    actions.busy === action ? <Spinner aria-hidden="true" /> : null;
 
   return (
     <div className="flex flex-wrap justify-end gap-1.5">
@@ -183,9 +233,11 @@ export function MachineRowActions({ machine }: { machine: Machine }) {
           variant="outline"
           className={button}
           aria-label={t`Suspend ${name}`}
-          onClick={() => run("suspend", machine)}
+          disabled={actions.busy !== null}
+          onClick={() => actions.run("suspend")}
         >
-          <Trans>Suspend</Trans>
+          {spin("suspend")}
+          {actions.busy === "suspend" ? <Trans>Suspending…</Trans> : <Trans>Suspend</Trans>}
         </Button>
       ) : null}
       {can("restore") ? (
@@ -193,9 +245,11 @@ export function MachineRowActions({ machine }: { machine: Machine }) {
           variant="outline"
           className={button}
           aria-label={t`Restore ${name}`}
-          onClick={() => run("restore", machine)}
+          disabled={actions.busy !== null}
+          onClick={() => actions.run("restore")}
         >
-          <Trans>Restore</Trans>
+          {spin("restore")}
+          {actions.busy === "restore" ? <Trans>Restoring…</Trans> : <Trans>Restore</Trans>}
         </Button>
       ) : null}
       {can("fork") ? (
@@ -203,9 +257,11 @@ export function MachineRowActions({ machine }: { machine: Machine }) {
           variant="outline"
           className={button}
           aria-label={t`Fork ${name}`}
-          onClick={() => run("fork", machine)}
+          disabled={actions.busy !== null}
+          onClick={() => actions.run("fork")}
         >
-          <Trans>Fork</Trans>
+          {spin("fork")}
+          {actions.busy === "fork" ? <Trans>Forking…</Trans> : <Trans>Fork</Trans>}
         </Button>
       ) : null}
       {can("delete") ? (
@@ -213,12 +269,18 @@ export function MachineRowActions({ machine }: { machine: Machine }) {
           variant="outline"
           className={`${button} text-destructive`}
           aria-label={t`Delete ${name}`}
+          disabled={actions.busy !== null}
           onClick={() => setConfirming(true)}
         >
           <Trans>Delete</Trans>
         </Button>
       ) : null}
-      <DeleteMachineDialog machine={machine} open={confirming} onOpenChange={setConfirming} />
+      <DeleteMachineDialog
+        machine={machine}
+        actions={actions}
+        open={confirming}
+        onOpenChange={setConfirming}
+      />
     </div>
   );
 }

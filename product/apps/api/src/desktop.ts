@@ -1,5 +1,6 @@
 import type { IncomingMessage, Server } from "node:http";
 import type { Duplex } from "node:stream";
+import { API_ERRORS } from "@rookbox/contracts";
 import WebSocket, { WebSocketServer } from "ws";
 import type { Identity } from "./auth.js";
 import type { Logger } from "./logger.js";
@@ -60,7 +61,7 @@ export function createDesktopProxy(deps: DesktopDeps) {
   }
 
   function status(error: unknown): number {
-    if (error instanceof MachineError) return error.code === "NOT_FOUND" ? 404 : 409;
+    if (error instanceof MachineError) return API_ERRORS[error.code].status;
     return 502;
   }
 
@@ -168,7 +169,7 @@ export function createDesktopProxy(deps: DesktopDeps) {
         });
       } catch (error) {
         if (error instanceof MachineError)
-          return reject(error.code === "NOT_FOUND" ? 404 : 409, "Unavailable");
+          return reject(API_ERRORS[error.code].status, "Unavailable");
         deps.logger.error("desktop websocket failed", { machine: id, error });
         reject(502, "Bad Gateway");
       }

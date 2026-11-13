@@ -14,6 +14,19 @@ export type SandboxInfo = {
 
 export type SpaceSize = { vcpu: number; memoryMib: number; diskMib: number };
 
+/** What `/health/space` learns about SPACE with one cheap, authenticated read. */
+export type SpaceProbe = {
+  /** A service key is set on this API. */
+  keyConfigured: boolean;
+  /** SPACE answered at all (any HTTP status). */
+  reachable: boolean;
+  /** HTTP status class only (`2xx`, `4xx`, `5xx`), never a body. */
+  statusClass: "2xx" | "3xx" | "4xx" | "5xx" | null;
+  /** `ok` when the key was accepted, `rejected` on 401 or 403, `unknown` when unreachable. */
+  auth: "ok" | "rejected" | "missing" | "unknown";
+  ms: number;
+};
+
 /** The slice of SPACE the product API uses. The real client calls ECW; tests pass a fake. */
 export interface SpaceClient {
   create(input: {
@@ -45,15 +58,53 @@ export interface SpaceClient {
     command: string,
     timeoutMs: number,
   ): Promise<ExecResult>;
+  /** Never throws: reports whether SPACE is reachable and accepts the key. */
+  probe(): Promise<SpaceProbe>;
+}
+
+/**
+ * Why a SPACE call failed, in terms the product can act on. The raw upstream message stays in
+ * `message` for logs; it is never sent to a client.
+ */
+export type SpaceErrorCode =
+  | "AUTH"
+  | "NOT_FOUND"
+  | "TEMPLATE_NOT_FOUND"
+  | "CONFLICT"
+  | "BAD_REQUEST"
+  | "QUOTA"
+  | "CAPACITY"
+  | "TIMEOUT"
+  | "UNREACHABLE"
+  | "UPSTREAM";
+
+/** Classifies an HTTP status SPACE answered with. */
+export function classifyStatus(status: number, message = ""): SpaceErrorCode {
+  if (status === 401 || status === 403) return "AUTH";
+  if (status === 404) return "NOT_FOUND";
+  if (status === 409 || status === 412) return "CONFLICT";
+  if (status === 408 || status === 504) return "TIMEOUT";
+  if (status === 429) return /quota|limit/i.test(message) ? "QUOTA" : "CAPACITY";
+  if (status === 503) return "CAPACITY";
+  if (status === 400 || status === 422) {
+    return /quota|limit (reached|exceeded)/i.test(message) ? "QUOTA" : "BAD_REQUEST";
+  }
+  return "UPSTREAM";
 }
 
 export class SpaceError extends Error {
+  readonly code: SpaceErrorCode;
   constructor(
+    /** HTTP status from SPACE, or 0 when no answer arrived. */
     readonly status: number,
     message: string,
+    code?: SpaceErrorCode,
+    /** `Retry-After` from SPACE, in milliseconds. */
+    readonly retryAfterMs?: number,
   ) {
     super(message);
     this.name = "SpaceError";
+    this.code = code ?? classifyStatus(status, message);
   }
 }
 
@@ -103,36 +154,77 @@ function toInfo(raw: Json): SandboxInfo {
 
 export type EcwClientOptions = {
   baseUrl: string;
+  /** Empty when the deployment has no key yet; calls then fail with `AUTH`. */
   apiKey: string;
   domain: string;
   fetch?: typeof fetch;
-  /** Request timeout for management calls. */
+  /** Timeout for calls that wait on a VM: create, suspend, restore, fork, delete. */
   timeoutMs?: number;
+  /** Timeout for plain reads. */
+  readTimeoutMs?: number;
+  /** Extra attempts for idempotent calls after a network error, timeout, 429, 502, 503 or 504. */
+  retries?: number;
+  /** Replaces the wait between attempts (tests). */
+  sleep?: (ms: number) => Promise<void>;
 };
 
 const MAX_OUTPUT_BYTES = 256 * 1024;
+const RETRY_STATUSES = new Set([429, 502, 503, 504]);
+const MAX_BACKOFF_MS = 2_000;
+
+function parseRetryAfter(value: string | null): number | undefined {
+  if (!value) return undefined;
+  const seconds = Number(value);
+  return Number.isFinite(seconds) && seconds >= 0 ? seconds * 1_000 : undefined;
+}
+
+type CallOptions = {
+  /** Statuses returned to the caller instead of thrown. */
+  accept?: readonly number[];
+  /** Safe to repeat: reads, deletes, and forks that carry an idempotency key. */
+  idempotent?: boolean;
+  /** A read, so it gets the shorter timeout. */
+  read?: boolean;
+  headers?: Record<string, string>;
+};
 
 export function createEcwClient(options: EcwClientOptions): SpaceClient {
   const doFetch = options.fetch ?? fetch;
   const base = options.baseUrl.replace(/\/+$/, "");
-  const timeoutMs = options.timeoutMs ?? 120_000;
+  const timeoutMs = options.timeoutMs ?? 60_000;
+  const readTimeoutMs = options.readTimeoutMs ?? Math.min(15_000, timeoutMs);
+  const retries = options.retries ?? 2;
+  const sleep =
+    options.sleep ?? ((ms: number) => new Promise<void>((done) => setTimeout(done, ms)));
 
-  async function call(
+  async function attempt(
     method: string,
     path: string,
-    body?: unknown,
-    accept: readonly number[] = [],
+    body: unknown,
+    opts: CallOptions,
   ): Promise<{ status: number; json: unknown; headers: Headers }> {
-    const response = await doFetch(`${base}${path}`, {
-      method,
-      headers: {
-        "x-api-key": options.apiKey,
-        ...(body === undefined ? {} : { "content-type": "application/json" }),
-      },
-      body: body === undefined ? undefined : JSON.stringify(body),
-      signal: AbortSignal.timeout(timeoutMs),
-    });
-    const text = await response.text();
+    let response: Response;
+    let text: string;
+    try {
+      response = await doFetch(`${base}${path}`, {
+        method,
+        headers: {
+          ...(options.apiKey ? { "x-api-key": options.apiKey } : {}),
+          ...(body === undefined ? {} : { "content-type": "application/json" }),
+          ...opts.headers,
+        },
+        body: body === undefined ? undefined : JSON.stringify(body),
+        signal: AbortSignal.timeout(opts.read ? readTimeoutMs : timeoutMs),
+      });
+      text = await response.text();
+    } catch (error) {
+      const timedOut = error instanceof Error && error.name === "TimeoutError";
+      throw new SpaceError(
+        0,
+        timedOut ? "SPACE did not answer in time" : "SPACE could not be reached",
+        timedOut ? "TIMEOUT" : "UNREACHABLE",
+      );
+    }
     let json: unknown = null;
     if (text) {
       try {
@@ -141,27 +233,65 @@ export function createEcwClient(options: EcwClientOptions): SpaceClient {
         json = null;
       }
     }
-    if (!response.ok && !accept.includes(response.status)) {
+    if (!response.ok && !(opts.accept ?? []).includes(response.status)) {
       const message =
         json && typeof json === "object" && "message" in json
-          ? String((json as Json).message)
+          ? String((json as Json).message).slice(0, 300)
           : `SPACE answered ${response.status}`;
-      throw new SpaceError(response.status, message);
+      throw new SpaceError(
+        response.status,
+        message,
+        undefined,
+        parseRetryAfter(response.headers.get("retry-after")),
+      );
     }
     return { status: response.status, json, headers: response.headers };
+  }
+
+  async function call(
+    method: string,
+    path: string,
+    body?: unknown,
+    opts: CallOptions = {},
+  ): Promise<{ status: number; json: unknown; headers: Headers }> {
+    for (let n = 0; ; n += 1) {
+      try {
+        return await attempt(method, path, body, opts);
+      } catch (error) {
+        const retryable =
+          opts.idempotent === true &&
+          n < retries &&
+          error instanceof SpaceError &&
+          (error.status === 0 || RETRY_STATUSES.has(error.status));
+        if (!retryable) throw error;
+        const backoff = Math.min(250 * 2 ** n, MAX_BACKOFF_MS);
+        await sleep(Math.min(error.retryAfterMs ?? backoff, MAX_BACKOFF_MS));
+      }
+    }
   }
 
   const enc = encodeURIComponent;
 
   return {
     async create({ templateId, metadata, timeoutS, size }) {
-      const { json } = await call("POST", "/sandboxes", {
-        templateID: templateId,
-        timeout: timeoutS,
-        autoPause: true,
-        metadata: { ...metadata, "space.resources": resourcesMetadata(size) },
-      });
-      return { id: String((json as Json).sandboxID) };
+      let json: unknown;
+      try {
+        ({ json } = await call("POST", "/sandboxes", {
+          templateID: templateId,
+          timeout: timeoutS,
+          autoPause: true,
+          metadata: { ...metadata, "space.resources": resourcesMetadata(size) },
+        }));
+      } catch (error) {
+        // No sandbox exists yet, so a 404 here can only mean the template.
+        if (error instanceof SpaceError && error.code === "NOT_FOUND") {
+          throw new SpaceError(error.status, error.message, "TEMPLATE_NOT_FOUND");
+        }
+        throw error;
+      }
+      const id = (json as Json | null)?.sandboxID;
+      if (typeof id !== "string" || !id) throw new SpaceError(502, "SPACE returned no sandbox id");
+      return { id };
     },
 
     async list(metadata) {
@@ -171,7 +301,10 @@ export function createEcwClient(options: EcwClientOptions): SpaceClient {
         const query: string = `${metadataQuery(metadata)}&state=running&state=paused&limit=100${
           token ? `&nextToken=${enc(token)}` : ""
         }`;
-        const { json, headers } = await call("GET", `/v2/sandboxes?${query}`);
+        const { json, headers } = await call("GET", `/v2/sandboxes?${query}`, undefined, {
+          idempotent: true,
+          read: true,
+        });
         for (const item of Array.isArray(json) ? json : []) found.push(toInfo(item as Json));
         token = headers.get("x-next-token") || null;
       } while (token && found.length < 1_000);
@@ -179,7 +312,11 @@ export function createEcwClient(options: EcwClientOptions): SpaceClient {
     },
 
     async get(id) {
-      const { status, json } = await call("GET", `/sandboxes/${enc(id)}`, undefined, [404]);
+      const { status, json } = await call("GET", `/sandboxes/${enc(id)}`, undefined, {
+        accept: [404],
+        idempotent: true,
+        read: true,
+      });
       return status === 404 ? null : toInfo(json as Json);
     },
 
@@ -192,10 +329,13 @@ export function createEcwClient(options: EcwClientOptions): SpaceClient {
     },
 
     async fork(id, timeoutS) {
-      const { json } = await call("POST", `/sandboxes/${enc(id)}/fork`, {
-        count: 1,
-        timeout: timeoutS,
-      });
+      // The idempotency key makes a repeat after a lost answer join the first fork, not add one.
+      const { json } = await call(
+        "POST",
+        `/sandboxes/${enc(id)}/fork`,
+        { count: 1, timeout: timeoutS },
+        { idempotent: true, headers: { "idempotency-key": crypto.randomUUID() } },
+      );
       const first = Array.isArray(json) ? (json[0] as Json | undefined) : undefined;
       if (!first || first.sandboxID === undefined) {
         const error = first?.error as Json | undefined;
@@ -205,13 +345,21 @@ export function createEcwClient(options: EcwClientOptions): SpaceClient {
     },
 
     async kill(id) {
-      const { status } = await call("DELETE", `/sandboxes/${enc(id)}`, undefined, [404]);
+      const { status } = await call("DELETE", `/sandboxes/${enc(id)}`, undefined, {
+        accept: [404],
+        idempotent: true,
+      });
       if (status === 404) return "missing";
       return status === 202 ? "queued" : "deleted";
     },
 
     async trafficToken(id, timeoutS) {
-      const { json } = await call("POST", `/sandboxes/${enc(id)}/connect`, { timeout: timeoutS });
+      const { json } = await call(
+        "POST",
+        `/sandboxes/${enc(id)}/connect`,
+        { timeout: timeoutS },
+        { idempotent: true },
+      );
       const token = (json as Json | null)?.trafficAccessToken;
       if (typeof token !== "string" || !token) {
         throw new SpaceError(502, "SPACE did not return a traffic access token");
@@ -227,6 +375,42 @@ export function createEcwClient(options: EcwClientOptions): SpaceClient {
         timeoutMs,
         doFetch,
       });
+    },
+
+    async probe() {
+      const started = Date.now();
+      const keyConfigured = options.apiKey.length > 0;
+      try {
+        const response = await doFetch(`${base}/v2/sandboxes?limit=1`, {
+          method: "GET",
+          headers: keyConfigured ? { "x-api-key": options.apiKey } : {},
+          signal: AbortSignal.timeout(readTimeoutMs),
+        });
+        const statusClass =
+          response.status >= 500
+            ? "5xx"
+            : response.status >= 400
+              ? "4xx"
+              : response.status >= 300
+                ? "3xx"
+                : "2xx";
+        const rejected = response.status === 401 || response.status === 403;
+        return {
+          keyConfigured,
+          reachable: true,
+          statusClass,
+          auth: !keyConfigured ? "missing" : rejected ? "rejected" : response.ok ? "ok" : "unknown",
+          ms: Date.now() - started,
+        };
+      } catch {
+        return {
+          keyConfigured,
+          reachable: false,
+          statusClass: null,
+          auth: keyConfigured ? "unknown" : "missing",
+          ms: Date.now() - started,
+        };
+      }
     },
   };
 }

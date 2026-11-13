@@ -46,12 +46,16 @@ path `apps/api/Dockerfile`, port `3000`). Guará injects `DATABASE_URL`; set the
 | `SPACE_ECW_API_URL` | `https://api.box.rookbox.run` |
 | `SPACE_ECW_API_KEY` | The SPACE service key (an ECW key of one SPACE organization). Server side only. |
 | `E2B_DOMAIN` | `box.rookbox.run` |
+| `SPACE_TEMPLATES` | Optional, default `desktop,corvo-computer,seed`. Templates people may create machines from, in the order the dashboard offers them. |
+| `SPACE_TIMEOUT_MS` | Optional, default `60000` (5000 to 300000). How long to wait on a call that waits on a VM: create, suspend, restore, fork. |
+| `SIGNIN_MAX_ATTEMPTS` | Optional, default `5`. Failed sign-ins allowed per email and per address within the window. |
+| `SIGNIN_WINDOW_S` | Optional, default `600`. The window for `SIGNIN_MAX_ATTEMPTS`, in seconds. |
 | `MACHINE_IDLE_TIMEOUT_S` | Optional, default `900`. Idle time before a machine suspends itself. |
 | `MAX_MACHINES_PER_USER` | Optional, default `10`. |
 | `LOG_LEVEL` | Optional, default `info`. |
 | `RUN_MIGRATIONS` | Optional, default `true`. |
 
-Health check path: `/health`. Pending migrations run when the container starts, before it
+Health check path: `/health` (the database). `/health/space` says whether the machine service answers and accepts the key; it reports only status classes. Pending migrations run when the container starts, before it
 listens. To run them alone: `node dist/cli/migrate.js` in the container.
 
 Local equivalent:
@@ -61,6 +65,19 @@ cd product
 docker build -f apps/api/Dockerfile -t rookbox-api .
 docker run --rm -p 3000:3000 --env-file apps/api/.env rookbox-api
 ```
+
+### Verify after deploy
+
+Run these in order after the first deploy and after any change to the variables above.
+
+1. `curl https://api.rookbox.run/health` returns `{"ok":true,"db":"ok",...}` with status 200. The log shows the migrations ran and, the first time, `owner account created`.
+2. `curl https://api.rookbox.run/health/space` returns `"ok":true` with `"reachable":true` and `"auth":"ok"`. A 503 with `"auth":"missing"` or `"rejected"` means the key is not set or is wrong, `"unknown"` that SPACE answered oddly; `"reachable":false` means the URL, DNS or network is wrong.
+3. Open `https://app.rookbox.run`, sign in as the owner, and switch the language (English, Portuguese, Spanish) from the menu.
+4. Create a machine from each template you offer. It should reach `running`.
+5. Open its terminal and run a command; open the desktop on a `desktop` machine.
+6. Suspend it (memory is saved), restore it, fork it, then delete the fork and the machine.
+7. Wrong password more than `SIGNIN_MAX_ATTEMPTS` times: the API answers with a wait time instead of trying again.
+8. Remove `ROOKBOX_SEED_OWNER_PASSWORD` once step 3 works.
 
 ### First login
 
@@ -149,7 +166,7 @@ app.rookbox.run { reverse_proxy 127.0.0.1:8081 }
   accepting that a SPACE key sees every sandbox of the organization (SPACE scopes keys to an
   organization, not to a Rookbox user). Until then, create an E2B key for yourself with
   `scripts/seed-api-key.sh` and use that with the SDK.
-- **Usage is sample data**, labeled as such.
+- **Usage and billing are not measured.** The Usage page says so and shows only how many machines are running now.
 - **Snapshots, secrets, webhooks, CI and members** are still "Soon" in the dashboard.
 - The SPACE side (`api.box.rookbox.run`) was not reachable while this was written, so the SPACE
   client was built from the ECW source and docs and tested against mocks. Run one real create,

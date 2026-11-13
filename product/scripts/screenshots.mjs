@@ -60,7 +60,7 @@ for (const scheme of ["dark", "light"]) {
 
   await p.getByRole("button", { name: "New machine" }).click();
   await p.getByRole("dialog").waitFor();
-  await p.getByText("Advanced").click();
+  await p.getByText("Custom size").click();
   await p.waitForTimeout(300);
   await shot(p, `dashboard-create-dialog-${scheme}`, false);
   await p.keyboard.press("Escape");
@@ -71,7 +71,7 @@ for (const scheme of ["dark", "light"]) {
   await shot(p, `dashboard-machine-detail-${scheme}`);
 
   await p.goto(`${WEB}/usage`, { waitUntil: "networkidle" });
-  await p.getByText("Sample data, not real usage.").waitFor();
+  await p.getByText("Machine hours and billing").waitFor();
   await shot(p, `dashboard-usage-${scheme}`);
 
   await p.goto(`${WEB}/keys`, { waitUntil: "networkidle" });
@@ -99,16 +99,28 @@ for (const scheme of ["dark", "light"]) {
   await p.context().close();
 }
 
-// pt-BR and es dashboards, to check the catalogs load.
+// pt-BR and es dashboards, in both themes and at phone width, to check the catalogs load and fit.
 for (const [name, locale] of [
   ["pt-BR", "pt-BR"],
   ["es", "es-ES"],
 ]) {
-  const p = await page("light", 1440, 900, locale);
-  await p.goto(`${WEB}/machines`, { waitUntil: "networkidle" });
-  await p.getByRole("link", { name: "build-runner" }).waitFor();
-  await shot(p, `dashboard-machines-${name}-light`, false);
-  await p.context().close();
+  for (const scheme of ["dark", "light"]) {
+    for (const [device, width, height] of [
+      ["desktop", 1440, 900],
+      ["mobile", 390, 844],
+    ]) {
+      const p = await page(scheme, width, height, locale);
+      await p.goto(`${WEB}/machines`, { waitUntil: "networkidle" });
+      await p.getByRole("link", { name: "build-runner" }).waitFor();
+      await shot(p, `dashboard-machines-${name}-${device}-${scheme}`, false);
+      await p.goto(`${WEB}/usage`, { waitUntil: "networkidle" });
+      await shot(p, `dashboard-usage-${name}-${device}-${scheme}`, false);
+      const extra = await p.overflow();
+      if (extra > 0)
+        console.warn(`dashboard ${name} ${device} ${scheme}: ${extra}px of sideways scroll`);
+      await p.context().close();
+    }
+  }
 }
 
 await browser.close();

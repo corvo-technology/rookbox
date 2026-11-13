@@ -1,9 +1,8 @@
 import { Trans, useLingui } from "@lingui/react/macro";
-import { Button, buttonVariants, cn } from "@rookbox/ui-web";
+import { Button, cn } from "@rookbox/ui-web";
 import type { LucideIcon } from "lucide-react";
 import {
   ChartColumn,
-  ChevronDown,
   GitBranch,
   KeyRound,
   Layers,
@@ -22,8 +21,9 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { setAppearance } from "../lib/appearance";
-import { AUTH_ENABLED, useSession } from "../lib/auth";
+import { useSession } from "../lib/auth";
 import { DOCS_URL, FILTER_INPUT_ID } from "../lib/site";
+import { LanguageSelect } from "./LanguageSelect";
 import { Logo } from "./Logo";
 
 type NavItem = { icon: LucideIcon; label: string; to?: string };
@@ -132,19 +132,6 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           ))}
         </div>
       ))}
-      <div className="mt-auto flex flex-col gap-2.5 rounded-2xl border border-border bg-card p-4 max-md:mt-6">
-        {/* Placeholders: the plan and its limits are not defined yet. */}
-        <p className="text-body2 text-muted-foreground">
-          <Trans>[PLAN NAME] plan. [LIMIT] machines running of [LIMIT].</Trans>
-        </p>
-        <Link
-          to="/usage"
-          onClick={onNavigate}
-          className={cn(buttonVariants({ variant: "default" }), "h-11 w-full text-body1")}
-        >
-          <Trans>Upgrade plan</Trans>
-        </Link>
-      </div>
     </nav>
   );
 }
@@ -184,35 +171,25 @@ function TopBar({ menuOpen, onMenu }: { menuOpen: boolean; onMenu: () => void })
         {menuOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
       </Button>
       <Link to="/machines" aria-label={t`Rookbox home`} className="rounded-lg">
-        <Logo />
+        <Logo className="max-[380px]:text-[18px]" />
       </Link>
-      <span aria-hidden="true" className="text-muted-foreground max-sm:hidden">
-        /
-      </span>
-      {/* Placeholder: workspaces do not exist yet, so the switcher is inert. */}
-      <button
-        type="button"
-        disabled
-        aria-label={t`Workspace switcher, coming soon`}
-        className="inline-flex min-h-11 items-center gap-2 rounded-[10px] border border-border px-3 text-body1 font-semibold text-foreground opacity-80 max-sm:hidden"
-      >
-        [Workspace]
-        <ChevronDown className="size-3.5" aria-hidden="true" />
-      </button>
       <span className="flex-1" />
-      <a
-        href={DOCS_URL}
-        className="inline-flex min-h-11 items-center rounded-[10px] px-3 text-body1 text-muted-foreground hover:bg-accent hover:text-foreground max-sm:hidden"
-      >
-        <Trans>Docs</Trans>
-      </a>
+      {DOCS_URL ? (
+        <a
+          href={DOCS_URL}
+          className="inline-flex min-h-11 items-center rounded-[10px] px-3 text-body1 text-muted-foreground hover:bg-accent hover:text-foreground max-sm:hidden"
+        >
+          <Trans>Docs</Trans>
+        </a>
+      ) : null}
+      <LanguageSelect />
       <ThemeToggle />
       <Link
         to="/settings"
         aria-label={t`Settings`}
         className="grid size-[34px] place-items-center rounded-full border border-border bg-card text-label font-semibold text-foreground"
       >
-        {AUTH_ENABLED ? (session.data?.email.charAt(0).toUpperCase() ?? "") : "[U]"}
+        {session.data?.email.charAt(0).toUpperCase() ?? ""}
       </Link>
     </header>
   );

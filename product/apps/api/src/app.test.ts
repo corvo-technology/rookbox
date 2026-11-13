@@ -8,12 +8,14 @@ import { createApp } from "./app.js";
 import type { AuthUser, Identity } from "./auth.js";
 import { createDesktopProxy } from "./desktop.js";
 import { silentLogger } from "./logger.js";
+import { createRateLimiter } from "./rate-limit.js";
+import { SpaceError } from "./space/client.js";
 import { memoryApiKeyStore, newMachineService } from "./test-support.js";
 
 const APP = "https://app.example.test";
 
-function setup() {
-  const { service, space } = newMachineService();
+function setup(extra: Partial<Parameters<typeof createApp>[0]> = {}) {
+  const { service, space } = newMachineService({ maxMachinesPerUser: 2 });
   const keys = memoryApiKeyStore();
   const apiKeys = createApiKeyService(keys);
   // Sessions are "session:<user>" cookies; the real identity is better-auth, covered by its own tests.
@@ -49,6 +51,8 @@ function setup() {
     apiKeys,
     desktop,
     checkDb: async () => undefined,
+    space,
+    ...extra,
   });
   const client = (cookie?: string, bearer?: string) =>
     createORPCClient(
@@ -75,7 +79,20 @@ describe("auth guard", () => {
     const { app } = setup();
     const response = await app.request("/health");
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ ok: true });
+    expect(await response.json()).toMatchObject({ ok: true, db: "ok" });
+  });
+
+  it("reports a database failure on /health without saying why", async () => {
+    const { app } = setup({
+      checkDb: async () => {
+        throw new Error("connect ECONNREFUSED db.internal.example:5432");
+      },
+    });
+    const response = await app.request("/health");
+    expect(response.status).toBe(503);
+    const text = await response.text();
+    expect(JSON.parse(text)).toMatchObject({ ok: false, db: "down" });
+    expect(text).not.toContain("internal");
   });
 
   it("accepts a Rookbox API key as a bearer token, and stops accepting it once revoked", async () => {
@@ -147,6 +164,151 @@ describe("machines over RPC", () => {
       exitCode: 0,
       truncated: false,
     });
+  });
+});
+
+describe("errors over RPC", () => {
+  it("tells the client what failed by code, without the upstream message", async () => {
+    const { client, space } = setup();
+    space.create = async () => {
+      throw new SpaceError(401, "Invalid or missing API key");
+    };
+    const error = await client("alice")
+      .machines.create({ name: "m", template: "seed", size: SIZE_PRESETS.small })
+      .catch((e: unknown) => e);
+    expect(error).toMatchObject({ code: "HOST_AUTH", status: 502 });
+    expect(JSON.stringify(error)).not.toContain("API key");
+  });
+
+  it("reports the machine limit with the number", async () => {
+    const { client } = setup();
+    for (const name of ["a", "b"]) {
+      await client("alice").machines.create({ name, template: "seed", size: SIZE_PRESETS.small });
+    }
+    await expect(
+      client("alice").machines.create({ name: "c", template: "seed", size: SIZE_PRESETS.small }),
+    ).rejects.toMatchObject({ code: "MACHINE_LIMIT", data: { limit: 2 } });
+  });
+
+  it("hides an unexpected failure behind a plain message", async () => {
+    const { client, space } = setup();
+    space.list = async () => {
+      throw new TypeError("secret detail at 10.0.0.9");
+    };
+    await client("alice").machines.create({
+      name: "m",
+      template: "seed",
+      size: SIZE_PRESETS.small,
+    });
+    const error = await client("alice")
+      .machines.list()
+      .catch((e: unknown) => e);
+    expect(error).toMatchObject({ code: "INTERNAL_SERVER_ERROR" });
+    expect(JSON.stringify(error)).not.toContain("secret");
+  });
+
+  it("serves the deployment's config", async () => {
+    const { client } = setup();
+    expect(await client("alice").config.get()).toEqual({
+      templates: ["desktop", "corvo-computer", "seed"],
+      maxMachines: 2,
+      defaultIdleTimeoutS: 900,
+      domain: "box.example.test",
+    });
+  });
+});
+
+describe("/health/space", () => {
+  it("answers without a session, reporting only status classes", async () => {
+    const { app, space } = setup();
+    space.probeResult = {
+      keyConfigured: true,
+      reachable: true,
+      statusClass: "4xx",
+      auth: "rejected",
+      ms: 12,
+    };
+    const response = await app.request("/health/space");
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({
+      ok: false,
+      keyConfigured: true,
+      reachable: true,
+      statusClass: "4xx",
+      auth: "rejected",
+      ms: 12,
+    });
+  });
+
+  it("is ok when SPACE accepts the key", async () => {
+    const { app } = setup();
+    const response = await app.request("/health/space");
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ ok: true, auth: "ok" });
+  });
+
+  it("answers when no key is set", async () => {
+    const { app, space } = setup();
+    space.probeResult = {
+      keyConfigured: false,
+      reachable: true,
+      statusClass: "4xx",
+      auth: "missing",
+      ms: 3,
+    };
+    const response = await app.request("/health/space");
+    expect(response.status).toBe(503);
+    expect(await response.json()).toMatchObject({ keyConfigured: false, auth: "missing" });
+  });
+});
+
+describe("sign-in limit", () => {
+  /** An app whose auth answers with the given statuses in turn, behind a limit of two failures. */
+  function authApp(answers: number[]) {
+    return createApp({
+      appOrigin: APP,
+      logger: silentLogger,
+      identity: async () => null,
+      authHandler: async () => new Response("x", { status: answers.shift() ?? 401 }),
+      machines: newMachineService().service,
+      apiKeys: createApiKeyService(memoryApiKeyStore()),
+      desktop: { http: async () => new Response("") },
+      signInLimiter: createRateLimiter({ max: 2, windowMs: 60_000 }),
+    });
+  }
+
+  const attempt = (app: ReturnType<typeof setup>["app"], email: string, ip = "1.1.1.1") =>
+    app.request("/api/auth/sign-in/email", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-forwarded-for": ip },
+      body: JSON.stringify({ email, password: "wrong" }),
+    });
+
+  it("blocks an email after repeated failures, with a retry time", async () => {
+    const failing = authApp([]);
+    expect((await attempt(failing, "a@example.test", "1.1.1.1")).status).toBe(401);
+    expect((await attempt(failing, "a@example.test", "2.2.2.2")).status).toBe(401);
+    const blocked = await attempt(failing, "A@example.test", "3.3.3.3");
+    expect(blocked.status).toBe(429);
+    expect(Number(blocked.headers.get("retry-after"))).toBeGreaterThan(0);
+    expect(await blocked.json()).toMatchObject({ code: "RATE_LIMITED" });
+    // Another email from a fresh address is unaffected.
+    expect((await attempt(failing, "b@example.test", "4.4.4.4")).status).toBe(401);
+  });
+
+  it("blocks an address that keeps failing across emails", async () => {
+    const failing = authApp([]);
+    await attempt(failing, "a@example.test");
+    await attempt(failing, "b@example.test");
+    expect((await attempt(failing, "c@example.test")).status).toBe(429);
+  });
+
+  it("forgets an email's failures after a good sign-in", async () => {
+    const ok = authApp([401, 200, 401, 401]);
+    expect((await attempt(ok, "a@example.test", "1.1.1.1")).status).toBe(401);
+    expect((await attempt(ok, "a@example.test", "2.2.2.2")).status).toBe(200);
+    expect((await attempt(ok, "a@example.test", "3.3.3.3")).status).toBe(401);
+    expect((await attempt(ok, "a@example.test", "4.4.4.4")).status).toBe(401);
   });
 });
 

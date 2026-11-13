@@ -10,12 +10,11 @@ export const TEMPLATES = ["seed", "desktop", "corvo-computer"] as const;
 export const MachineTemplate = z.enum(TEMPLATES);
 export type MachineTemplate = z.infer<typeof MachineTemplate>;
 
-/** Templates a machine can be created from today. */
-export const AVAILABLE_TEMPLATES: readonly MachineTemplate[] = [
-  "seed",
-  "desktop",
-  "corvo-computer",
-];
+/**
+ * Every template Rookbox knows. Which of them a deployment offers is the API's `SPACE_TEMPLATES`
+ * setting, served through `config.get`.
+ */
+export const AVAILABLE_TEMPLATES: readonly MachineTemplate[] = [...TEMPLATES];
 
 /** Templates that serve a VNC desktop on port 6080. */
 export const DESKTOP_TEMPLATES: readonly MachineTemplate[] = ["desktop", "corvo-computer"];
@@ -71,6 +70,16 @@ export function presetOf(size: MachineSize): SizePreset | null {
   return null;
 }
 
+/** Idle time before a machine suspends itself, in seconds. */
+export const IDLE_TIMEOUT_LIMITS = { min: 60, max: 86_400 } as const;
+export const IdleTimeoutS = z
+  .number()
+  .int()
+  .min(IDLE_TIMEOUT_LIMITS.min)
+  .max(IDLE_TIMEOUT_LIMITS.max);
+/** Choices the dashboard offers; the API accepts any value within the limits. */
+export const IDLE_TIMEOUT_PRESETS_S = [300, 900, 3_600, 14_400] as const;
+
 export const MACHINE_NAME_MAX_LENGTH = 48;
 export const MachineName = z
   .string()
@@ -94,6 +103,8 @@ export const MachineSchema = z.object({
   template: MachineTemplate,
   status: MachineStatus,
   size: MachineSize,
+  /** Seconds without activity before the machine suspends itself. */
+  idleTimeoutS: IdleTimeoutS,
   createdAt: z.iso.datetime(),
   /** The machine whose disk this one was copied from. */
   forkedFrom: MachineId.nullable(),
@@ -106,6 +117,8 @@ export const CreateMachineInput = z.object({
   name: MachineName.optional(),
   template: MachineTemplate,
   size: MachineSize,
+  /** The deployment's default when omitted. */
+  idleTimeoutS: IdleTimeoutS.optional(),
 });
 export type CreateMachineInput = z.infer<typeof CreateMachineInput>;
 

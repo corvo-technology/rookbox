@@ -8,7 +8,7 @@ separate from the Rust SPACE workspace around it.
 | `apps/www` | Marketing site: Astro, React islands, Tailwind v4, sitemap. English, Brazilian Portuguese (`/pt/`) and Spanish (`/es/`). |
 | `apps/web` | Dashboard: Vite, React, React Router, TanStack Query, shadcn/ui on Base UI, Tailwind v4, Lingui (en, pt-BR, es). |
 | `apps/api` | The product API: Hono, oRPC, Prisma + Postgres, better-auth. Runs machines on SPACE through its E2B-compatible API. See `DEPLOY.md` and `apps/api/.env.example`. |
-| `packages/contracts` | The dashboard's oRPC contract (machines, API keys, usage) and the machine lifecycle rules. |
+| `packages/contracts` | The dashboard's oRPC contract (machines, API keys) and the machine lifecycle rules. |
 | `packages/ui-tokens` | Semantic colour tokens; `src/index.ts` generates `src/tokens.css`. |
 | `packages/ui-web` | Vendored shadcn/ui components on Base UI, plus the shared theme CSS. |
 
@@ -52,8 +52,8 @@ installed Google Chrome through Playwright and writes PNGs to `.screenshots/` (i
   chooses the client: with `VITE_API_URL` set the dashboard talks to the real API in `apps/api`
   (and shows a sign-in screen); without it, it runs on this fake, with no sign-in. Fake machines
   run no commands and have no desktop.
-- **Sample data.** The fake starts with three made-up machines and one key. Usage numbers are
-  generated per day, in the fake and in the real API, and the page labels them "Sample data".
+- **Sample data.** The fake starts with three made-up machines and one key. The Usage page
+  shows no numbers: machine hours and billing are not measured yet.
 
 ## Run the real API locally
 
@@ -74,8 +74,8 @@ deployment and what is not done yet (Rookbox API keys are not E2B keys).
   says so.
 - **The logo.** The flat monochrome "Gate" glyph and the "Rookbox" wordmark live in
   `apps/www/src/components/Logo.astro` and `apps/www/public/favicon.svg`; the social image is
-  `apps/www/public/og.png`. The dashboard's `apps/web/src/components/Logo.tsx` and favicon still
-  hold the plain wordmark and a placeholder "R".
+  `apps/www/public/og.png`. The dashboard's `apps/web/src/components/Logo.tsx` and
+  `apps/web/public/favicon.svg` use the same glyph.
 
 ## Design
 

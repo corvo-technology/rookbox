@@ -1,3 +1,4 @@
+import { TEMPLATES } from "@rookbox/contracts";
 import * as z from "zod";
 
 const csv = (value: string) =>
@@ -36,7 +37,22 @@ export const EnvSchema = z.object({
 
   /** Base URL of SPACE's E2B-compatible API, e.g. https://api.box.rookbox.run. */
   SPACE_ECW_API_URL: z.url(),
-  SPACE_ECW_API_KEY: z.string().min(1),
+  /**
+   * The SPACE service key. Optional so the API can start and `/health/space` can say it is
+   * missing; every machine call then fails with a credentials error.
+   */
+  SPACE_ECW_API_KEY: z.string().default(""),
+  /** Templates people may create machines from, in the order the dashboard offers them. */
+  SPACE_TEMPLATES: z
+    .string()
+    .default("desktop,corvo-computer,seed")
+    .transform(csv)
+    .pipe(z.array(z.enum(TEMPLATES)).min(1)),
+  /** How long to wait on a SPACE call that waits on a VM (create, suspend, restore, fork). */
+  SPACE_TIMEOUT_MS: z.coerce.number().int().min(5_000).max(300_000).default(60_000),
+  /** Failed sign-ins allowed per email and per address within the window. */
+  SIGNIN_MAX_ATTEMPTS: z.coerce.number().int().min(1).max(100).default(5),
+  SIGNIN_WINDOW_S: z.coerce.number().int().min(10).max(86_400).default(600),
   /** The E2B domain: sandboxes live at https://<port>-<id>.<E2B_DOMAIN>. */
   E2B_DOMAIN: z.string().min(1),
   /** Idle seconds before a machine is suspended on its own. */
