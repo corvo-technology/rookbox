@@ -1,22 +1,21 @@
 ---
 import { getCopy } from "../i18n/copy";
 import type { Locale } from "../i18n/locales";
-import { DEFAULT_LOCALE, isLocale, LOCALE_HTML_LANG, localeHomePath } from "../i18n/locales";
+import { DEFAULT_LOCALE, isLocale, localeHomePath } from "../i18n/locales";
 import { rich } from "../i18n/rich";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { CONTACT_URL, DOCS_URL, MACHINES_URL, API_KEYS_URL } from "../site";
-import { ENV_AFTER, ENV_BEFORE, buildSessions } from "../snippets";
-import { FLEET_ENDPOINT, FREE_CREDIT_OFFER, PLANS } from "../placeholders";
-import { EnvToggle } from "./EnvToggle";
-import { FleetCounter } from "./FleetCounter";
+import { DASHBOARD_URL, DOCS_URL, SDK_DOMAIN } from "../site";
+import { buildE2bSnippets, buildSessions } from "../snippets";
+import { E2bSnippet } from "./E2bSnippet";
 import Footer from "./Footer.astro";
 import Header from "./Header.astro";
 import { SessionDemo } from "./SessionDemo";
 
 const locale: Locale = isLocale(Astro.currentLocale) ? Astro.currentLocale : DEFAULT_LOCALE;
 const copy = getCopy(locale);
-const { hero, demo, features, e2b, lifecycle, pricing, cta } = copy;
-const sessions = buildSessions(demo.session);
+const { hero, demo, features, e2b, lifecycle, cta } = copy;
+const sessions = buildSessions(SDK_DOMAIN, demo.session);
+const e2bSnippets = buildE2bSnippets(SDK_DOMAIN);
 
 const ICONS = [
   // Own kernel
@@ -40,38 +39,31 @@ const LIFECYCLE_BARS = [100, 60, 50, 75];
   description={copy.meta.description}
   locale={locale}
   skipLabel={copy.meta.skipToContent}
+  imageAlt={copy.meta.ogAlt}
 >
   <Header copy={copy.nav} homeHref={localeHomePath(locale)} />
 
   <main id="main">
     <section class="hero" aria-labelledby="hero-title">
       <div class="wrap hero__wrap">
-          <FleetCounter
-            client:visible
-            locale={LOCALE_HTML_LANG[locale]}
-            label={hero.counter.label}
-            demo={hero.counter.demo}
-            aria={hero.counter.aria}
-            note={`${hero.counter.note} ${FLEET_ENDPOINT}`}
-          />
         <div class="hero__copy">
           <p class="eyebrow">{hero.eyebrow}</p>
           <h1 id="hero-title" class="hd">{hero.title}</h1>
           <p class="lead">{hero.lead}</p>
           <div class="ctas">
-            <a class="btn btn--pri" href={MACHINES_URL}>{hero.start}</a>
-            <a class="btn" href="#demo">{hero.watch}</a>
+            <a class="btn btn--pri" href={DASHBOARD_URL}>{hero.start}</a>
+            <a class="btn" href="#how">{hero.watch}</a>
           </div>
-          <p class="fine">{hero.fine} {FREE_CREDIT_OFFER}</p>
+          <p class="hero__facts">{hero.facts}</p>
         </div>
       </div>
     </section>
 
-    <section class="sec sec--alt" id="demo" aria-labelledby="demo-title">
+    <section class="sec sec--alt" id="how" aria-labelledby="how-title">
       <div class="wrap">
         <div class="shead">
           <p class="eyebrow">{demo.eyebrow}</p>
-          <h2 id="demo-title" class="sh">{demo.title}</h2>
+          <h2 id="how-title" class="sh">{demo.title}</h2>
           <p class="lead">{demo.lead}</p>
         </div>
         <SessionDemo
@@ -80,7 +72,6 @@ const LIFECYCLE_BARS = [100, 60, 50, 75];
           steps={demo.steps}
           languageLabel={demo.languageLabel}
           terminalLabel={demo.terminalLabel}
-          cliLabel={demo.cli}
         />
         <p class="fine demo-note">{demo.note}</p>
       </div>
@@ -110,10 +101,7 @@ const LIFECYCLE_BARS = [100, 60, 50, 75];
                     set:html={ICONS[i]}
                   />
                 </div>
-                <h3>
-                  {item.title}
-                  {i === features.items.length - 1 && <span class="soon">{features.soon}</span>}
-                </h3>
+                <h3>{item.title}</h3>
                 <p set:html={rich(item.body)} />
               </article>
             ))
@@ -124,20 +112,22 @@ const LIFECYCLE_BARS = [100, 60, 50, 75];
 
     <section class="sec sec--alt" id="e2b" aria-labelledby="e2b-title">
       <div class="wrap">
-        <EnvToggle
-          client:visible
-          toggleLabel={e2b.toggleLabel}
-          before={e2b.before}
-          after={e2b.after}
-          beforeHint={e2b.beforeHint}
-          unchanged={e2b.unchanged}
-          envBefore={ENV_BEFORE}
-          envAfter={ENV_AFTER}
-        >
-          <p class="eyebrow">{e2b.eyebrow}</p>
-          <h2 id="e2b-title" class="sh">{e2b.title}</h2>
-          <p class="lead" set:html={rich(e2b.lead)} />
-        </EnvToggle>
+        <div class="env">
+          <div>
+            <p class="eyebrow">{e2b.eyebrow}</p>
+            <h2 id="e2b-title" class="sh">{e2b.title}</h2>
+            <p class="lead">{e2b.lead}</p>
+            <p class="fine env__note" set:html={rich(e2b.envLine)} />
+            <p class="fine env__note">{e2b.keyLine} <a class="env__link" href={DASHBOARD_URL}>{e2b.keyLink}</a></p>
+          </div>
+          <E2bSnippet
+            client:visible
+            snippets={e2bSnippets}
+            languageLabel={e2b.languageLabel}
+            before={e2b.before}
+            after={e2b.after}
+          />
+        </div>
       </div>
     </section>
 
@@ -165,42 +155,14 @@ const LIFECYCLE_BARS = [100, 60, 50, 75];
       </div>
     </section>
 
-    <section class="sec sec--alt" id="pricing" aria-labelledby="pricing-title">
-      <div class="wrap">
-        <div class="shead">
-          <p class="eyebrow">{pricing.eyebrow}</p>
-          <h2 id="pricing-title" class="sh">{pricing.title}</h2>
-          <p class="lead" set:html={rich(pricing.lead)} />
-        </div>
-        <div class="plans">
-          {
-            PLANS.map((plan) => (
-              <article class:list={["plan", plan.highlight && "plan--hl"]}>
-                <h3>{plan.name}</h3>
-                <p class="plan__price">{plan.price}</p>
-                <ul>
-                  {plan.features.map((feature) => <li>{feature}</li>)}
-                </ul>
-                <a
-                  class:list={["btn", plan.highlight && "btn--pri"]}
-                  href={"contact" in plan ? CONTACT_URL : API_KEYS_URL}
-                >
-                  {plan.cta}
-                </a>
-              </article>
-            ))
-          }
-        </div>
-      </div>
-    </section>
-
     <section class="sec sec--cta" id="start" aria-labelledby="cta-title">
       <div class="wrap">
         <div class="cta">
+          <p class="cta__eyebrow">{cta.eyebrow}</p>
           <h2 id="cta-title" class="sh">{cta.title}</h2>
           <p set:html={rich(cta.lead)} />
           <div class="cta__actions">
-            <a class="btn btn--accent" href={API_KEYS_URL}>{cta.getKey}</a>
+            <a class="btn btn--accent" href={DASHBOARD_URL}>{cta.start}</a>
             <a class="btn btn--ghost" href={DOCS_URL}>{cta.docs}</a>
           </div>
         </div>

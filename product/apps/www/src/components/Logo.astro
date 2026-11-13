@@ -1,21 +1,30 @@
 ---
 /**
- * THE logo for the site. The owner has not chosen a mark yet, so this is a neutral placeholder:
- * the plain monochrome "Rookbox" wordmark (Instrument Sans 700, tracking -0.055em), no symbol.
+ * THE logo for the site: the flat monochrome "Gate" glyph (a rook silhouette with three merlons,
+ * one thin seam under the crown and the doorway cut out) next to the "Rookbox" wordmark
+ * (Instrument Sans 700, tracking -0.055em). Both draw in `currentColor`, so they invert with the
+ * text color. The seam and the doorway are real cut-outs, not painted over, so any background works.
  *
- * Swap point for the logo: replace this file (the final lockup), HeroVisual.astro (the large hero
- * slot) and public/favicon.svg. Nothing else draws the brand.
+ * Swap point for the logo: this file and public/favicon.svg (same glyph path).
  */
 type Props = {
   href: string;
   label: string;
-  /** Wordmark size in px. */
+  /** Wordmark size in px. The glyph is 1.1x that, tall. */
   size?: number;
 };
 
 const { href, label, size = 20 } = Astro.props;
+const height = Math.round(size * 1.1);
+const width = Math.round(height * 0.8);
 ---
 
 <a class="logo" href={href} aria-label={label}>
+  <svg width={width} height={height} viewBox="16 12 32 40" aria-hidden="true" focusable="false">
+    <path
+      fill="currentColor"
+      fill-rule="evenodd"
+      d="M16 12h8v7h4v-7h8v7h4v-7h8v10.5H16zM16 25.3h32V52H16zM27 52V40a5 5 0 0 1 10 0v12z"></path>
+  </svg>
   <span class="logo__word" style={`font-size:${size}px`} aria-hidden="true">Rookbox</span>
 </a>

@@ -67,18 +67,15 @@ VITE_API_URL=http://127.0.0.1:3000 pnpm --filter @rookbox/web dev
 
 Set `ROOKBOX_SEED_OWNER_PASSWORD` once to create the owner account. `DEPLOY.md` covers the
 deployment and what is not done yet (Rookbox API keys are not E2B keys).
-- **Placeholders:** the domain `box.example.com` (SDK snippets, site URL, sitemap), the
-  `ROOKBOX_API_KEY` variable name, the Docs, Changelog, Status, API reference, Rook, Privacy and
-  Terms links (anchors until those pages exist), and every `[BRACKETED]` value on the landing
-  (plans, prices, legal line, free-credit offer, fleet-count endpoint; see
-  `apps/www/src/placeholders.ts`) and in the dashboard (workspace, plan, limits, credits, region,
-  snapshot sizes). Sidebar entries without a screen (Snapshots, Secrets, Webhooks, CI, Members)
-  are marked "Soon" and are not links. The `desktop` template is coming soon and cannot be
-  selected; "Open desktop" is disabled. The landing's "machines running" counter is illustrative
-  demo data and says so.
-- **The logo.** Not chosen yet. `apps/www/src/components/Logo.astro` and
-  `apps/web/src/components/Logo.tsx` hold a plain "Rookbox" wordmark, and both apps'
-  `public/favicon.svg` is a placeholder "R". Replace those files to ship a mark.
+- **Placeholders:** the dashboard's `box.example.com` default domain, the `ROOKBOX_API_KEY`
+  variable name, and the dashboard's workspace, plan, limits, credits, region and snapshot-size
+  values. Sidebar entries without a screen (Snapshots, Secrets, Webhooks, CI, Members) are marked
+  "Soon" and are not links. The landing has no placeholders: no prices are published yet, so it
+  says so.
+- **The logo.** The flat monochrome "Gate" glyph and the "Rookbox" wordmark live in
+  `apps/www/src/components/Logo.astro` and `apps/www/public/favicon.svg`; the social image is
+  `apps/www/public/og.png`. The dashboard's `apps/web/src/components/Logo.tsx` and favicon still
+  hold the plain wordmark and a placeholder "R".
 
 ## Design
 

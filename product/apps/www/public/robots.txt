@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://box.example.com/sitemap-index.xml
+Sitemap: https://rookbox.run/sitemap-index.xml
