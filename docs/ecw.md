@@ -75,6 +75,11 @@ scripts/seed-api-key.sh \
   --namespace space
 ```
 
+The helper pod runs on the `general` node pool when the cluster has one and on
+the `infra` pool otherwise, which is where a Kind cluster keeps PostgreSQL. Pass
+`--node-pool <pool>` to choose another pool, or `--node-pool none` to set no
+node selector.
+
 Treat `--execute` as an administrative database operation. Select the context
 explicitly and inspect the generated SQL before using it outside a disposable
 local installation.
