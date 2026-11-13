@@ -2,16 +2,7 @@
 import type { Copy } from "../i18n/copy";
 import type { Locale } from "../i18n/locales";
 import { LOCALE_HREFLANG, LOCALE_LABELS, LOCALES, localeHomePath } from "../i18n/locales";
-import { LEGAL_LINE } from "../placeholders";
-import {
-  API_REFERENCE_URL,
-  CHANGELOG_URL,
-  DOCS_URL,
-  PRIVACY_URL,
-  ROOK_URL,
-  STATUS_URL,
-  TERMS_URL,
-} from "../site";
+import { DASHBOARD_URL, DOCS_URL, REPO_URL, SITE_NAME, SPACE_URL } from "../site";
 import Logo from "./Logo.astro";
 
 type Props = {
@@ -21,30 +12,23 @@ type Props = {
 
 const { locale, copy } = Astro.props;
 const f = copy.footer;
+// Computed at build time.
+const year = new Date().getFullYear();
 
 const columns = [
   {
     heading: f.product,
     links: [
-      { href: "#demo", label: f.howItWorks },
-      { href: "#pricing", label: f.pricing },
-      { href: STATUS_URL, label: f.status },
+      { href: "#how", label: f.howItWorks },
+      { href: "#lifecycle", label: f.lifecycle },
+      { href: DASHBOARD_URL, label: f.dashboard },
     ],
   },
   {
     heading: f.developers,
     links: [
       { href: DOCS_URL, label: f.docs },
-      { href: API_REFERENCE_URL, label: f.api },
-      { href: CHANGELOG_URL, label: f.changelog },
-    ],
-  },
-  {
-    heading: f.company,
-    links: [
-      { href: ROOK_URL, label: f.rook },
-      { href: PRIVACY_URL, label: f.privacy },
-      { href: TERMS_URL, label: f.terms },
+      { href: REPO_URL, label: f.github },
     ],
   },
 ];
@@ -55,7 +39,9 @@ const columns = [
     <div class="foot__grid">
       <div class="foot__brand">
         <Logo href={localeHomePath(locale)} label={copy.nav.home} size={28} />
-        <p>{f.tagline} <a class="foot__rook" href={ROOK_URL}>{f.rook}</a>.</p>
+        <p>
+          {f.tagline} {f.builtOn}{" "}<a class="foot__rook" href={SPACE_URL}>{f.spaceName}</a>{" "}{f.license}
+        </p>
         <nav class="foot__langs" aria-label={f.languages}>
           {
             LOCALES.map((item) => (
@@ -81,6 +67,6 @@ const columns = [
         }
       </nav>
     </div>
-    <p class="fine foot__legal">{LEGAL_LINE}</p>
+    <p class="fine foot__legal">© {year} {SITE_NAME}</p>
   </div>
 </footer>

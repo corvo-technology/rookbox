@@ -15,11 +15,13 @@ type Props = {
   description: string;
   locale: Locale;
   skipLabel: string;
+  imageAlt: string;
 };
 
-const { title, description, locale, skipLabel } = Astro.props;
-const site = Astro.site ?? new URL("https://box.example.com");
+const { title, description, locale, skipLabel, imageAlt } = Astro.props;
+const site = Astro.site ?? new URL("https://rookbox.run");
 const canonical = new URL(Astro.url.pathname, site).toString();
+const image = new URL("/og.png", site).toString();
 ---
 
 <!doctype html>
@@ -36,6 +38,14 @@ const canonical = new URL(Astro.url.pathname, site).toString();
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={SITE_NAME} />
     <meta property="og:locale" content={LOCALE_OG[locale]} />
+    <meta property="og:image" content={image} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={imageAlt} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={image} />
     <link rel="canonical" href={canonical} />
     {
       LOCALES.map((item) => (

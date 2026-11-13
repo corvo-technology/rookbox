@@ -116,7 +116,8 @@ for (const [name, locale] of [
       await p.goto(`${WEB}/usage`, { waitUntil: "networkidle" });
       await shot(p, `dashboard-usage-${name}-${device}-${scheme}`, false);
       const extra = await p.overflow();
-      if (extra > 0) console.warn(`dashboard ${name} ${device} ${scheme}: ${extra}px of sideways scroll`);
+      if (extra > 0)
+        console.warn(`dashboard ${name} ${device} ${scheme}: ${extra}px of sideways scroll`);
       await p.context().close();
     }
   }
