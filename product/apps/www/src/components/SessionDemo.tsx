@@ -2,10 +2,9 @@ import { useEffect, useState } from "react";
 import type { Sessions } from "../snippets";
 
 type TabId = keyof Sessions;
-const TABS: { id: TabId; label?: string }[] = [
+const TABS: { id: TabId; label: string }[] = [
   { id: "py", label: "Python" },
   { id: "ts", label: "TypeScript" },
-  { id: "cli" },
 ];
 
 type Props = {
@@ -13,15 +12,14 @@ type Props = {
   steps: { label: string; note: string }[];
   languageLabel: string;
   terminalLabel: string;
-  cliLabel: string;
 };
 
 /**
- * The animated terminal and the five steps beside it. Python, TypeScript and CLI tabs replay the
+ * The animated terminal and the steps beside it. Python and TypeScript tabs replay the
  * same session. The server renders the finished session; with reduced motion it stays finished,
  * otherwise it replays from the top once the page is interactive.
  */
-export function SessionDemo({ sessions, steps, languageLabel, terminalLabel, cliLabel }: Props) {
+export function SessionDemo({ sessions, steps, languageLabel, terminalLabel }: Props) {
   const [tab, setTab] = useState<TabId>("py");
   const [shown, setShown] = useState(sessions.py.length);
   const [reduce, setReduce] = useState(true);
@@ -69,7 +67,7 @@ export function SessionDemo({ sessions, steps, languageLabel, terminalLabel, cli
               className={tab === t.id ? "term__tab term__tab--sel" : "term__tab"}
               onClick={() => pick(t.id)}
             >
-              {t.label ?? cliLabel}
+              {t.label}
             </button>
           ))}
         </div>
