@@ -307,8 +307,8 @@ msgid "Revoke key"
 msgstr "Revocar clave"
 
 #: src/components/AppRail.tsx
-msgid "Rook Box home"
-msgstr "Inicio de Rook Box"
+msgid "Rookbox home"
+msgstr "Inicio de Rookbox"
 
 #: src/components/StatusChip.tsx
 msgid "Running"

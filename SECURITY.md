@@ -1,6 +1,6 @@
 # Security
 
-This policy describes how to report security vulnerabilities in Rook Box, a
+This policy describes how to report security vulnerabilities in Rookbox, a
 deployment built on SPACE, and which versions receive security fixes. Please
 use the private reporting channel below for security-sensitive findings.
 

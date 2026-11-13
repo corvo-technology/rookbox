@@ -30,7 +30,7 @@ export function AppRail() {
       aria-label={t`Main`}
       className="flex w-19 shrink-0 flex-col items-center gap-1 border-r border-sidebar-border bg-sidebar py-4"
     >
-      <NavLink to="/machines" aria-label={t`Rook Box home`} className="mb-4 rounded-lg">
+      <NavLink to="/machines" aria-label={t`Rookbox home`} className="mb-4 rounded-lg">
         <BoxMark className="size-8" />
       </NavLink>
       <RailLink to="/machines" icon={Server} label={t`Machines`} />

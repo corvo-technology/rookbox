@@ -2,14 +2,14 @@ import type { Copy } from "./types";
 
 export const es: Copy = {
   meta: {
-    title: "Rook Box: una computadora para cada agente",
+    title: "Rookbox: una computadora para cada agente",
     description:
       "Máquinas Linux para agentes de IA, cada una con su propio kernel y root. Suspéndelas, restáuralas y haz fork con el SDK de E2B.",
     skipToContent: "Ir al contenido",
   },
   nav: {
     primary: "Principal",
-    home: "Inicio de Rook Box",
+    home: "Inicio de Rookbox",
     menu: "Menú",
     docs: "Documentación",
     pricing: "Precios",
@@ -26,7 +26,7 @@ export const es: Copy = {
     snippetLabel: "Crea una máquina con el SDK de E2B",
   },
   preview: {
-    label: "El panel de Rook Box",
+    label: "El panel de Rookbox",
     machines: "Máquinas",
     newMachine: "Nueva máquina",
     running: "En ejecución",
@@ -60,7 +60,7 @@ export const es: Copy = {
     },
     sdk: {
       title: "Funciona con el SDK de E2B",
-      body: "Mantén el código que ya tienes. Apúntalo a Rook Box con un dominio y una clave.",
+      body: "Mantén el código que ya tienes. Apúntalo a Rookbox con un dominio y una clave.",
     },
   },
   cta: {

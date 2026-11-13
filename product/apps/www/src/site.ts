@@ -1,6 +1,6 @@
-export const SITE_NAME = "Rook Box";
+export const SITE_NAME = "Rookbox";
 
-/** Placeholder until Rook Box has a public domain. Also the domain the SDK snippets point at. */
+/** Placeholder until Rookbox has a public domain. Also the domain the SDK snippets point at. */
 export const SDK_DOMAIN = "box.example.com";
 
 /** The dashboard (apps/web). Set PUBLIC_DASHBOARD_URL when building for a real deployment. */

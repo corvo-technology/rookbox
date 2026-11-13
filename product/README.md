@@ -1,6 +1,6 @@
-# Rook Box product
+# Rookbox product
 
-The Rook Box marketing site and dashboard. This folder is its own pnpm + Turborepo workspace,
+The Rookbox marketing site and dashboard. This folder is its own pnpm + Turborepo workspace,
 separate from the Rust SPACE workspace around it.
 
 | Path | What it is |

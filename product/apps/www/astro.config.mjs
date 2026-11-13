@@ -6,7 +6,7 @@ import { defineConfig } from "astro/config";
 const wwwPort = Number(process.env.WWW_PORT ?? 4321);
 
 export default defineConfig({
-  // Placeholder until Rook Box has a public domain.
+  // Placeholder until Rookbox has a public domain.
   site: "https://box.example.com",
   output: "static",
   i18n: {
