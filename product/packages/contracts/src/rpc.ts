@@ -11,7 +11,14 @@ import {
   CreatedApiKeySchema,
   RevokeApiKeyInput,
 } from "./api-keys.js";
-import { CreateMachineInput, ForkMachineInput, MachineIdInput, MachineSchema } from "./machines.js";
+import {
+  CreateMachineInput,
+  ExecInput,
+  ExecResultSchema,
+  ForkMachineInput,
+  MachineIdInput,
+  MachineSchema,
+} from "./machines.js";
 import { UsageSummaryInput, UsageSummarySchema } from "./usage.js";
 
 /**
@@ -25,7 +32,8 @@ const errors = {
 
 const ok = z.object({ ok: z.literal(true) });
 
-/** The dashboard's API. A fake in-memory client implements it today; the real API will too. */
+/** The dashboard's API. `apps/api` implements it; so does the in-memory fake the dashboard uses
+ * when `VITE_API_URL` is not set. */
 export const appContract = {
   machines: {
     list: oc.output(z.array(MachineSchema)),
@@ -36,6 +44,8 @@ export const appContract = {
     /** Copies the source's disk into a new machine. Memory is not copied. */
     fork: oc.errors(errors).input(ForkMachineInput).output(MachineSchema),
     delete: oc.errors(errors).input(MachineIdInput).output(ok),
+    /** Runs a shell command in a running machine and waits for it to end. */
+    exec: oc.errors(errors).input(ExecInput).output(ExecResultSchema),
   },
   apiKeys: {
     list: oc.output(z.array(ApiKeySchema)),

@@ -22,6 +22,7 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { setAppearance } from "../lib/appearance";
+import { AUTH_ENABLED, useSession } from "../lib/auth";
 import { DOCS_URL, FILTER_INPUT_ID } from "../lib/site";
 import { Logo } from "./Logo";
 
@@ -170,6 +171,7 @@ function ThemeToggle() {
 
 function TopBar({ menuOpen, onMenu }: { menuOpen: boolean; onMenu: () => void }) {
   const { t } = useLingui();
+  const session = useSession();
   return (
     <header className="flex h-15 shrink-0 items-center gap-3 border-b border-border bg-background px-3 md:px-5">
       <Button
@@ -210,7 +212,7 @@ function TopBar({ menuOpen, onMenu }: { menuOpen: boolean; onMenu: () => void })
         aria-label={t`Settings`}
         className="grid size-[34px] place-items-center rounded-full border border-border bg-card text-label font-semibold text-foreground"
       >
-        [U]
+        {AUTH_ENABLED ? (session.data?.email.charAt(0).toUpperCase() ?? "") : "[U]"}
       </Link>
     </header>
   );

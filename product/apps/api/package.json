@@ -1,0 +1,40 @@
+{
+  "name": "@rookbox/api",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "generate": "prisma generate",
+    "build": "node scripts/build.mjs",
+    "start": "node --enable-source-maps dist/index.js",
+    "check": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --root ../.. apps/api/src",
+    "db:migrate": "node --enable-source-maps dist/cli/migrate.js",
+    "owner:seed": "node --enable-source-maps dist/cli/seed-owner.js"
+  },
+  "dependencies": {
+    "@hono/node-server": "2.1.5",
+    "@orpc/server": "1.15.7",
+    "@prisma/adapter-pg": "7.10.1",
+    "@prisma/client": "7.10.1",
+    "better-auth": "1.7.12",
+    "hono": "4.13.14",
+    "pg": "8.23.1",
+    "ws": "8.21.3",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@orpc/client": "1.15.7",
+    "@rookbox/contracts": "workspace:*",
+    "@types/node": "24.19.2",
+    "@types/pg": "8.23.1",
+    "@types/ws": "8.18.1",
+    "esbuild": "0.28.2",
+    "prisma": "7.10.1",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2",
+    "vitest": "4.1.12"
+  }
+}

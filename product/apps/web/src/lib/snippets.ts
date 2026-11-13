@@ -1,5 +1,5 @@
 /** Placeholder until Rookbox has a public domain. */
-export const ROOKBOX_DOMAIN = "box.example.com";
+export const ROOKBOX_DOMAIN: string = import.meta.env.VITE_E2B_DOMAIN ?? "box.example.com";
 
 /** Python, with the E2B SDK: connect to an existing machine and run a command in it. */
 export function connectSnippet(machineId: string): string {

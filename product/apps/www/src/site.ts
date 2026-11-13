@@ -1,7 +1,7 @@
 export const SITE_NAME = "Rookbox";
 
 /** Placeholder until Rookbox has a public domain. */
-export const SDK_DOMAIN = "box.example.com";
+export const SDK_DOMAIN: string = import.meta.env.PUBLIC_SDK_DOMAIN ?? "box.example.com";
 
 /** The dashboard (apps/web). Set PUBLIC_DASHBOARD_URL when building for a real deployment. */
 const DASHBOARD_BASE: string = import.meta.env.PUBLIC_DASHBOARD_URL ?? "http://127.0.0.1:5173/";

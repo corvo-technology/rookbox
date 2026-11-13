@@ -6,8 +6,8 @@ import { defineConfig } from "astro/config";
 const wwwPort = Number(process.env.WWW_PORT ?? 4321);
 
 export default defineConfig({
-  // Placeholder until Rookbox has a public domain.
-  site: "https://box.example.com",
+  // Set PUBLIC_SITE_URL when building for a real deployment; the default is a placeholder.
+  site: process.env.PUBLIC_SITE_URL ?? "https://box.example.com",
   output: "static",
   i18n: {
     defaultLocale: "en",
