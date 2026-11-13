@@ -360,6 +360,62 @@ else
   fail "--secrets-manager-key alone no longer creates the secret"
 fi
 
+# --execute picks the helper pod's node pool from the cluster. A stub kubectl
+# reports which pools have nodes and records the pod overrides.
+stub_kubectl() { # space-separated pools that have nodes
+  local dir="${WORK_DIR}/kubectl-$RANDOM"
+  mkdir -p "${dir}"
+  cat >"${dir}/kubectl" <<STUB
+#!/usr/bin/env bash
+args="\$*"
+case "\$args" in
+  *"get secret"*) printf 'eA==' ;;
+  *"get nodes"*)
+    for pool in $1; do
+      [[ "\$args" == *"node-pool=\${pool}"* ]] && echo "node/\${pool}-1"
+    done
+    exit 0 ;;
+  *"run "*) printf '%s\n' "\$args" >"${dir}/run" ;;
+  *"exec "*) cat >/dev/null ;;
+esac
+exit 0
+STUB
+  chmod +x "${dir}/kubectl"
+  printf '%s\n' "${dir}"
+}
+
+run_execute() { # kubectl-stub-dir, extra args...
+  local dir="$1"
+  shift
+  PATH="${dir}:${PATH}" seed --execute --namespace space "$@" >/dev/null 2>&1
+  cat "${dir}/run"
+}
+
+dir="$(stub_kubectl "infra sandbox builder")"
+if run_execute "${dir}" | grep -q 'node-pool":"infra"'; then
+  pass "--execute selects the infra pool on a Kind-shaped cluster"
+else
+  fail "--execute did not select the infra pool when no general pool exists"
+fi
+dir="$(stub_kubectl "general infra")"
+if run_execute "${dir}" | grep -q 'node-pool":"general"'; then
+  pass "--execute prefers the general pool when it exists"
+else
+  fail "--execute did not prefer the general pool"
+fi
+dir="$(stub_kubectl "")"
+if run_execute "${dir}" | grep -q nodeSelector; then
+  fail "--execute set a nodeSelector with no labelled nodes"
+else
+  pass "--execute omits the nodeSelector when no known pool is labelled"
+fi
+dir="$(stub_kubectl "general infra")"
+if run_execute "${dir}" --node-pool builder | grep -q 'node-pool":"builder"'; then
+  pass "--node-pool overrides auto-detection"
+else
+  fail "--node-pool did not override auto-detection"
+fi
+
 if [[ "${FAILURES}" -ne 0 ]]; then
   printf '\n%d check(s) failed.\n' "${FAILURES}" >&2
   exit 1

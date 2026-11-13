@@ -45,6 +45,12 @@ Options:
   --secret-key <key>           Postgres connection secret key. Default: POSTGRES_CONNECTION_STRING.
   --pod-name <name>            Helper pod name. Defaults to a generated name.
   --pod-image <image>          Helper pod image. Default: postgres:17.
+  --node-pool <pool|none>      Value of the space.pplx.net/node-pool label the
+                               helper pod must run on. Default: auto-detect the
+                               first of general (deployed clusters) or infra
+                               (Kind, where Postgres runs) that labels a node;
+                               if neither does, no selector is set. "none"
+                               forces no selector.
   --secrets-manager-key <id>   Store/read the raw token in AWS Secrets Manager.
   -h, --help                  Show this help.
 
@@ -66,7 +72,7 @@ Store the raw credential in a secret manager. SPACE stores only KEY_HASH.
 Execute mode:
   --execute copies the Postgres connection string from the secret namespace into
   a temporary secret in the helper pod namespace, schedules a postgres:17 pod on
-  the general node pool, runs the insert with psql, and removes the pod and
+  the node pool chosen by --node-pool, runs the insert with psql, and removes the pod and
   temporary secret on exit.
 EOF
 }
@@ -214,6 +220,29 @@ cleanup_execute_resources() {
   fi
 }
 
+# Print the node pool for the helper pod, or nothing for no selector. Deployed
+# clusters label a general pool; the Kind cluster from infra/space/kind has only
+# sandbox, infra and builder pools, and runs Postgres in infra. Probing the
+# cluster keeps one command valid on both without a hard-coded pool name.
+resolve_node_pool() {
+  local candidate
+  case "$NODE_POOL" in
+    none) return ;;
+    "") ;;
+    *)
+      printf '%s\n' "$NODE_POOL"
+      return
+      ;;
+  esac
+  for candidate in general infra; do
+    if [[ -n "$(kubectl_cmd get nodes -l "space.pplx.net/node-pool=${candidate}" \
+      -o name 2>/dev/null | head -n 1)" ]]; then
+      printf '%s\n' "$candidate"
+      return
+    fi
+  done
+}
+
 execute_sql() {
   command -v kubectl >/dev/null 2>&1 || die "kubectl is required for --execute"
 
@@ -230,6 +259,9 @@ execute_sql() {
   validate_kube_name "--secret-name" "$SECRET_NAME"
   validate_kube_name "--pod-name" "$POD_NAME"
   validate_secret_key "$SECRET_KEY"
+  if [[ -n "$NODE_POOL" && "$NODE_POOL" != none ]]; then
+    validate_kube_name "--node-pool" "$NODE_POOL"
+  fi
 
   TEMP_SECRET_NAME="$POD_NAME"
   CONNECTION_STRING_FILE="$(mktemp)"
@@ -247,9 +279,16 @@ execute_sql() {
     "--from-file=${SECRET_KEY}=${CONNECTION_STRING_FILE}" >/dev/null
   TEMP_SECRET_CREATED="true"
 
+  local node_selector=""
+  local pool
+  pool="$(resolve_node_pool)"
+  if [[ -n "$pool" ]]; then
+    node_selector="\"nodeSelector\":{\"space.pplx.net/node-pool\":\"${pool}\"},"
+  fi
+
   local pod_overrides
   pod_overrides="$(cat <<EOF
-{"spec":{"nodeSelector":{"space.pplx.net/node-pool":"general"},"containers":[{"name":"${POD_NAME}","image":"${POD_IMAGE}","env":[{"name":"PGCONNECT_TIMEOUT","value":"10"}],"envFrom":[{"secretRef":{"name":"${TEMP_SECRET_NAME}"}}],"command":["sleep","3600"]}]}}
+{"spec":{${node_selector}"containers":[{"name":"${POD_NAME}","image":"${POD_IMAGE}","env":[{"name":"PGCONNECT_TIMEOUT","value":"10"}],"envFrom":[{"secretRef":{"name":"${TEMP_SECRET_NAME}"}}],"command":["sleep","3600"]}]}}
 EOF
 )"
 
@@ -356,6 +395,7 @@ SECRET_NAME="space-postgres"
 SECRET_KEY="POSTGRES_CONNECTION_STRING"
 POD_NAME=""
 POD_IMAGE="postgres:17"
+NODE_POOL=""
 TEMP_SECRET_NAME=""
 CONNECTION_STRING_FILE=""
 TEMP_SECRET_CREATED="false"
@@ -463,6 +503,11 @@ while [[ $# -gt 0 ]]; do
     --pod-image)
       [[ $# -ge 2 ]] || die "--pod-image requires a value"
       POD_IMAGE="$2"
+      shift 2
+      ;;
+    --node-pool)
+      [[ $# -ge 2 ]] || die "--node-pool requires a value"
+      NODE_POOL="$2"
       shift 2
       ;;
     --secrets-manager-key)
