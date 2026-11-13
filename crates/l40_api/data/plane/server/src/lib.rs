@@ -667,41 +667,10 @@ fn router(state: DataPlaneState) -> Router {
         None => Router::new(),
     };
 
-    Router::new()
-        .route("/healthz", get(|| async { "ok" }))
-        .route("/readyz", get(readyz))
-        .route(
-            native_routes::ATTACH_SESSION.runtime_path(),
-            on(
-                native_method_filter(native_routes::ATTACH_SESSION.method()),
-                attach_session,
-            ),
-        )
-        .route(
-            native_routes::STREAM_SESSION_EVENTS.runtime_path(),
-            on(
-                native_method_filter(native_routes::STREAM_SESSION_EVENTS.method()),
-                session_events,
-            ),
-        )
-        .route(
-            native_routes::PROXY_SESSION.runtime_path(),
-            any(proxy_session),
-        )
-        .route(
-            native_routes::PROXY_SESSION_SUBPATH_MOUNT,
-            any(proxy_session),
-        )
-        .route(
-            "/health",
-            get(|| async { StatusCode::NO_CONTENT }).fallback(unsupported_ecw_envd_method),
-        )
-        .route(
-            "/files",
-            get(ecw_files::read_file)
-                .post(ecw_files::write_file)
-                .fallback(unsupported_ecw_envd_method),
-        )
+    // Connect clients read the failure code from the body's string `code`;
+    // without it they derive one from the HTTP status, and a 404 becomes
+    // `unimplemented`. Only these routes speak Connect.
+    let connect_routes = Router::new()
         .route(
             "/filesystem.Filesystem/Stat",
             post(ecw_files::filesystem_stat).fallback(unsupported_ecw_envd_method),
@@ -770,10 +739,48 @@ fn router(state: DataPlaneState) -> Router {
             "/process.Process/CloseStdin",
             post(ecw_process::process_close_stdin).fallback(unsupported_ecw_envd_method),
         )
+        .route_layer(middleware::from_fn(ecw_connect::connect_error_code));
+
+    Router::new()
+        .route("/healthz", get(|| async { "ok" }))
+        .route("/readyz", get(readyz))
+        .route(
+            native_routes::ATTACH_SESSION.runtime_path(),
+            on(
+                native_method_filter(native_routes::ATTACH_SESSION.method()),
+                attach_session,
+            ),
+        )
+        .route(
+            native_routes::STREAM_SESSION_EVENTS.runtime_path(),
+            on(
+                native_method_filter(native_routes::STREAM_SESSION_EVENTS.method()),
+                session_events,
+            ),
+        )
+        .route(
+            native_routes::PROXY_SESSION.runtime_path(),
+            any(proxy_session),
+        )
+        .route(
+            native_routes::PROXY_SESSION_SUBPATH_MOUNT,
+            any(proxy_session),
+        )
+        .route(
+            "/health",
+            get(|| async { StatusCode::NO_CONTENT }).fallback(unsupported_ecw_envd_method),
+        )
+        .route(
+            "/files",
+            get(ecw_files::read_file)
+                .post(ecw_files::write_file)
+                .fallback(unsupported_ecw_envd_method),
+        )
         .route("/metrics", any(unsupported_ecw_envd_endpoint))
         .route("/envs", any(unsupported_ecw_envd_endpoint))
         .route("/files/compose", any(unsupported_ecw_envd_endpoint))
         .merge(native_files)
+        .merge(connect_routes)
         // Matched routes only: service-port requests are forwarded before
         // routing, and the fallback proxy carries no data-plane API route.
         .route_layer(middleware::from_fn(record_request_latency))
