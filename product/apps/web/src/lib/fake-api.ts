@@ -10,7 +10,7 @@ import {
 } from "@rookbox/contracts";
 
 /**
- * An in-memory stand-in for the Rook Box API, so the dashboard runs with no server. It implements
+ * An in-memory stand-in for the Rookbox API, so the dashboard runs with no server. It implements
  * the shared contract, so inputs and outputs are validated exactly as the real API will validate
  * them, and screens move through the same states (creating, running, suspending, ...) with
  * simulated latency. Everything resets on reload.

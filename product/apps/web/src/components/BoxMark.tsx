@@ -1,7 +1,7 @@
 import { cn } from "@rookbox/ui-web";
 
 /**
- * The Rook Box mark: a small machine with two eyes. Ink and paper follow the theme; the screen
+ * The Rookbox mark: a small machine with two eyes. Ink and paper follow the theme; the screen
  * line is the one green.
  */
 export function BoxMark({ className, asleep = false }: { className?: string; asleep?: boolean }) {

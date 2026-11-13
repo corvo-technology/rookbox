@@ -1,4 +1,4 @@
-/** Placeholder until Rook Box has a public domain. */
+/** Placeholder until Rookbox has a public domain. */
 export const ROOKBOX_DOMAIN = "box.example.com";
 
 /** Python, with the E2B SDK: connect to an existing machine and run a command in it. */

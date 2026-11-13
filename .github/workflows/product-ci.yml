@@ -1,6 +1,6 @@
 name: Product CI
 
-# Lint, type-check, test and build the Rook Box site and dashboard in product/.
+# Lint, type-check, test and build the Rookbox site and dashboard in product/.
 # Unlike the upstream SPACE workflows, this one runs in this repository.
 
 on:

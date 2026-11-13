@@ -1,6 +1,6 @@
 import { SDK_DOMAIN } from "./site";
 
-/** The hero's snippets: the unmodified E2B SDK pointed at Rook Box. */
+/** The hero's snippets: the unmodified E2B SDK pointed at Rookbox. */
 export const SNIPPETS = [
   {
     language: "Python",
