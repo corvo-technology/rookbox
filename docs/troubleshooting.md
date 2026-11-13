@@ -16,6 +16,7 @@ This section covers the [Kind installation](installation.md). Use the explicit `
 | Running setup from a Mac | Use a Linux x86_64 host with KVM and run the setup there over SSH. Installing the command-line tools on macOS does not satisfy the host requirements. |
 | `/dev/kvm` or `/dev/net/tun` is missing, or storage setup fails | Check device access, nested virtualization, privileged Docker operations, loop devices, and btrfs support on the host. |
 | Package installation fails | Install the packages named in the error, or provide root/non-interactive sudo access. Rerun the failed step rather than skipping it. |
+| `kube-proxy` or `metrics-server` restarts with `too many open files` | Raise the host's inotify limits as described under [Check the host](installation.md#check-the-host), then delete the `kube-proxy` pods in `kube-system` so they restart. |
 | Pods remain pending or restart | Run the commands below and inspect the first failing pod's events and container logs. Confirm the host supports the required privileged containers and storage operations. |
 | `seed:latest` cannot be resolved | Check `space-seed-publish` logs and completion. The seed must be built and published before sandbox creation. |
 | Login rejects `root@local` | Use the password selected before the bring-up (`password` by default). Confirm the bring-up completed and Tilt's `provision-local-console` resource succeeded; rerunning does not reset an existing password. |
