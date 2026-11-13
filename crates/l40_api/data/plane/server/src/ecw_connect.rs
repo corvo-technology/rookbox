@@ -17,7 +17,7 @@ use serde::de::DeserializeOwned;
 use serde_json::{Value, json};
 
 use super::{
-    EcwProxyError, ResponseKind, ResponseOrigin, TooManyRequestsReason,
+    EcwConnectErrorCode, EcwProxyError, ResponseKind, ResponseOrigin, TooManyRequestsReason,
     backend_transport_reset_reason,
 };
 
@@ -573,6 +573,42 @@ pub(super) fn tonic_status_to_ecw_error(status: tonic::Status) -> EcwProxyError 
             error.with_too_many_requests_reason(TooManyRequestsReason::BackendResourceExhausted);
     }
     error.with_backend_status(status)
+}
+
+/// The Connect error code to put in the body for an error response with this
+/// HTTP status, where a Connect client would otherwise derive the wrong one.
+///
+/// Connect clients read the string `code` from the error body and, when it is
+/// absent, derive one from the HTTP status; they derive `unimplemented` from a
+/// 404. E2B SDKs rely on `not_found` to make `exists()` false and to raise
+/// `FileNotFoundError`. Other statuses derive codes existing clients already
+/// handle, so they keep the numeric body.
+pub(super) fn connect_code_for_status(status: StatusCode) -> Option<&'static str> {
+    (status == StatusCode::NOT_FOUND).then_some("not_found")
+}
+
+/// Rewrites the body of an error response on a Connect route to carry the
+/// string `code` Connect clients expect. The REST routes keep the numeric code.
+pub(super) async fn connect_error_code(
+    request: axum::http::Request<Body>,
+    next: axum::middleware::Next,
+) -> Response {
+    let response = next.run(request).await;
+    let Some(EcwConnectErrorCode(code)) = response.extensions().get().copied() else {
+        return response;
+    };
+    let (mut parts, body) = response.into_parts();
+    let Ok(collected) = to_bytes(body, E2B_CONNECT_JSON_BODY_LIMIT_BYTES).await else {
+        return Response::from_parts(parts, Body::empty());
+    };
+    let Ok(mut value) = serde_json::from_slice::<Value>(&collected) else {
+        return Response::from_parts(parts, Body::from(collected));
+    };
+    if let Some(object) = value.as_object_mut() {
+        object.insert("code".to_string(), json!(code));
+    }
+    parts.headers.remove(header::CONTENT_LENGTH);
+    Response::from_parts(parts, Body::from(value.to_string()))
 }
 
 fn tonic_status_needs_ecw_not_running_shape(status: &tonic::Status) -> bool {

@@ -1935,6 +1935,11 @@ impl EcwProxyError {
     }
 }
 
+/// The Connect error code an [`EcwProxyError`] response should carry when it
+/// answers a Connect route; see `ecw_connect::connect_error_code`.
+#[derive(Clone, Copy, Debug)]
+pub(super) struct EcwConnectErrorCode(pub(super) &'static str);
+
 impl IntoResponse for EcwProxyError {
     fn into_response(self) -> Response {
         crate::metrics::response(
@@ -1960,6 +1965,9 @@ impl IntoResponse for EcwProxyError {
         }
 
         let mut response = (self.status, Json(body)).into_response();
+        if let Some(code) = crate::ecw_connect::connect_code_for_status(self.status) {
+            response.extensions_mut().insert(EcwConnectErrorCode(code));
+        }
         if let Some(retry_after) = self.retry_after
             && let Ok(value) =
                 header::HeaderValue::from_str(&retry_after.as_secs().max(1).to_string())
