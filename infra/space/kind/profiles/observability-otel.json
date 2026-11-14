@@ -1,5 +1,0 @@
-{
-  "SPACE_KIND_TELEMETRY_MODE": "otel",
-  "SPACE_KIND_DATADOG_MODE": "off",
-  "SPACE_KIND_OBSERVABILITY": "auto"
-}

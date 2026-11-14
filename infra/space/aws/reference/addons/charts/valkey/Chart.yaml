@@ -1,5 +1,0 @@
-apiVersion: v2
-name: space-reference-valkey
-description: One in-memory Valkey instance, for the SPACE reference deployment.
-type: application
-version: 0.1.0

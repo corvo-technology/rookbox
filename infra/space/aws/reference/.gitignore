@@ -1,8 +1,0 @@
-.terraform/
-*.tfstate
-*.tfstate.*
-*.tfplan
-tfplan
-# The first bootstrap apply uses a local-backend override that is deleted before
-# the state migrates into the bucket; never commit one.
-*_override.tf

@@ -1,3 +1,0 @@
-interface:
-  display_name: "SPACE Validation"
-  short_description: "Local, Kind, smoke, load, and CI validation"

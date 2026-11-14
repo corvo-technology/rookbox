@@ -180,12 +180,12 @@ the public `POST https://api.rookbox.run/waitlist` (the landing's `PUBLIC_API_UR
   once in the dashboard, in case the email does not arrive. The migration adds the
   `waitlist_entry` table and runs at start.
 
-### SPACE service key
+### Sandbox engine service key
 
-`SPACE_ECW_API_KEY` is an ECW API key for one SPACE organization (see `docs/ecw.md`, "Create an
-API key", and `scripts/seed-api-key.sh`). The API tags every sandbox it creates with
+`SPACE_ECW_API_KEY` is an ECW (E2B-compatible) API key for one organization of the sandbox engine,
+created on the engine's own server. The API tags every sandbox it creates with
 `rookbox.owner=<user id>` and only touches sandboxes of the signed-in user. All Rookbox users
-share that one SPACE organization.
+share that one engine organization.
 
 ## 2. Dashboard and landing on the VPS
 
@@ -328,8 +328,8 @@ use rather than its provisioned size; verify against a machine you know.
 
 ## How machine access works
 
-- **Machines** are SPACE sandboxes created through its E2B-compatible API (ECW). ECW `pause` is
-  SPACE `suspend`, and ECW `resume` is SPACE `restore`. Every create sends the idle timeout with
+- **Machines** are sandboxes of the sandbox engine, created through its E2B-compatible API (ECW).
+  ECW `pause` is the engine's `suspend`, and ECW `resume` is its `restore`. Every create sends the idle timeout with
   auto-pause on, so an idle machine suspends itself.
 - **Desktop.** A sandbox's public ports require the header `e2b-traffic-access-token`. A browser
   link or WebSocket cannot send it, and ECW rejects `allowPublicTraffic`. So "Open desktop" asks the API for a signed link, which lands on
@@ -421,7 +421,7 @@ release is withdrawn by deleting the release (the installer then falls back to t
   hours and sizes. There are no prices, credits or invoices yet.
 - **Snapshots, secrets, webhooks and members** do not exist yet; the dashboard hides them (see
   `SHOW_COMING_SOON` in `apps/web/src/components/AppShell.tsx`).
-- The SPACE side (`api.box.rookbox.run`) was not reachable while this was written, so the SPACE
+- The sandbox engine (`api.box.rookbox.run`) was not reachable while this was written, so its
   client was built from the ECW source and docs and tested against mocks. Run one real create,
   suspend, restore, exec and desktop pass after the first deploy.
 

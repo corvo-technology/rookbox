@@ -1,13 +1,12 @@
 # Rookbox product
 
-The Rookbox marketing site and dashboard. This folder is its own pnpm + Turborepo workspace,
-separate from the Rust SPACE workspace around it.
+The Rookbox marketing site and dashboard. This folder is its own pnpm + Turborepo workspace.
 
 | Path | What it is |
 | --- | --- |
 | `apps/www` | Marketing site: Astro, React islands, Tailwind v4, sitemap. English, Brazilian Portuguese (`/pt/`) and Spanish (`/es/`). |
 | `apps/web` | Dashboard: Vite, React, React Router, TanStack Query, shadcn/ui on Base UI, Tailwind v4, Lingui (en, pt-BR, es). |
-| `apps/api` | The product API: Hono, oRPC, Prisma + Postgres, better-auth. Runs machines on SPACE through its E2B-compatible API. See `DEPLOY.md` and `apps/api/.env.example`. |
+| `apps/api` | The product API: Hono, oRPC, Prisma + Postgres, better-auth. Runs machines on the sandbox engine through its E2B-compatible API. See `DEPLOY.md` and `apps/api/.env.example`. |
 | `apps/reporter` | The usage reporter: runs next to the sandbox server, lists the machines, and ships usage events to the API. Node 22, no runtime dependencies. See its README. |
 | `packages/contracts` | The dashboard's oRPC contract (machines, API keys) and the machine lifecycle rules. |
 | `packages/ui-tokens` | Semantic colour tokens; `src/index.ts` generates `src/tokens.css`. |
@@ -58,7 +57,7 @@ installed Google Chrome through Playwright and writes PNGs to `.screenshots/` (i
 
 ## Run the real API locally
 
-Needs a Postgres and a SPACE (or any ECW-compatible endpoint). Copy `apps/api/.env.example` to
+Needs a Postgres and a sandbox engine (or any ECW-compatible endpoint). Copy `apps/api/.env.example` to
 `apps/api/.env`, fill it in, then:
 
 ```bash
