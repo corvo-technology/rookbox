@@ -19,7 +19,8 @@ import { sandboxHost } from "./space/client.js";
  *    `<desktop origin>/open/<link token>`, valid for `linkTtlS` (minutes).
  * 2. Opening it (`/open/<token>`) trades the link for a session token, set as a host-only,
  *    path-scoped cookie (`Path=/m/<id>/`, `HttpOnly`, `SameSite=Strict`) and redirects to the page.
- *    A cookie, not a token in the URL, so the secret stays out of history, logs and Referer, while
+ *    The page is shown in a frame on the dashboard (`frame-ancestors` names only that origin; the
+ *    desktop origin is same-site with it, so the Strict cookie still travels). A cookie, not a token in the URL, so the secret stays out of history, logs and Referer, while
  *    assets and the WebSocket (same origin, same path) still carry it. A link works once.
  * 3. `/m/<id>/...` and its `websockify` WebSocket need that cookie. The login cookie is never read
  *    here and nothing here sets it: this code path has no access to better-auth.
@@ -31,11 +32,13 @@ const TOKEN_TTL_MS = 60_000;
 const MAX_USED_LINKS = 10_000;
 
 export type DesktopDeps = {
-  machines: Pick<MachineService, "desktopTarget">;
+  machines: Pick<MachineService, "desktopTarget" | "ensureDesktop">;
   tokens: DesktopTokens;
   e2bDomain: string;
   /** Origin the desktop is served from; WebSocket upgrades must come from it. */
   origin: string;
+  /** The dashboard's origin: the only page allowed to show the desktop in a frame. */
+  appOrigin: string;
   /** Host (and port) of that origin. When set, upgrades on any other host are refused. */
   host: string | null;
   linkTtlS: number;
@@ -134,6 +137,8 @@ export function createDesktopProxy(deps: DesktopDeps) {
      */
     async issueLink(userId: string, machineId: string): Promise<DesktopLink> {
       await deps.machines.desktopTarget(userId, machineId);
+      // The stack is not running on a machine the API created, or after a restore.
+      await deps.machines.ensureDesktop(userId, machineId);
       const { token, expiresAt } = deps.tokens.sign("link", { machineId, userId }, deps.linkTtlS);
       return { url: `${deps.origin}/open/${token}`, expiresAt: expiresAt.toISOString() };
     },
@@ -176,6 +181,8 @@ export function createDesktopProxy(deps: DesktopDeps) {
           "set-cookie": cookie,
           "cache-control": "no-store",
           "referrer-policy": "no-referrer",
+          // The redirect is navigated inside the dashboard's frame, so it must be frameable too.
+          "content-security-policy": `frame-ancestors ${deps.appOrigin}`,
         },
       });
     },
@@ -213,8 +220,9 @@ export function createDesktopProxy(deps: DesktopDeps) {
       const out = new Headers({
         "x-content-type-options": "nosniff",
         "referrer-policy": "no-referrer",
-        "x-frame-options": "DENY",
       });
+      // Only the dashboard may frame the desktop; the page's own scripts get no say in it.
+      out.set("content-security-policy", `frame-ancestors ${deps.appOrigin}`);
       for (const name of RESPONSE_HEADERS) {
         const value = upstream.headers.get(name);
         if (value) out.set(name, value);

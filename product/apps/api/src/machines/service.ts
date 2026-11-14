@@ -17,6 +17,7 @@ import {
 import type { Logger } from "../logger.js";
 import type { SandboxInfo, SpaceClient, SpaceErrorCode } from "../space/client.js";
 import { SpaceError, sandboxHost } from "../space/client.js";
+import { DESKTOP_EXEC_TIMEOUT_MS, DESKTOP_SCRIPT } from "./desktop-stack.js";
 import { type MachineOp, mapStatus } from "./state.js";
 import { DuplicateNameError, type MachineRow, type MachineStore } from "./store.js";
 
@@ -411,6 +412,45 @@ export function createMachineService(options: MachineServiceOptions) {
       }
       logger.info("user machines suspended", { owner: ownerId, ...result });
       return result;
+    },
+
+    /**
+     * Makes sure the machine's desktop stack runs (see `desktop-stack.ts`), starting it when it
+     * does not. Safe to call on every open: a stack that is up costs one local request.
+     */
+    async ensureDesktop(ownerId: string, id: string): Promise<void> {
+      const { row, info } = await owned(ownerId, id);
+      const machine = toMachine(row, info);
+      if (!machine || !DESKTOP_TEMPLATES.includes(row.template)) {
+        throw new MachineError("NOT_FOUND", "No such desktop.");
+      }
+      if (machine.status !== "running") {
+        throw new MachineError("CONFLICT", `The machine is ${machine.status}, not running.`);
+      }
+      if (!info?.envdAccessToken) {
+        throw new MachineError("CONFLICT", "The machine did not give access.");
+      }
+      let result: ExecResult;
+      try {
+        result = await space.exec(
+          id,
+          info.envdAccessToken,
+          DESKTOP_SCRIPT,
+          DESKTOP_EXEC_TIMEOUT_MS,
+        );
+      } catch (error) {
+        logger.warn("desktop start failed", { owner: ownerId, machine: id, error });
+        wrap(error);
+      }
+      if (result.exitCode !== 0) {
+        logger.warn("desktop did not come up", {
+          owner: ownerId,
+          machine: id,
+          exitCode: result.exitCode,
+          stderr: result.stderr.slice(0, 500),
+        });
+        throw new MachineError("HOST_ERROR", "The desktop did not start. Try again in a moment.");
+      }
     },
 
     /** What the desktop proxy needs: the sandbox id and its traffic token, for a running desktop. */

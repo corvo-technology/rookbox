@@ -91,6 +91,7 @@ try {
     }),
     e2bDomain: env.E2B_DOMAIN,
     origin: desktopOrigin(env),
+    appOrigin: env.APP_ORIGIN,
     host: env.DESKTOP_HOST ?? null,
     linkTtlS: env.DESKTOP_LINK_TTL_S,
     sessionTtlS: env.DESKTOP_SESSION_TTL_S,
