@@ -158,6 +158,12 @@ export function MachinesPage() {
           <p className="text-heading3 font-medium text-foreground">
             <Trans>No machines yet</Trans>
           </p>
+          <p className="max-w-[420px] text-body1 text-muted-foreground">
+            <Trans>
+              A machine is your own Linux computer in the cloud. Create one to run commands, open a
+              desktop or host something.
+            </Trans>
+          </p>
           {newMachine}
         </div>
       ) : (
@@ -226,9 +232,21 @@ export function MachinesPage() {
               </TableBody>
             </Table>
             {rows.length === 0 ? (
-              <p className="p-10 text-center text-muted-foreground">
-                <Trans>No machines match.</Trans>
-              </p>
+              <div className="flex flex-col items-center gap-2 p-10 text-center">
+                <p className="text-muted-foreground">
+                  <Trans>No machines match.</Trans>
+                </p>
+                <Button
+                  variant="outline"
+                  className="h-11 px-3.5"
+                  onClick={() => {
+                    setQuery("");
+                    setState("all");
+                  }}
+                >
+                  <Trans>Clear filters</Trans>
+                </Button>
+              </div>
             ) : null}
           </div>
           <p className="text-label text-muted-foreground">

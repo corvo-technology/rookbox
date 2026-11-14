@@ -312,6 +312,41 @@ export function createMachineService(options: MachineServiceOptions) {
 
     suspend: suspendMachine,
 
+    /**
+     * Every machine of every owner, for the operator panel. One listing of the host, none per
+     * row; a row the host does not show reads as `failed`. Changes nothing.
+     */
+    async listAll(): Promise<{ row: MachineRow; status: Machine["status"] }[]> {
+      const rows = await store.listAll();
+      const listed = new Map((await space.list({})).map((info) => [info.id, info]));
+      return rows
+        .map((row) => {
+          const info = listed.get(row.id);
+          const status = mapStatus({
+            space: info ? info.state : "missing",
+            op: row.op,
+            opAt: row.opAt,
+            now: now(),
+          });
+          return { row, status: status ?? ("failed" as const) };
+        })
+        .sort((a, b) => b.row.createdAt.getTime() - a.row.createdAt.getTime());
+    },
+
+    /** The account a machine belongs to, or null. For operator actions, which then act as that owner. */
+    async ownerOf(id: string): Promise<string | null> {
+      return (await store.listAll()).find((row) => row.id === id)?.ownerId ?? null;
+    },
+
+    /** How many machines each account holds a record of. Reads the database only. */
+    async countByOwner(): Promise<Map<string, number>> {
+      const counts = new Map<string, number>();
+      for (const row of await store.listAll()) {
+        counts.set(row.ownerId, (counts.get(row.ownerId) ?? 0) + 1);
+      }
+      return counts;
+    },
+
     async restore(ownerId: string, id: string): Promise<Machine> {
       const current = await view(ownerId, id);
       if (!canPerform(current.status, "restore")) {

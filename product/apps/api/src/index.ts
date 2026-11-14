@@ -18,6 +18,7 @@ import { createEcwClient } from "./space/client.js";
 import { createIngestHandler } from "./usage/ingest.js";
 import { createPrismaUsageStore } from "./usage/prisma-store.js";
 import { createUsageService } from "./usage/service.js";
+import { createAuthCredentials, createPrismaUserStore, createUserAdmin } from "./users.js";
 
 const bootLogger = createLogger("info", { service: "rookbox-api" });
 
@@ -144,6 +145,16 @@ try {
       },
     },
     reconcile: (mode) => reconcile(reconcileDeps, mode),
+    userAdmin: createUserAdmin({
+      store: createPrismaUserStore(db),
+      // Sign-up stays closed on the server's own auth; this second instance is never mounted, it
+      // only hashes and stores a password for an account the operator creates.
+      credentials: createAuthCredentials(createAuth(db, env, logger, { allowSignUp: true })),
+      allowedEmails: env.ROOKBOX_ALLOWED_EMAILS,
+      suspendMachines: (userId) => machines.suspendAll(userId),
+      logger,
+    }),
+    maxRunningTotal: env.MAX_RUNNING_MACHINES_TOTAL,
     space,
     usage,
     ingestUsage: createIngestHandler({ secret: env.INGEST_SECRET, usage, logger }),

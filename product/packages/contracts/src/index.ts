@@ -1,4 +1,5 @@
 export * from "./admin.js";
+export * from "./admin-panel.js";
 export * from "./api-keys.js";
 export * from "./config.js";
 export * from "./errors.js";

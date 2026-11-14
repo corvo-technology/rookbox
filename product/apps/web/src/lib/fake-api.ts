@@ -282,11 +282,55 @@ export function createFakeApi(options: FakeApiOptions = {}): AppClient {
       }),
     },
     admin: {
-      // Nobody is an admin in the fake.
+      // Nobody is an admin in the fake, so the operator panel never shows.
+      access: os.admin.access.handler(async () => {
+        await latency();
+        return { admin: false };
+      }),
       usage: os.admin.usage.handler(async ({ errors }) => {
         await latency();
         throw errors.FORBIDDEN();
       }),
+      health: os.admin.health.handler(async ({ errors }) => {
+        await latency();
+        throw errors.FORBIDDEN();
+      }),
+      users: {
+        list: os.admin.users.list.handler(async ({ errors }) => {
+          await latency();
+          throw errors.FORBIDDEN();
+        }),
+        create: os.admin.users.create.handler(async ({ errors }) => {
+          await latency();
+          throw errors.FORBIDDEN();
+        }),
+        resetPassword: os.admin.users.resetPassword.handler(async ({ errors }) => {
+          await latency();
+          throw errors.FORBIDDEN();
+        }),
+        disable: os.admin.users.disable.handler(async ({ errors }) => {
+          await latency();
+          throw errors.FORBIDDEN();
+        }),
+        enable: os.admin.users.enable.handler(async ({ errors }) => {
+          await latency();
+          throw errors.FORBIDDEN();
+        }),
+      },
+      machines: {
+        list: os.admin.machines.list.handler(async ({ errors }) => {
+          await latency();
+          throw errors.FORBIDDEN();
+        }),
+        suspend: os.admin.machines.suspend.handler(async ({ errors }) => {
+          await latency();
+          throw errors.FORBIDDEN();
+        }),
+        delete: os.admin.machines.delete.handler(async ({ errors }) => {
+          await latency();
+          throw errors.FORBIDDEN();
+        }),
+      },
     },
     config: {
       get: os.config.get.handler(async () => {

@@ -32,6 +32,18 @@ msgstr "{0} está lista."
 msgid "{elapsed} s"
 msgstr "{elapsed} s"
 
+#: src/pages/admin/AdminUsersPage.tsx
+msgid "{email} can sign in again."
+msgstr "{email} puede iniciar sesión de nuevo."
+
+#: src/pages/admin/AdminUsersPage.tsx
+msgid "{email} is disabled."
+msgstr "{email} está desactivada."
+
+#: src/pages/admin/AdminUsersPage.tsx
+msgid "{email} is disabled. Machines suspended: {count}."
+msgstr "{email} está desactivada. Máquinas suspendidas: {count}."
+
 #: src/components/MachineActions.tsx
 msgid "{name} deleted"
 msgstr "{name} eliminada"
@@ -52,10 +64,12 @@ msgstr "{vcpu} vCPU · {memory} de RAM · {disk} de disco"
 msgid "{vcpu} vCPU / {memory}"
 msgstr "{vcpu} vCPU / {memory}"
 
+#: src/pages/admin/AdminUsagePage.tsx
 #: src/pages/UsagePage.tsx
 msgid "30 days"
 msgstr "30 días"
 
+#: src/pages/admin/AdminUsagePage.tsx
 #: src/pages/UsagePage.tsx
 msgid "7 days"
 msgstr "7 días"
@@ -72,6 +86,10 @@ msgstr "Se alcanzó un límite del servicio de máquinas."
 msgid "A Linux desktop with Chromium you can open in a tab, plus a terminal."
 msgstr "Un escritorio Linux con Chromium que puedes abrir en una pestaña, más una terminal."
 
+#: src/pages/MachinesPage.tsx
+msgid "A machine is your own Linux computer in the cloud. Create one to run commands, open a desktop or host something."
+msgstr "Una máquina es tu propio ordenador Linux en la nube. Crea una para ejecutar comandos, abrir un escritorio o alojar algo."
+
 #: src/components/CreateMachineDialog.tsx
 msgid "A machine with no activity for this long is suspended and keeps its memory. Restore it any time."
 msgstr "Una máquina sin actividad durante este tiempo se suspende y conserva su memoria. Restáurala cuando quieras."
@@ -80,14 +98,29 @@ msgstr "Una máquina sin actividad durante este tiempo se suspende y conserva su
 msgid "A machine with that name already exists."
 msgstr "Ya existe una máquina con ese nombre."
 
+#: src/components/ErrorNote.tsx
+msgid "A name is required."
+msgstr "El nombre es obligatorio."
+
+#: src/pages/admin/AdminUsersPage.tsx
+msgid "A new password is generated and every device they are signed in on is signed out. The old password stops working."
+msgstr "Se genera una contraseña nueva y se cierra la sesión en todos los dispositivos de la persona. La contraseña anterior deja de funcionar."
+
 #: src/components/CreateMachineDialog.tsx
 msgid "A private Linux machine that starts in seconds."
 msgstr "Una máquina Linux privada que arranca en segundos."
 
+#: src/pages/admin/AdminUsersPage.tsx
 #: src/pages/SettingsPage.tsx
 msgid "Account"
 msgstr "Cuenta"
 
+#: src/pages/admin/AdminHealthPage.tsx
+msgid "Accounts and machines can't be read until it is back."
+msgstr "No se pueden leer cuentas ni máquinas hasta que vuelva."
+
+#: src/pages/admin/AdminMachinesPage.tsx
+#: src/pages/admin/AdminUsersPage.tsx
 #: src/pages/ApiKeysPage.tsx
 #: src/pages/MachinesPage.tsx
 msgid "Actions"
@@ -97,9 +130,51 @@ msgstr "Acciones"
 msgid "Actions for {name}"
 msgstr "Acciones de {name}"
 
+#: src/pages/admin/AdminUsersPage.tsx
+msgid "Active"
+msgstr "Activa"
+
+#: src/components/ErrorNote.tsx
+msgid "Add it to ROOKBOX_ALLOWED_EMAILS on the server and deploy, then create the account."
+msgstr "Añade el correo a ROOKBOX_ALLOWED_EMAILS en el servidor, haz el despliegue y luego crea la cuenta."
+
+#: src/pages/admin/AdminUsersPage.tsx
+msgid "Admin"
+msgstr "Admin"
+
+#: src/pages/admin/AdminMachinesPage.tsx
+msgid "Age"
+msgstr "Antigüedad"
+
 #: src/pages/MachinesPage.tsx
 msgid "All"
 msgstr "Todas"
+
+#: src/components/AppShell.tsx
+#: src/pages/admin/AdminMachinesPage.tsx
+msgid "All machines"
+msgstr "Todas las máquinas"
+
+#: src/pages/admin/AdminUsersPage.tsx
+msgid "Also suspend their running machines"
+msgstr "Suspender también sus máquinas en ejecución"
+
+#: src/components/ErrorNote.tsx
+msgid "An account with that email already exists."
+msgstr "Ya existe una cuenta con ese correo."
+
+#: src/pages/admin/AdminMachinesPage.tsx
+msgid "an unknown account"
+msgstr "una cuenta desconocida"
+
+#. placeholder {0}: host.ms
+#: src/pages/admin/AdminHealthPage.tsx
+msgid "Answered in {0} ms"
+msgstr "Respondió en {0} ms"
+
+#: src/pages/admin/AdminHealthPage.tsx
+msgid "Answering"
+msgstr "Respondiendo"
 
 #: src/pages/MachinePage.tsx
 msgid "Anything listening on a port inside the machine is served at this address. Requests need the machine's access token, so a browser tab can't open it directly."
@@ -108,6 +183,10 @@ msgstr "Todo lo que escucha en un puerto dentro de la máquina se sirve en esta 
 #: src/pages/ApiKeysPage.tsx
 msgid "Anything using this key stops working right away."
 msgstr "Todo lo que use esta clave deja de funcionar al instante."
+
+#: src/pages/admin/AdminHealthPage.tsx
+msgid "API"
+msgstr "API"
 
 #: src/components/AppShell.tsx
 #: src/pages/ApiKeysPage.tsx
@@ -118,6 +197,10 @@ msgstr "Claves de API"
 msgid "Appearance"
 msgstr "Apariencia"
 
+#: src/components/ErrorNote.tsx
+msgid "Ask another administrator to do it."
+msgstr "Pídeselo a otro administrador."
+
 #: src/pages/UsagePage.tsx
 msgid "Billing is coming soon."
 msgstr "La facturación llegará pronto."
@@ -125,6 +208,10 @@ msgstr "La facturación llegará pronto."
 #: src/pages/MachinePage.tsx
 msgid "Breadcrumb"
 msgstr "Ruta de navegación"
+
+#: src/pages/admin/AdminHealthPage.tsx
+msgid "Can't be reached"
+msgstr "No se puede alcanzar"
 
 #: src/components/ErrorNote.tsx
 msgid "Can't reach Rookbox."
@@ -135,13 +222,31 @@ msgid "Can't reach Rookbox. Check your connection and try again."
 msgstr "No se pudo conectar con Rookbox. Revisa tu conexión e inténtalo de nuevo."
 
 #: src/components/MachineActions.tsx
+#: src/pages/admin/AdminMachinesPage.tsx
+#: src/pages/admin/AdminUsersPage.tsx
 #: src/pages/ApiKeysPage.tsx
 msgid "Cancel"
 msgstr "Cancelar"
 
+#: src/pages/admin/AdminHealthPage.tsx
+msgid "Capacity"
+msgstr "Capacidad"
+
+#: src/pages/admin/AdminHealthPage.tsx
+msgid "Check again"
+msgstr "Comprobar de nuevo"
+
+#: src/pages/admin/AdminHealthPage.tsx
+msgid "Check that the reporter is running and has the signing secret."
+msgstr "Comprueba que el reporter está en marcha y tiene el secreto de firma."
+
 #: src/components/ErrorNote.tsx
 msgid "Check your connection and try again."
 msgstr "Revisa tu conexión e inténtalo de nuevo."
+
+#: src/pages/admin/AdminHealthPage.tsx
+msgid "Checked"
+msgstr "Comprobado"
 
 #: src/pages/MachinePage.tsx
 msgid "Chromium over VNC, right here on the page."
@@ -150,6 +255,14 @@ msgstr "Chromium por VNC, aquí mismo en la página."
 #: src/components/AppShell.tsx
 msgid "CI"
 msgstr "CI"
+
+#: src/pages/MachinesPage.tsx
+msgid "Clear filters"
+msgstr "Quitar filtros"
+
+#: src/pages/admin/AdminMachinesPage.tsx
+msgid "Clear the filter"
+msgstr "Quitar el filtro"
 
 #: src/components/AppShell.tsx
 msgid "Close menu"
@@ -187,6 +300,10 @@ msgstr "Copiar"
 msgid "Copy key"
 msgstr "Copiar clave"
 
+#: src/pages/admin/AdminUsersPage.tsx
+msgid "Copy password"
+msgstr "Copiar contraseña"
+
 #: src/pages/MachinePage.tsx
 msgid "Copy URL for port {port}"
 msgstr "Copiar URL del puerto {port}"
@@ -194,6 +311,14 @@ msgstr "Copiar URL del puerto {port}"
 #: src/pages/ApiKeysPage.tsx
 msgid "Copy your key now"
 msgstr "Copia tu clave ahora"
+
+#: src/pages/ApiKeysPage.tsx
+msgid "Create a key to call the Rookbox API from a script or a CI job."
+msgstr "Crea una clave para llamar a la API de Rookbox desde un script o un trabajo de CI."
+
+#: src/pages/admin/AdminUsersPage.tsx
+msgid "Create account"
+msgstr "Crear cuenta"
 
 #: src/pages/ApiKeysPage.tsx
 msgid "Create API key"
@@ -207,6 +332,11 @@ msgstr "Crear clave"
 msgid "Create machine"
 msgstr "Crear máquina"
 
+#: src/pages/admin/AdminUsersPage.tsx
+msgid "Create the first account, then give the person the password."
+msgstr "Crea la primera cuenta y después entrega la contraseña a la persona."
+
+#: src/pages/admin/AdminUsersPage.tsx
 #: src/pages/ApiKeysPage.tsx
 #: src/pages/MachinePage.tsx
 #: src/pages/MachinesPage.tsx
@@ -229,16 +359,27 @@ msgstr "Clientes"
 msgid "Dark"
 msgstr "Oscuro"
 
+#: src/pages/admin/AdminHealthPage.tsx
+msgid "Database"
+msgstr "Base de datos"
+
 #: src/components/MachineActions.tsx
+#: src/pages/admin/AdminMachinesPage.tsx
 #: src/pages/MachinePage.tsx
 msgid "Delete"
 msgstr "Eliminar"
+
+#. placeholder {0}: machine.name
+#: src/pages/admin/AdminMachinesPage.tsx
+msgid "Delete {0}"
+msgstr "Eliminar {0}"
 
 #: src/components/MachineActions.tsx
 msgid "Delete {name}"
 msgstr "Eliminar {name}"
 
 #: src/components/MachineActions.tsx
+#: src/pages/admin/AdminMachinesPage.tsx
 msgid "Delete {name}?"
 msgstr "¿Eliminar {name}?"
 
@@ -247,6 +388,7 @@ msgid "Delete a machine you no longer need, then try again."
 msgstr "Elimina una máquina que ya no necesites e inténtalo de nuevo."
 
 #: src/components/MachineActions.tsx
+#: src/pages/admin/AdminMachinesPage.tsx
 msgid "Delete machine"
 msgstr "Eliminar máquina"
 
@@ -273,6 +415,26 @@ msgstr "Escritorio de {name}"
 #: src/components/CreateMachineDialog.tsx
 msgid "Desktop with browser"
 msgstr "Escritorio con navegador"
+
+#: src/pages/admin/AdminUsersPage.tsx
+msgid "Disable"
+msgstr "Desactivar"
+
+#: src/pages/admin/AdminUsersPage.tsx
+msgid "Disable {email}"
+msgstr "Desactivar {email}"
+
+#: src/pages/admin/AdminUsersPage.tsx
+msgid "Disable {email}?"
+msgstr "¿Desactivar {email}?"
+
+#: src/pages/admin/AdminUsersPage.tsx
+msgid "Disable account"
+msgstr "Desactivar cuenta"
+
+#: src/pages/admin/AdminUsersPage.tsx
+msgid "Disabled"
+msgstr "Desactivada"
 
 #: src/pages/MachinePage.tsx
 msgid "Disk"
@@ -303,6 +465,7 @@ msgstr "Documentación"
 msgid "e.g. ci-runner"
 msgstr "p. ej., ci-runner"
 
+#: src/pages/admin/AdminUsersPage.tsx
 #: src/pages/LoginPage.tsx
 msgid "Email"
 msgstr "Correo electrónico"
@@ -310,6 +473,14 @@ msgstr "Correo electrónico"
 #: src/pages/LoginPage.tsx
 msgid "Email or password is wrong."
 msgstr "Correo o contraseña incorrectos."
+
+#: src/pages/admin/AdminUsersPage.tsx
+msgid "Enable"
+msgstr "Activar"
+
+#: src/pages/admin/AdminUsersPage.tsx
+msgid "Enable {email}"
+msgstr "Activar {email}"
 
 #. placeholder {0}: entry.result.exitCode
 #: src/pages/MachinePage.tsx
@@ -324,9 +495,18 @@ msgstr "Falló"
 msgid "Filter by name or id"
 msgstr "Filtrar por nombre o id"
 
+#: src/pages/admin/AdminMachinesPage.tsx
+msgid "Filter by owner, name or id"
+msgstr "Filtrar por propietario, nombre o id"
+
+#: src/pages/admin/AdminMachinesPage.tsx
 #: src/pages/MachinesPage.tsx
 msgid "Filter machines"
 msgstr "Filtrar máquinas"
+
+#: src/pages/admin/AdminHealthPage.tsx
+msgid "Fix the service key on the API, then check again."
+msgstr "Corrige la clave del servicio en la API y comprueba de nuevo."
 
 #: src/components/MachineActions.tsx
 #: src/pages/MachinePage.tsx
@@ -362,19 +542,38 @@ msgstr "GiB-horas"
 msgid "GiB-hours, running"
 msgstr "GiB-horas, en ejecución"
 
+#: src/pages/admin/AdminUsersPage.tsx
+msgid "Give them this password"
+msgstr "Entrega esta contraseña a la persona"
+
 #: src/App.tsx
+#: src/components/AdminGuard.tsx
 #: src/pages/MachinePage.tsx
 #: src/pages/UsagePage.tsx
 msgid "Go to machines"
 msgstr "Ir a máquinas"
 
+#: src/pages/admin/AdminHealthPage.tsx
+msgid "Gone quiet"
+msgstr "Dejó de responder"
+
+#: src/components/AppShell.tsx
+#: src/pages/admin/AdminHealthPage.tsx
+msgid "Health"
+msgstr "Estado"
+
 #: src/pages/LoginPage.tsx
 msgid "Hide password"
 msgstr "Ocultar contraseña"
 
+#: src/pages/admin/AdminUsersPage.tsx
 #: src/pages/ApiKeysPage.tsx
 msgid "I have saved it"
 msgstr "Ya la guardé"
+
+#: src/components/ErrorNote.tsx
+msgid "If they are locked out, reset their password instead."
+msgstr "Si no puede entrar, restablece su contraseña."
 
 #: src/pages/UsagePage.tsx
 msgid "in this period"
@@ -404,6 +603,10 @@ msgstr "Sigue trabajando, avísame cuando esté lista"
 msgid "Key"
 msgstr "Clave"
 
+#: src/pages/admin/AdminHealthPage.tsx
+msgid "Key rejected"
+msgstr "Clave rechazada"
+
 #: src/components/LanguageSelect.tsx
 #: src/pages/SettingsPage.tsx
 msgid "Language"
@@ -417,9 +620,17 @@ msgstr "Grande"
 msgid "Last report"
 msgstr "Último reporte"
 
+#: src/pages/admin/AdminHealthPage.tsx
+msgid "Last seen"
+msgstr "Visto por última vez"
+
 #: src/pages/ApiKeysPage.tsx
 msgid "Last used"
 msgstr "Último uso"
+
+#: src/pages/admin/AdminUsersPage.tsx
+msgid "Leave empty to generate a strong one"
+msgstr "Déjalo vacío para generar una contraseña segura"
 
 #: src/components/CreateMachineDialog.tsx
 msgid "Leave it empty and Rookbox picks one."
@@ -429,19 +640,37 @@ msgstr "Déjalo vacío y Rookbox elige uno."
 msgid "Light"
 msgstr "Claro"
 
+#: src/pages/admin/AdminHealthPage.tsx
+msgid "Limit per account"
+msgstr "Límite por cuenta"
+
 #: src/components/CreateMachineDialog.tsx
 msgid "Linux with root access and no screen. The fastest to start."
 msgstr "Linux con acceso root y sin pantalla. El más rápido en arrancar."
 
 #: src/App.tsx
+#: src/components/AdminGuard.tsx
+#: src/pages/admin/AdminHealthPage.tsx
+#: src/pages/admin/AdminMachinesPage.tsx
+#: src/pages/admin/AdminUsagePage.tsx
+#: src/pages/admin/AdminUsersPage.tsx
 #: src/pages/MachinesPage.tsx
 #: src/pages/UsagePage.tsx
 msgid "Loading"
 msgstr "Cargando"
 
+#: src/pages/admin/AdminMachinesPage.tsx
 #: src/pages/UsagePage.tsx
 msgid "Machine"
 msgstr "Máquina"
+
+#: src/pages/admin/AdminHealthPage.tsx
+msgid "Machine records"
+msgstr "Registros de máquinas"
+
+#: src/pages/admin/AdminHealthPage.tsx
+msgid "Machine service"
+msgstr "Servicio de máquinas"
 
 #: src/pages/UsagePage.tsx
 msgid "machine-hours"
@@ -453,11 +682,20 @@ msgstr "Horas de máquina en ejecución por día"
 
 #: src/components/AdminUsage.tsx
 #: src/components/AppShell.tsx
+#: src/pages/admin/AdminUsersPage.tsx
 #: src/pages/MachinePage.tsx
 #: src/pages/MachinesPage.tsx
 #: src/pages/UsagePage.tsx
 msgid "Machines"
 msgstr "Máquinas"
+
+#: src/pages/admin/AdminHealthPage.tsx
+msgid "Machines can't be counted right now because the machine service didn't answer."
+msgstr "Ahora no se pueden contar las máquinas porque el servicio de máquinas no respondió."
+
+#: src/pages/admin/AdminMachinesPage.tsx
+msgid "Machines that people create show up here, with who owns them."
+msgstr "Las máquinas que crea la gente aparecen aquí, con su propietario."
 
 #: src/pages/UsagePage.tsx
 msgid "Measured every {seconds} seconds, so times are accurate to about that. Days are in UTC."
@@ -488,6 +726,7 @@ msgstr "Máximo en un día: {0} h"
 
 #: src/components/AdminUsage.tsx
 #: src/components/CreateMachineDialog.tsx
+#: src/pages/admin/AdminUsersPage.tsx
 #: src/pages/ApiKeysPage.tsx
 #: src/pages/MachinesPage.tsx
 msgid "Name"
@@ -497,18 +736,42 @@ msgstr "Nombre"
 msgid "Name it after where it will run, so you can revoke the right one later."
 msgstr "Ponle el nombre del lugar donde se usará, para revocar la correcta más adelante."
 
+#: src/pages/admin/AdminUsersPage.tsx
+msgid "name@example.com"
+msgstr "nombre@ejemplo.com"
+
 #: src/pages/ApiKeysPage.tsx
 msgid "Never"
 msgstr "Nunca"
+
+#: src/pages/admin/AdminHealthPage.tsx
+msgid "Never reported"
+msgstr "Nunca ha informado"
 
 #: src/components/CreateMachineDialog.tsx
 #: src/pages/MachinesPage.tsx
 msgid "New machine"
 msgstr "Nueva máquina"
 
+#: src/pages/admin/AdminHealthPage.tsx
+msgid "New machines can't be created until it is back."
+msgstr "No se pueden crear máquinas nuevas hasta que vuelva."
+
+#: src/components/ErrorNote.tsx
+msgid "No account has that email."
+msgstr "Ninguna cuenta tiene ese correo."
+
+#: src/pages/admin/AdminUsersPage.tsx
+msgid "No accounts yet"
+msgstr "Aún no hay cuentas"
+
 #: src/components/AdminUsage.tsx
 msgid "No customer app has used machines in this period."
 msgstr "Ninguna app de cliente usó máquinas en este período."
+
+#: src/pages/admin/AdminHealthPage.tsx
+msgid "No key set"
+msgstr "Sin clave configurada"
 
 #: src/pages/ApiKeysPage.tsx
 msgid "No keys yet"
@@ -518,9 +781,14 @@ msgstr "Aún no hay claves"
 msgid "No machine is running right now."
 msgstr "Ninguna máquina está en ejecución ahora."
 
+#: src/pages/admin/AdminMachinesPage.tsx
 #: src/pages/MachinesPage.tsx
 msgid "No machines match."
 msgstr "Ninguna máquina coincide."
+
+#: src/pages/admin/AdminMachinesPage.tsx
+msgid "No machines on the server"
+msgstr "No hay máquinas en el servidor"
 
 #: src/pages/MachinesPage.tsx
 msgid "No machines yet"
@@ -534,9 +802,25 @@ msgstr "Sin uso en este período"
 msgid "No user has used machines in this period."
 msgstr "Ningún usuario usó máquinas en este período."
 
+#: src/pages/admin/AdminHealthPage.tsx
+msgid "Not answering"
+msgstr "No responde"
+
+#: src/pages/admin/AdminHealthPage.tsx
+msgid "Not healthy"
+msgstr "Con problemas"
+
+#: src/pages/admin/AdminUsersPage.tsx
+msgid "Not on the allowed list"
+msgstr "Fuera de la lista de permitidos"
+
 #: src/pages/UsagePage.tsx
 msgid "Nothing has been reported yet."
 msgstr "Todavía no se ha reportado nada."
+
+#: src/pages/admin/AdminHealthPage.tsx
+msgid "Off"
+msgstr "Apagado"
 
 #: src/components/DesktopDialog.tsx
 #: src/pages/MachinePage.tsx
@@ -551,6 +835,10 @@ msgstr "Abrir en una pestaña nueva"
 msgid "Open menu"
 msgstr "Abrir menú"
 
+#: src/components/AppShell.tsx
+msgid "Operator"
+msgstr "Operación"
+
 #: src/components/CreateMachineDialog.tsx
 msgid "Optional, for example research-agent"
 msgstr "Opcional, por ejemplo research-agent"
@@ -558,6 +846,10 @@ msgstr "Opcional, por ejemplo research-agent"
 #: src/pages/MachinePage.tsx
 msgid "Output cut"
 msgstr "Salida cortada"
+
+#: src/pages/admin/AdminMachinesPage.tsx
+msgid "Owner"
+msgstr "Propietario"
 
 #: src/App.tsx
 msgid "Page not found"
@@ -567,6 +859,7 @@ msgstr "Página no encontrada"
 msgid "Password"
 msgstr "Contraseña"
 
+#: src/pages/admin/AdminUsagePage.tsx
 #: src/pages/UsagePage.tsx
 msgid "Period"
 msgstr "Período"
@@ -600,9 +893,26 @@ msgstr "RAM (GiB)"
 msgid "Reconnect"
 msgstr "Reconectar"
 
+#: src/pages/admin/AdminHealthPage.tsx
+msgid "Reporting"
+msgstr "Informando"
+
+#: src/pages/admin/AdminUsagePage.tsx
 #: src/pages/UsagePage.tsx
 msgid "Reports have stopped, so the latest time may be missing."
 msgstr "Los reportes se detuvieron, así que puede faltar el tiempo más reciente."
+
+#: src/pages/admin/AdminUsersPage.tsx
+msgid "Reset password"
+msgstr "Restablecer contraseña"
+
+#: src/pages/admin/AdminUsersPage.tsx
+msgid "Reset password for {email}"
+msgstr "Restablecer la contraseña de {email}"
+
+#: src/pages/admin/AdminUsersPage.tsx
+msgid "Reset the password for {email}?"
+msgstr "¿Restablecer la contraseña de {email}?"
 
 #: src/components/MachineActions.tsx
 #: src/pages/MachinePage.tsx
@@ -671,6 +981,7 @@ msgid "Run a command to see its output here."
 msgstr "Ejecuta un comando para ver su salida aquí."
 
 #: src/components/StatusChip.tsx
+#: src/pages/admin/AdminHealthPage.tsx
 #: src/pages/MachinesPage.tsx
 #: src/pages/UsagePage.tsx
 msgid "Running"
@@ -681,6 +992,10 @@ msgstr "En ejecución"
 msgid "Running h"
 msgstr "Ejecución h"
 
+#: src/pages/admin/AdminHealthPage.tsx
+msgid "Running machines"
+msgstr "Máquinas en ejecución"
+
 #: src/components/AdminUsage.tsx
 #: src/pages/UsagePage.tsx
 msgid "Running now"
@@ -689,6 +1004,10 @@ msgstr "En ejecución ahora"
 #: src/pages/UsagePage.tsx
 msgid "Running time"
 msgstr "Tiempo en ejecución"
+
+#: src/pages/admin/AdminHealthPage.tsx
+msgid "Running time is not accruing until it is back."
+msgstr "El tiempo de ejecución no se contabiliza hasta que vuelva."
 
 #: src/pages/UsagePage.tsx
 msgid "Running time per day"
@@ -740,6 +1059,7 @@ msgid "Signed in as"
 msgstr "Sesión iniciada como"
 
 #: src/components/CreateMachineDialog.tsx
+#: src/pages/admin/AdminMachinesPage.tsx
 #: src/pages/MachinesPage.tsx
 msgid "Size"
 msgstr "Tamaño"
@@ -781,6 +1101,8 @@ msgstr "Estado"
 msgid "State filter"
 msgstr "Filtro de estado"
 
+#: src/pages/admin/AdminMachinesPage.tsx
+#: src/pages/admin/AdminUsersPage.tsx
 #: src/pages/MachinesPage.tsx
 msgid "Status"
 msgstr "Estado"
@@ -790,19 +1112,34 @@ msgid "Still working. It's almost there."
 msgstr "Sigue en marcha. Ya casi está."
 
 #: src/components/MachineActions.tsx
+#: src/pages/admin/AdminMachinesPage.tsx
 #: src/pages/MachinePage.tsx
 msgid "Suspend"
 msgstr "Suspender"
 
+#. placeholder {0}: machine.name
+#: src/pages/admin/AdminMachinesPage.tsx
+msgid "Suspend {0}"
+msgstr "Suspender {0}"
+
 #: src/components/MachineActions.tsx
 msgid "Suspend {name}"
 msgstr "Suspender {name}"
+
+#: src/pages/admin/AdminMachinesPage.tsx
+msgid "Suspend {name}?"
+msgstr "¿Suspender {name}?"
+
+#: src/pages/admin/AdminMachinesPage.tsx
+msgid "Suspend machine"
+msgstr "Suspender máquina"
 
 #: src/components/CreateMachineDialog.tsx
 msgid "Suspend when idle"
 msgstr "Suspender cuando esté inactiva"
 
 #: src/components/StatusChip.tsx
+#: src/pages/admin/AdminHealthPage.tsx
 #: src/pages/MachinesPage.tsx
 #: src/pages/UsagePage.tsx
 msgid "Suspended"
@@ -837,10 +1174,18 @@ msgstr "Cambiar al tema claro"
 msgid "System"
 msgstr "Sistema"
 
+#: src/components/ErrorNote.tsx
+msgid "Tell the administrator."
+msgstr "Avisa al administrador."
+
 #: src/pages/MachinePage.tsx
 #: src/pages/MachinesPage.tsx
 msgid "Template"
 msgstr "Plantilla"
+
+#: src/pages/admin/AdminUsersPage.tsx
+msgid "Temporary password (optional)"
+msgstr "Contraseña temporal (opcional)"
 
 #: src/pages/MachinePage.tsx
 msgid "Terminal"
@@ -851,8 +1196,24 @@ msgid "Terminal only"
 msgstr "Solo terminal"
 
 #: src/components/ErrorNote.tsx
+msgid "That email isn't on the allowed list."
+msgstr "Ese correo no está en la lista de permitidos."
+
+#: src/components/ErrorNote.tsx
+msgid "That isn't available on this server."
+msgstr "Eso no está disponible en este servidor."
+
+#: src/components/ErrorNote.tsx
 msgid "That machine doesn't exist anymore."
 msgstr "Esa máquina ya no existe."
+
+#: src/components/ErrorNote.tsx
+msgid "That password is too long."
+msgstr "Esa contraseña es demasiado larga."
+
+#: src/components/ErrorNote.tsx
+msgid "That password is too short."
+msgstr "Esa contraseña es demasiado corta."
 
 #: src/components/ErrorNote.tsx
 msgid "That template isn't available."
@@ -862,6 +1223,10 @@ msgstr "Esa plantilla no está disponible."
 msgid "The beta is full right now."
 msgstr "La beta está llena en este momento."
 
+#: src/pages/admin/AdminHealthPage.tsx
+msgid "The beta is full: new machines and restores are turned away."
+msgstr "La beta está llena: se rechazan máquinas nuevas y restauraciones."
+
 #: src/components/DesktopDialog.tsx
 msgid "The desktop did not open."
 msgstr "El escritorio no se abrió."
@@ -870,13 +1235,29 @@ msgstr "El escritorio no se abrió."
 msgid "The desktop image built for AI agents that use a screen."
 msgstr "La imagen de escritorio creada para agentes de IA que usan una pantalla."
 
+#: src/pages/admin/AdminUsersPage.tsx
+msgid "The email must already be on the server's allowed list. There is no sign-up page, so you give them the password yourself."
+msgstr "El correo ya debe estar en la lista de permitidos del servidor. No hay página de registro, así que tú mismo entregas la contraseña a la persona."
+
 #: src/components/CreateMachineDialog.tsx
 msgid "The first start of a template can take about 15 seconds."
 msgstr "El primer arranque de una plantilla puede tardar unos 15 segundos."
 
+#: src/components/ErrorNote.tsx
+msgid "The list may be out of date. Refresh it and try again."
+msgstr "Puede que la lista esté desactualizada. Actualízala e inténtalo de nuevo."
+
 #: src/pages/MachinePage.tsx
 msgid "The machine has to be running."
 msgstr "La máquina tiene que estar en ejecución."
+
+#: src/pages/admin/AdminMachinesPage.tsx
+msgid "The machine is deleted."
+msgstr "La máquina se eliminó."
+
+#: src/pages/admin/AdminMachinesPage.tsx
+msgid "The machine is suspended."
+msgstr "La máquina está suspendida."
 
 #: src/components/ErrorNote.tsx
 msgid "The machine may still be getting ready. Look at the list in a moment before you try again."
@@ -894,6 +1275,14 @@ msgstr "El servicio de máquinas tardó demasiado en responder."
 msgid "The machine's state doesn't allow that right now."
 msgstr "El estado de la máquina no lo permite ahora mismo."
 
+#: src/pages/admin/AdminUsagePage.tsx
+msgid "The meter has not reported yet."
+msgstr "El medidor aún no ha informado."
+
+#: src/pages/admin/AdminUsagePage.tsx
+msgid "The meter last reported"
+msgstr "El medidor informó por última vez"
+
 #: src/components/ErrorNote.tsx
 msgid "There's no room for another machine at the moment. Try again later."
 msgstr "No hay espacio para otra máquina en este momento. Inténtalo de nuevo más tarde."
@@ -901,6 +1290,14 @@ msgstr "No hay espacio para otra máquina en este momento. Inténtalo de nuevo m
 #: src/pages/ApiKeysPage.tsx
 msgid "These keys do not work with the E2B SDK yet. Support for it is coming soon. We store only a hash of each key, so a key is shown once."
 msgstr "Estas claves todavía no funcionan con el SDK de E2B. La compatibilidad llegará pronto. Solo guardamos un hash de cada clave, así que se muestra una sola vez."
+
+#: src/pages/admin/AdminUsersPage.tsx
+msgid "They are signed out at once, can't sign in, and their API keys stop working. You can enable the account again later."
+msgstr "Se cierra su sesión al instante, no puede iniciar sesión y sus claves de API dejan de funcionar. Puedes volver a activar la cuenta más tarde."
+
+#: src/components/AdminGuard.tsx
+msgid "This area is for administrators"
+msgstr "Esta área es para administradores"
 
 #: src/components/ErrorNote.tsx
 msgid "This is a setup problem on our side, not yours. Try again in a minute. If it keeps happening, tell the administrator."
@@ -910,9 +1307,27 @@ msgstr "Es un problema de configuración de nuestra parte, no tuyo. Inténtalo d
 msgid "This is the only time it is shown. If you lose it, revoke it and create a new one."
 msgstr "Esta es la única vez que se muestra. Si la pierdes, revócala y crea una nueva."
 
+#. placeholder {0}: result.email
+#: src/pages/admin/AdminUsersPage.tsx
+msgid "This is the only time it is shown. Send it to {0} privately and ask them to change it after signing in."
+msgstr "Solo se muestra esta vez. Envíala a {0} en privado y pídele que la cambie al iniciar sesión."
+
+#: src/pages/admin/AdminMachinesPage.tsx
+msgid "This machine belongs to {owner}. Its disk and saved memory are deleted for good. This can't be undone."
+msgstr "Esta máquina pertenece a {owner}. Su disco y su memoria guardada se eliminan para siempre. No se puede deshacer."
+
+#: src/pages/admin/AdminMachinesPage.tsx
+msgid "This machine belongs to {owner}. Its memory is saved and it stops running. They can restore it later."
+msgstr "Esta máquina pertenece a {owner}. Se guarda su memoria y deja de ejecutarse. La persona puede restaurarla después."
+
+#: src/pages/admin/AdminUsagePage.tsx
 #: src/pages/UsagePage.tsx
 msgid "This month"
 msgstr "Este mes"
+
+#: src/pages/admin/AdminHealthPage.tsx
+msgid "This page refreshes by itself every 15 seconds."
+msgstr "Esta página se actualiza sola cada 15 segundos."
 
 #: src/pages/MachinePage.tsx
 msgid "Timed out"
@@ -925,6 +1340,11 @@ msgstr "Demasiados intentos. Inténtalo de nuevo en {minutes} min."
 #: src/pages/MachinesPage.tsx
 msgid "Total"
 msgstr "Total"
+
+#. placeholder {0}: all.length
+#: src/pages/admin/AdminMachinesPage.tsx
+msgid "Total: {0}"
+msgstr "Total: {0}"
 
 #: src/App.tsx
 #: src/components/DesktopDialog.tsx
@@ -945,18 +1365,55 @@ msgstr "Inténtalo de nuevo. Si sigue pasando, avisa al administrador."
 msgid "Type"
 msgstr "Tipo"
 
+#: src/components/ErrorNote.tsx
+msgid "Type the person's name."
+msgstr "Escribe el nombre de la persona."
+
 #: src/components/AdminUsage.tsx
 msgid "Unassigned"
 msgstr "Sin propietario"
+
+#: src/pages/admin/AdminMachinesPage.tsx
+msgid "Unknown account"
+msgstr "Cuenta desconocida"
+
+#. placeholder {0}: formatSpan(health.api.uptimeS)
+#: src/pages/admin/AdminHealthPage.tsx
+msgid "Up for {0}"
+msgstr "En marcha desde hace {0}"
 
 #: src/components/AppShell.tsx
 #: src/pages/UsagePage.tsx
 msgid "Usage and billing"
 msgstr "Uso y facturación"
 
+#: src/components/AppShell.tsx
+msgid "Usage by user"
+msgstr "Uso por usuario"
+
+#: src/pages/admin/AdminUsagePage.tsx
+msgid "Usage by user and customer"
+msgstr "Uso por usuario y cliente"
+
+#: src/pages/admin/AdminHealthPage.tsx
+msgid "Usage is not being recorded on this server."
+msgstr "El uso no se está registrando en este servidor."
+
+#: src/pages/admin/AdminHealthPage.tsx
+msgid "Usage meter"
+msgstr "Medidor de uso"
+
 #: src/pages/UsagePage.tsx
 msgid "Usage shows up here once a machine has run. It can take a minute to appear."
 msgstr "El uso aparece aquí una vez que una máquina haya funcionado. Puede tardar un minuto en aparecer."
+
+#: src/components/ErrorNote.tsx
+msgid "Use at least 12 characters, or leave it empty to generate one."
+msgstr "Usa al menos 12 caracteres o déjalo vacío para generar una."
+
+#: src/components/ErrorNote.tsx
+msgid "Use at most 128 characters, or leave it empty to generate one."
+msgstr "Usa como máximo 128 caracteres o déjalo vacío para generar una."
 
 #: src/pages/ApiKeysPage.tsx
 msgid "Use it as a bearer token against the Rookbox API. It does not work with the E2B SDK yet."
@@ -971,6 +1428,8 @@ msgid "Use the account you were given."
 msgstr "Usa la cuenta que te dieron."
 
 #: src/components/AdminUsage.tsx
+#: src/components/AppShell.tsx
+#: src/pages/admin/AdminUsersPage.tsx
 msgid "Users"
 msgstr "Usuarios"
 
@@ -1012,6 +1471,10 @@ msgid "Workspace"
 msgstr "Espacio de trabajo"
 
 #: src/components/ErrorNote.tsx
+msgid "You can't disable your own account."
+msgstr "No puedes desactivar tu propia cuenta."
+
+#: src/components/ErrorNote.tsx
 msgid "You can't do that."
 msgstr "No puedes hacer eso."
 
@@ -1026,6 +1489,10 @@ msgstr "Has alcanzado tu límite de {limit} máquinas."
 #: src/components/ErrorNote.tsx
 msgid "You've reached your machine limit."
 msgstr "Has alcanzado tu límite de máquinas."
+
+#: src/components/AdminGuard.tsx
+msgid "Your account doesn't have access to it."
+msgstr "Tu cuenta no tiene acceso a ella."
 
 #: src/components/ErrorNote.tsx
 msgid "Your account doesn't have permission for this action."

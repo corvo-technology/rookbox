@@ -13,6 +13,47 @@ export function useErrorText() {
   const { t } = useLingui();
   return (error: unknown): ErrorText => {
     const found = classifyError(error);
+    const userAdminWords = (reason: ClassifiedError["reason"]): { title: string; hint: string } => {
+      switch (reason) {
+        case "name_required":
+          return { title: t`A name is required.`, hint: t`Type the person's name.` };
+        case "not_allowed":
+          return {
+            title: t`That email isn't on the allowed list.`,
+            hint: t`Add it to ROOKBOX_ALLOWED_EMAILS on the server and deploy, then create the account.`,
+          };
+        case "exists":
+          return {
+            title: t`An account with that email already exists.`,
+            hint: t`If they are locked out, reset their password instead.`,
+          };
+        case "password_short":
+          return {
+            title: t`That password is too short.`,
+            hint: t`Use at least 12 characters, or leave it empty to generate one.`,
+          };
+        case "password_long":
+          return {
+            title: t`That password is too long.`,
+            hint: t`Use at most 128 characters, or leave it empty to generate one.`,
+          };
+        case "no_account":
+          return {
+            title: t`No account has that email.`,
+            hint: t`The list may be out of date. Refresh it and try again.`,
+          };
+        case "self":
+          return {
+            title: t`You can't disable your own account.`,
+            hint: t`Ask another administrator to do it.`,
+          };
+        default:
+          return {
+            title: t`That isn't available on this server.`,
+            hint: t`Tell the administrator.`,
+          };
+      }
+    };
     const words = ((): { title: string; hint: string } => {
       switch (found.kind) {
         case "session":
@@ -98,6 +139,8 @@ export function useErrorText() {
             title: t`You can't do that.`,
             hint: t`Your account doesn't have permission for this action.`,
           };
+        case "user_admin":
+          return userAdminWords(found.reason);
         case "space":
           return {
             title: t`The machine service had a problem.`,

@@ -1,4 +1,4 @@
-import { isApiErrorCode } from "@rookbox/contracts";
+import { isApiErrorCode, USER_ADMIN_REASONS, type UserAdminReason } from "@rookbox/contracts";
 
 /** What went wrong, in terms a person can act on. The words live in `ErrorNote`. */
 export type ErrorKind =
@@ -17,12 +17,15 @@ export type ErrorKind =
   | "space"
   | "rate_limited"
   | "forbidden"
+  | "user_admin"
   | "unknown";
 
 export type ClassifiedError = {
   kind: ErrorKind;
   /** Seconds to wait, for `rate_limited`. */
   retryAfterS?: number;
+  /** Why an account change was refused, for `user_admin`. */
+  reason?: UserAdminReason;
   /** The machine limit, for `limit`. */
   limit?: number;
   /** Trying the same thing again can work, without anyone changing anything. */
@@ -44,6 +47,12 @@ export function classifyError(error: unknown): ClassifiedError {
   const code = field(error, "code");
   const status = field(error, "status");
   const data = field(error, "data");
+
+  // An account change the API refused says why, whatever its HTTP status.
+  const reason = field(data, "reason");
+  if (typeof reason === "string" && (USER_ADMIN_REASONS as readonly string[]).includes(reason)) {
+    return { kind: "user_admin", reason: reason as UserAdminReason, retryable: false };
+  }
 
   if (isApiErrorCode(code)) {
     switch (code) {

@@ -34,6 +34,8 @@ export interface UsageService {
   ingest(message: IngestMessage): Promise<IngestAck>;
   summary(userId: string, period: UsagePeriod): Promise<UsageSummary>;
   admin(period: UsagePeriod): Promise<AdminUsage>;
+  /** How the meter is doing, for the health view. */
+  reporter(): Promise<AdminUsage["reporter"]>;
   isAdmin(email: string): boolean;
 }
 
@@ -338,5 +340,28 @@ export function createUsageService(options: UsageServiceOptions): UsageService {
     };
   }
 
-  return { ingest, summary, admin, isAdmin: (email) => admins.has(email.trim().toLowerCase()) };
+  async function reporter(): Promise<AdminUsage["reporter"]> {
+    const now = clock();
+    const { reporters, last, stale } = await liveUntil(now);
+    const lastEventAt = reporters.reduce<Date | null>(
+      (best, row) =>
+        row.lastEventAt && (!best || row.lastEventAt > best) ? row.lastEventAt : best,
+      null,
+    );
+    return {
+      lastContactAt: last ? iso(last) : null,
+      lastContactAgeS: ageS(last, now),
+      lastEventAt: lastEventAt ? iso(lastEventAt) : null,
+      lastEventAgeS: ageS(lastEventAt, now),
+      stale,
+    };
+  }
+
+  return {
+    ingest,
+    summary,
+    admin,
+    reporter,
+    isAdmin: (email) => admins.has(email.trim().toLowerCase()),
+  };
 }
