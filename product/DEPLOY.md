@@ -74,8 +74,10 @@ path `apps/api/Dockerfile`, port `3000`). Guará injects `DATABASE_URL`; set the
 | `MAX_RUNNING_MACHINES_TOTAL` | Optional, default `5`. Most machines running at once across all accounts (about five 2 vCPU / 4 GiB machines fit on a 32 GB server). At the cap, create, fork and restore answer "The beta is full right now, try again later". `0` turns the cap off. |
 | `INGEST_SECRET` | 32+ random characters: `openssl rand -hex 32`. The usage reporter signs its requests with it; the same value goes in the reporter's environment. Unset, `POST /ingest/usage-events` answers 503 and no usage is recorded. See "Usage metering" below. |
 | `ADMIN_EMAILS` | Optional, comma-separated. Who may see everyone's usage (the admin view and `usage:report`). Unset, only the first `ROOKBOX_ALLOWED_EMAILS` entry may. |
-| `RESEND_API_KEY` | Optional. Resend API key for the waitlist emails (confirmation and invitation). Unset, entries are still stored and the emails are only logged; nothing crashes. See "Waitlist". |
-| `EMAIL_FROM` | Optional. The From header, e.g. `Rookbox <hello@rookbox.run>`. **The sending domain must be verified in Resend** (DNS records) or Resend rejects every send. Both this and `RESEND_API_KEY` are needed to send. |
+| `EMAIL_PROVIDER` | Optional, `none` (default) or `resend`. `none` stores waitlist entries and only logs the emails. `resend` sends them through Resend or a Resend-compatible service (for example Millionsend). Same names as Rook, so the same values work in both products. |
+| `EMAIL_API_KEY` | The provider's API key. Required when `EMAIL_PROVIDER=resend`. |
+| `EMAIL_API_URL` | Optional. A Resend-compatible send endpoint, `https` only (http only on localhost). Unset: Resend's own, `https://api.resend.com/emails`. |
+| `EMAIL_FROM` | The From header, e.g. `Pedro at Rook <pedro@rook.team>`. Required when `EMAIL_PROVIDER=resend`. **The sending domain must be verified with the provider** (DNS records), or every send is rejected. |
 | `WWW_ORIGIN` | Optional. The landing's origin, `https://rookbox.run`. Setting it turns on the public `POST /waitlist`, which answers that origin only. Unset, the route does not exist. |
 | `WAITLIST_MAX_PER_IP` / `WAITLIST_WINDOW_S` | Optional, defaults `10` / `3600`. Waitlist joins allowed per client address within the window. |
 | `LOG_LEVEL` | Optional, default `info`. |
@@ -161,11 +163,12 @@ the public `POST https://api.rookbox.run/waitlist` (the landing's `PUBLIC_API_UR
   `TRUSTED_PROXY_HOPS` so addresses are the visitors', not the proxy's).
 - The email is stored lower-case and unique, so joining twice is a no-op and sends nothing the
   second time. A filled-in honeypot field gets the same answer as a success and stores nothing.
-- A confirmation email goes out through Resend (plain `fetch` to `https://api.resend.com/emails`,
-  English, Portuguese or Spanish by the page's language). Create a Resend API key, **verify the
-  sending domain in Resend** (add the DNS records it shows), then set `RESEND_API_KEY` and
-  `EMAIL_FROM` on the API. If either is missing, or Resend refuses, the entry is kept and the
-  failure is logged; the visitor still sees success.
+- A confirmation email goes out through the provider set by `EMAIL_PROVIDER=resend` (plain `fetch`
+  to `EMAIL_API_URL`, default `https://api.resend.com/emails`; English, Portuguese or Spanish by the
+  page's language). Create an API key, **verify the sending domain with the provider** (add the DNS
+  records it shows), then set `EMAIL_PROVIDER`, `EMAIL_API_KEY` and `EMAIL_FROM` on the API. With
+  `EMAIL_PROVIDER=none` (the default), or if the provider refuses, the entry is kept and the failure
+  is logged; the visitor still sees success.
 - In the dashboard, operators (`ADMIN_EMAILS`/`ROOKBOX_ADMIN_EMAILS`) get **Waitlist** under
   Operator. "Invite" creates the account with a generated password, marks the entry invited and
   emails the sign-in link (`APP_ORIGIN`) and the temporary password. The password is also shown
