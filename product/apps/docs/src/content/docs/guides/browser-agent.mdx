@@ -3,14 +3,14 @@ title: Agente com navegador
 description: Rode um agente que usa o navegador numa máquina desktop e acompanhe a tela.
 ---
 
-Use um template com tela: `desktop` ou `corvo-computer`. O `Sandbox.create()` sem template já cria uma `desktop` no beta.
+Use um template com tela: `desktop-v2`, `corvo-computer-v2` (ou as antigas `desktop` e `corvo-computer`). O `Sandbox.create()` sem template já cria uma `desktop-v2` no beta.
 
 ## 1. Crie a máquina
 
 ```python
 from e2b import Sandbox
 
-sandbox = Sandbox.create("desktop", timeout=60 * 60)
+sandbox = Sandbox.create("desktop-v2", timeout=60 * 60)
 print(sandbox.sandbox_id)
 ```
 

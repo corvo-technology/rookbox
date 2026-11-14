@@ -67,7 +67,7 @@ path `apps/api/Dockerfile`, port `3000`). Guará injects `DATABASE_URL`; set the
 | `SPACE_ECW_API_URL` | `https://api.box.rookbox.run` |
 | `SPACE_ECW_API_KEY` | The sandbox engine service key (an ECW key of one engine organization). Server side only. |
 | `E2B_DOMAIN` | `box.rookbox.run` |
-| `SPACE_TEMPLATES` | Optional, default `desktop,corvo-computer,seed`. Templates people may create machines from, in the order the dashboard offers them. |
+| `SPACE_TEMPLATES` | Optional, default `desktop-v2,corvo-computer-v2,desktop,corvo-computer,seed`. Templates people may create machines from, in the order the dashboard offers them; the first is also what the SDK default `base` means. The `-v2` templates must exist in the sandbox engine and be visible to the organization behind `SPACE_ECW_API_KEY`; if the engine lacks them, creating from them fails, so list only the ones it has (for example `desktop,corvo-computer,seed`). |
 | `SPACE_TIMEOUT_MS` | Optional, default `60000` (5000 to 300000). How long to wait on a call that waits on a VM: create, suspend, restore, fork. |
 | `SIGNIN_MAX_ATTEMPTS` | Optional, default `5`. Failed sign-ins allowed per email and per address within the window. |
 | `SIGNIN_WINDOW_S` | Optional, default `600`. The window for `SIGNIN_MAX_ATTEMPTS`, in seconds. |

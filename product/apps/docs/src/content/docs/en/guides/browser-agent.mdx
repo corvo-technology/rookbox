@@ -3,14 +3,14 @@ title: Browser agent
 description: Run an agent that uses the browser on a desktop machine and watch the screen.
 ---
 
-Use a template with a screen: `desktop` or `corvo-computer`. `Sandbox.create()` with no template already creates a `desktop` in the beta.
+Use a template with a screen: `desktop-v2`, `corvo-computer-v2` (or the older `desktop` and `corvo-computer`). `Sandbox.create()` with no template already creates a `desktop-v2` in the beta.
 
 ## 1. Create the machine
 
 ```python
 from e2b import Sandbox
 
-sandbox = Sandbox.create("desktop", timeout=60 * 60)
+sandbox = Sandbox.create("desktop-v2", timeout=60 * 60)
 print(sandbox.sandbox_id)
 ```
 

@@ -154,15 +154,19 @@ export function CreateMachineDialog({
     large: t`Large`,
   };
 
+  const desktopText = {
+    title: t`Desktop with browser`,
+    description: t`A Linux desktop with Chromium you can open in a tab, plus a terminal.`,
+  };
+  const computerText = {
+    title: t`Computer-use desktop`,
+    description: t`The desktop image built for AI agents that use a screen.`,
+  };
   const templateText: Record<MachineTemplate, { title: string; description: string }> = {
-    desktop: {
-      title: t`Desktop with browser`,
-      description: t`A Linux desktop with Chromium you can open in a tab, plus a terminal.`,
-    },
-    "corvo-computer": {
-      title: t`Computer-use desktop`,
-      description: t`The desktop image built for AI agents that use a screen.`,
-    },
+    desktop: desktopText,
+    "desktop-v2": desktopText,
+    "corvo-computer": computerText,
+    "corvo-computer-v2": computerText,
     seed: {
       title: t`Terminal only`,
       description: t`Linux with root access and no screen. The fastest to start.`,

@@ -149,7 +149,7 @@ describe("errors over RPC", () => {
   it("serves the deployment's config", async () => {
     const { client } = setup();
     expect(await client("alice").config.get()).toEqual({
-      templates: ["desktop", "corvo-computer", "seed"],
+      templates: ["desktop-v2", "corvo-computer-v2", "desktop", "corvo-computer", "seed"],
       maxMachines: 2,
       defaultIdleTimeoutS: 900,
       domain: "box.example.test",

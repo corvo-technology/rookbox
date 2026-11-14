@@ -7,20 +7,22 @@ A template is the image a machine starts from. The beta offers:
 
 | Template | For |
 | --- | --- |
-| `desktop` | A Linux desktop with Chromium you open in a tab, plus a terminal. |
-| `corvo-computer` | The desktop built for agents that use a screen (computer use). |
+| `desktop-v2` | A Linux desktop with Chromium you open in a tab, plus a terminal. The desktop starts by itself when the machine boots and restarts if a part crashes. |
+| `corvo-computer-v2` | The desktop built for agents that use a screen (computer use), with the same self-starting desktop. |
+| `desktop` | The first desktop image. Still available; the desktop starts when you open it. |
+| `corvo-computer` | The first computer-use image. Still available. |
 | `seed` | Terminal only, with root and no screen. The fastest to start. |
 
 The Dashboard shows what each deployment offers, in the order they appear.
 
 ## Which one the SDK uses
 
-`Sandbox.create()` with no template, or with the SDK's `base`, creates the **first** one in the deployment's list. In the beta, the first is `desktop`.
+`Sandbox.create()` with no template, or with the SDK's `base`, creates the **first** one in the deployment's list. In the beta, the first is `desktop-v2`.
 
 To pick another, pass its name. A name outside the list gives a 400 error with the list of what is available.
 
 ```python
-sandbox = Sandbox.create("corvo-computer")
+sandbox = Sandbox.create("corvo-computer-v2")
 ```
 
 You cannot create your own templates for now. The E2B templates API is not available (see [Compatibility](/en/reference/compat/)).

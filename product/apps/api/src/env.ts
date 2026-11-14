@@ -139,7 +139,7 @@ const EnvObject = z.object({
   /** Templates people may create machines from, in the order the dashboard offers them. */
   SPACE_TEMPLATES: z
     .string()
-    .default("desktop,corvo-computer,seed")
+    .default("desktop-v2,corvo-computer-v2,desktop,corvo-computer,seed")
     .transform(csv)
     .pipe(z.array(z.enum(TEMPLATES)).min(1)),
   /** How long to wait on a sandbox engine call that waits on a VM (create, suspend, restore, fork). */
