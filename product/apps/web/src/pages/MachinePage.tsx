@@ -17,7 +17,7 @@ import {
   MachineActionFailure,
   useMachineActions,
 } from "../components/MachineActions";
-import { Panel, Tag } from "../components/Panel";
+import { Panel } from "../components/Panel";
 import { StatusChip } from "../components/StatusChip";
 import { orpc, TRANSITION_POLL_MS } from "../lib/api";
 import { formatDate, formatIdle, formatMib } from "../lib/format";
@@ -324,23 +324,13 @@ export function MachinePage() {
             <CommandRunner machine={data} />
           </Panel>
 
-          <Panel
-            title={<Trans>Connect</Trans>}
-            action={
-              <Tag>
-                <Trans>Soon</Trans>
-              </Tag>
-            }
-          >
+          <Panel title={<Trans>Connect</Trans>}>
             <div className="flex flex-col gap-3">
-              <CodeBlock
-                code={connectSnippet(data.id, config.data?.domain)}
-                label="Python · E2B SDK"
-              />
+              <CodeBlock code={connectSnippet(data.id)} label="Python · E2B SDK" />
               <p className="text-label text-muted-foreground">
                 <Trans>
-                  Rookbox API keys do not work with the E2B SDK yet. This shows how a machine will
-                  be reached once they do. Until then, use the terminal and the desktop here.
+                  With E2B_API_KEY set to one of your Rookbox keys and E2B_API_URL set to the API
+                  address (see API keys), the E2B SDK reaches this machine by its id.
                 </Trans>
               </p>
             </div>

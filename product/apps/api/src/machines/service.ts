@@ -6,6 +6,7 @@ import type {
   ExecResult,
   ForkMachineInput,
   Machine,
+  MachineSize,
   MachineTemplate,
 } from "@rookbox/contracts";
 import {
@@ -308,6 +309,65 @@ export function createMachineService(options: MachineServiceOptions) {
           throw toMachineError(error);
         }
       });
+    },
+
+    /**
+     * Creates a machine through a caller that talks to the host itself (the E2B front). The
+     * account's machine cap, the deployment's capacity and the account's one-create-at-a-time
+     * rule apply exactly as for `create`; a row is recorded so the dashboard, the cap and the
+     * reconciler see the machine. `launch` makes the host call and returns the new id; it gets
+     * the machine's name for the host's metadata. If the row cannot be written, the machine is
+     * killed again.
+     */
+    createExternal<T extends { id: string }>(
+      ownerId: string,
+      input: {
+        template: MachineTemplate;
+        size: MachineSize;
+        idleTimeoutS: number;
+        launch: (name: string) => Promise<T>;
+      },
+    ): Promise<T> {
+      return lock(ownerId, async () => {
+        if ((await countMachines(ownerId)) >= options.maxMachinesPerUser) {
+          throw new MachineError("MACHINE_LIMIT", undefined, { limit: options.maxMachinesPerUser });
+        }
+        const name = await uniqueName(ownerId, `e2b-${randomSuffix(random)}`);
+        const launched = await lock(CAPACITY_LOCK, async () => {
+          await ensureRoom();
+          return input.launch(name);
+        });
+        try {
+          await store.insert({
+            id: launched.id,
+            ownerId,
+            name,
+            template: input.template,
+            size: input.size,
+            idleTimeoutS: input.idleTimeoutS,
+            forkedFrom: null,
+          });
+        } catch (error) {
+          await space.kill(launched.id).catch(() => undefined);
+          if (error instanceof DuplicateNameError) throw new MachineError("NAME_TAKEN");
+          throw toMachineError(error);
+        }
+        logger.info("machine created", { owner: ownerId, machine: launched.id, via: "e2b" });
+        return launched;
+      });
+    },
+
+    /** Runs `task` inside the deployment's capacity check, for a start the caller makes itself. */
+    withCapacity<T>(task: () => Promise<T>): Promise<T> {
+      return lock(CAPACITY_LOCK, async () => {
+        await ensureRoom();
+        return task();
+      });
+    },
+
+    /** Drops the record of a machine the host no longer has. */
+    forget(id: string): Promise<void> {
+      return store.remove(id);
     },
 
     suspend: suspendMachine,

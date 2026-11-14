@@ -7,6 +7,7 @@ export const LIMIT_CLASSES = [
   "machine_fork",
   "machine_lifecycle",
   "machine_exec",
+  "e2b_read",
   "api_key_create",
   "desktop_link",
   "auth",
@@ -26,6 +27,7 @@ export const LIMIT_ENV: Record<LimitClass, string> = {
   machine_fork: "RATE_LIMIT_MACHINE_FORK",
   machine_lifecycle: "RATE_LIMIT_MACHINE_LIFECYCLE",
   machine_exec: "RATE_LIMIT_MACHINE_EXEC",
+  e2b_read: "RATE_LIMIT_E2B_READ",
   api_key_create: "RATE_LIMIT_API_KEY_CREATE",
   desktop_link: "RATE_LIMIT_DESKTOP_LINK",
   auth: "RATE_LIMIT_AUTH",
@@ -42,6 +44,7 @@ export const DEFAULT_LIMITS: Record<LimitClass, string> = {
   machine_fork: "user=20/3600,ip=60/3600",
   machine_lifecycle: "user=60/600,ip=180/600",
   machine_exec: "user=120/60,ip=300/60",
+  e2b_read: "user=300/60,ip=900/60",
   api_key_create: "user=10/3600,ip=30/3600",
   desktop_link: "user=30/600,ip=90/600",
   // Every request to the sign-in endpoints, on top of the failed-sign-in counter. No user yet.

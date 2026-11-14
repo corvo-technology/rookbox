@@ -12,6 +12,7 @@ import { AdminHealthPage } from "./pages/admin/AdminHealthPage";
 import { AdminMachinesPage } from "./pages/admin/AdminMachinesPage";
 import { AdminUsagePage } from "./pages/admin/AdminUsagePage";
 import { AdminUsersPage } from "./pages/admin/AdminUsersPage";
+import { CiPage } from "./pages/CiPage";
 import { LoginPage } from "./pages/LoginPage";
 import { MachinePage } from "./pages/MachinePage";
 import { MachinesPage } from "./pages/MachinesPage";
@@ -81,6 +82,7 @@ export function App() {
           <Route path="/machines" element={<MachinesPage />} />
           <Route path="/machines/:id" element={<MachinePage />} />
           <Route path="/keys" element={<ApiKeysPage />} />
+          <Route path="/ci" element={<CiPage />} />
           <Route path="/usage" element={<UsagePage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/admin" element={<AdminGuard />}>

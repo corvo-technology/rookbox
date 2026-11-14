@@ -9,6 +9,7 @@ import type { ApiKeyService } from "./api-keys.js";
 import type { AuthUser, Identity } from "./auth.js";
 import { clientAddress } from "./client-ip.js";
 import type { DesktopProxy } from "./desktop.js";
+import type { E2bFront } from "./e2b/front.js";
 import type { Logger } from "./logger.js";
 import type { MachineService } from "./machines/service.js";
 import type { RateLimiter } from "./rate-limit.js";
@@ -54,6 +55,11 @@ export type AppDeps = {
   reconcile?: (mode: { act: boolean; killOrphans: boolean }) => Promise<ReconcileReport>;
   /** Measured usage for the dashboard and the admin view. Without it those answer 503. */
   usage?: UsageService;
+  /**
+   * The E2B-compatible control plane (`createE2bFront`), mounted on the API host at
+   * `/sandboxes` and `/v2/sandboxes`. Without it those paths answer 404.
+   */
+  e2b?: E2bFront;
   /** `POST /ingest/usage-events`, signed by the usage reporter. Without it the route is absent. */
   ingestUsage?: (request: Request) => Promise<Response>;
   now?: () => number;
@@ -262,6 +268,14 @@ export function createApp(deps: AppDeps) {
     });
     return matched ? c.newResponse(response.body, response) : c.notFound();
   });
+
+  // The E2B SDKs' own door: authenticated by the key header, not by a session or CORS.
+  const e2b = deps.e2b;
+  if (e2b) {
+    for (const path of ["/sandboxes", "/sandboxes/*", "/v2/sandboxes", "/v2/sandboxes/*"]) {
+      main.all(path, (c) => e2b.fetch(c.req.raw, { ip: ipOf(c) }));
+    }
+  }
 
   // Without a separate desktop host (development) the API serves the desktop itself.
   if (desktopHost === null) mountDesktop(main as unknown as Hono);

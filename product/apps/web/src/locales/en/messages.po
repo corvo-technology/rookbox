@@ -44,6 +44,14 @@ msgstr "{email} is disabled."
 msgid "{email} is disabled. Machines suspended: {count}."
 msgstr "{email} is disabled. Machines suspended: {count}."
 
+#: src/pages/CiPage.tsx
+msgid "{idleMinutes, plural, one {If you do not set a timeout, a machine stops after # minute.} other {If you do not set a timeout, a machine stops after # minutes.}}"
+msgstr "{idleMinutes, plural, one {If you do not set a timeout, a machine stops after # minute.} other {If you do not set a timeout, a machine stops after # minutes.}}"
+
+#: src/pages/CiPage.tsx
+msgid "{limit, plural, one {Each account can have # machine at a time. Starting another one while you are at the limit fails with a 429 error, so jobs that run in parallel need to wait or use fewer machines.} other {Each account can have # machines at a time. Starting another one while you are at the limit fails with a 429 error, so jobs that run in parallel need to wait or use fewer machines.}}"
+msgstr "{limit, plural, one {Each account can have # machine at a time. Starting another one while you are at the limit fails with a 429 error, so jobs that run in parallel need to wait or use fewer machines.} other {Each account can have # machines at a time. Starting another one while you are at the limit fails with a 429 error, so jobs that run in parallel need to wait or use fewer machines.}}"
+
 #: src/components/MachineActions.tsx
 msgid "{name} deleted"
 msgstr "{name} deleted"
@@ -155,6 +163,10 @@ msgstr "All machines"
 msgid "Also suspend their running machines"
 msgstr "Also suspend their running machines"
 
+#: src/pages/CiPage.tsx
+msgid "Always remove the machine at the end, as the workflow does. A machine you forget stops on its own when its timeout runs out, but it counts toward your limit until then."
+msgstr "Always remove the machine at the end, as the workflow does. A machine you forget stops on its own when its timeout runs out, but it counts toward your limit until then."
+
 #: src/components/ErrorNote.tsx
 msgid "An account with that email already exists."
 msgstr "An account with that email already exists."
@@ -198,8 +210,8 @@ msgid "Ask another administrator to do it."
 msgstr "Ask another administrator to do it."
 
 #: src/pages/UsagePage.tsx
-msgid "Billing is coming soon."
-msgstr "Billing is coming soon."
+msgid "Billing is not enabled yet; usage is measured."
+msgstr "Billing is not enabled yet; usage is measured."
 
 #: src/pages/MachinePage.tsx
 msgid "Breadcrumb"
@@ -247,10 +259,6 @@ msgstr "Checked"
 #: src/pages/MachinePage.tsx
 msgid "Chromium over VNC, right here on the page."
 msgstr "Chromium over VNC, right here on the page."
-
-#: src/components/AppShell.tsx
-msgid "CI"
-msgstr "CI"
 
 #: src/pages/MachinesPage.tsx
 msgid "Clear filters"
@@ -300,6 +308,10 @@ msgstr "Copy key"
 msgid "Copy password"
 msgstr "Copy password"
 
+#: src/pages/CiPage.tsx
+msgid "Copy the workflow below into .github/workflows/rookbox.yml and push."
+msgstr "Copy the workflow below into .github/workflows/rookbox.yml and push."
+
 #: src/pages/MachinePage.tsx
 msgid "Copy URL for port {port}"
 msgstr "Copy URL for port {port}"
@@ -315,6 +327,10 @@ msgstr "Create a key to call the Rookbox API from a script or a CI job."
 #: src/pages/admin/AdminUsersPage.tsx
 msgid "Create account"
 msgstr "Create account"
+
+#: src/pages/CiPage.tsx
+msgid "Create an API key on the <0>API keys</0> page. Name it after the pipeline, so you can revoke the right one later."
+msgstr "Create an API key on the <0>API keys</0> page. Name it after the pipeline, so you can revoke the right one later."
 
 #: src/pages/ApiKeysPage.tsx
 msgid "Create API key"
@@ -478,6 +494,10 @@ msgstr "Enable"
 msgid "Enable {email}"
 msgstr "Enable {email}"
 
+#: src/components/E2bSnippets.tsx
+msgid "Environment"
+msgstr "Environment"
+
 #. placeholder {0}: entry.result.exitCode
 #: src/pages/MachinePage.tsx
 msgid "Exit code {0}"
@@ -553,6 +573,10 @@ msgstr "Go to machines"
 msgid "Gone quiet"
 msgstr "Gone quiet"
 
+#: src/pages/CiPage.tsx
+msgid "Good to know"
+msgstr "Good to know"
+
 #: src/components/AppShell.tsx
 #: src/pages/admin/AdminHealthPage.tsx
 msgid "Health"
@@ -603,6 +627,7 @@ msgstr "Key"
 msgid "Key rejected"
 msgstr "Key rejected"
 
+#: src/components/E2bSnippets.tsx
 #: src/components/LanguageSelect.tsx
 #: src/pages/SettingsPage.tsx
 msgid "Language"
@@ -692,6 +717,10 @@ msgstr "Machines can't be counted right now because the machine service didn't a
 #: src/pages/admin/AdminMachinesPage.tsx
 msgid "Machines that people create show up here, with who owns them."
 msgstr "Machines that people create show up here, with who owns them."
+
+#: src/components/E2bSnippets.tsx
+msgid "Machines you create this way show up in your dashboard and count toward your machine limit. Do not set E2B_DOMAIN: the API tells the SDK where the machine is."
+msgstr "Machines you create this way show up in your dashboard and count toward your machine limit. Do not set E2B_DOMAIN: the API tells the SDK where the machine is."
 
 #: src/pages/UsagePage.tsx
 msgid "Measured every {seconds} seconds, so times are accurate to about that. Days are in UTC."
@@ -940,10 +969,6 @@ msgstr "Revoke {name}?"
 msgid "Revoke key"
 msgstr "Revoke key"
 
-#: src/pages/MachinePage.tsx
-msgid "Rookbox API keys do not work with the E2B SDK yet. This shows how a machine will be reached once they do. Until then, use the terminal and the desktop here."
-msgstr "Rookbox API keys do not work with the E2B SDK yet. This shows how a machine will be reached once they do. Until then, use the terminal and the desktop here."
-
 #: src/components/ErrorNote.tsx
 msgid "Rookbox can't reach the machine service right now (credentials)."
 msgstr "Rookbox can't reach the machine service right now (credentials)."
@@ -961,8 +986,8 @@ msgid "Rookbox home"
 msgstr "Rookbox home"
 
 #: src/pages/ApiKeysPage.tsx
-msgid "Rookbox keys start with <0>rbx_</0> and work with the Rookbox API only. Send one as <1>Authorization: Bearer rbx_…</1>."
-msgstr "Rookbox keys start with <0>rbx_</0> and work with the Rookbox API only. Send one as <1>Authorization: Bearer rbx_…</1>."
+msgid "Rookbox keys start with <0>rbx_</0>. Use one with the E2B SDK (below) or send it as <1>Authorization: Bearer rbx_…</1> to the Rookbox API."
+msgstr "Rookbox keys start with <0>rbx_</0>. Use one with the E2B SDK (below) or send it as <1>Authorization: Bearer rbx_…</1> to the Rookbox API."
 
 #: src/pages/MachinePage.tsx
 msgid "Run"
@@ -971,6 +996,10 @@ msgstr "Run"
 #: src/pages/MachinePage.tsx
 msgid "Run a command to see its output here."
 msgstr "Run a command to see its output here."
+
+#: src/pages/CiPage.tsx
+msgid "Run a step of your pipeline on a fresh Rookbox machine: start it, run commands in it, then remove it. It works with the standard E2B SDK, so there is nothing new to learn."
+msgstr "Run a step of your pipeline on a fresh Rookbox machine: start it, run commands in it, then remove it. It works with the standard E2B SDK, so there is nothing new to learn."
 
 #: src/components/StatusChip.tsx
 #: src/pages/admin/AdminHealthPage.tsx
@@ -1025,6 +1054,10 @@ msgstr "Search"
 msgid "Secrets"
 msgstr "Secrets"
 
+#: src/pages/CiPage.tsx
+msgid "Set it up"
+msgstr "Set it up"
+
 #: src/components/AppShell.tsx
 #: src/pages/SettingsPage.tsx
 msgid "Settings"
@@ -1069,7 +1102,6 @@ msgid "Something went wrong."
 msgstr "Something went wrong."
 
 #: src/components/AppShell.tsx
-#: src/pages/MachinePage.tsx
 msgid "Soon"
 msgstr "Soon"
 
@@ -1102,6 +1134,10 @@ msgstr "Status"
 #: src/components/CreateMachineDialog.tsx
 msgid "Still working. It's almost there."
 msgstr "Still working. It's almost there."
+
+#: src/pages/CiPage.tsx
+msgid "Store the key as a secret in your CI, named <0>ROOKBOX_API_KEY</0>. In GitHub, open Settings, then Secrets and variables, then Actions, and add a repository secret. Never put the key in your code."
+msgstr "Store the key as a secret in your CI, named <0>ROOKBOX_API_KEY</0>. In GitHub, open Settings, then Secrets and variables, then Actions, and add a repository secret. Never put the key in your code."
 
 #: src/components/MachineActions.tsx
 #: src/pages/admin/AdminMachinesPage.tsx
@@ -1267,6 +1303,10 @@ msgstr "The meter has not reported yet."
 msgid "The meter last reported"
 msgstr "The meter last reported"
 
+#: src/pages/CiPage.tsx
+msgid "The timeout you pass when creating a machine is how long it may live. Pick a little more than your job needs."
+msgstr "The timeout you pass when creating a machine is how long it may live. Pick a little more than your job needs."
+
 #: src/pages/admin/AdminUsersPage.tsx
 msgid "There is no sign-up page, so you give them the password yourself. They can sign in right away."
 msgstr "There is no sign-up page, so you give them the password yourself. They can sign in right away."
@@ -1274,10 +1314,6 @@ msgstr "There is no sign-up page, so you give them the password yourself. They c
 #: src/components/ErrorNote.tsx
 msgid "There's no room for another machine at the moment. Try again later."
 msgstr "There's no room for another machine at the moment. Try again later."
-
-#: src/pages/ApiKeysPage.tsx
-msgid "These keys do not work with the E2B SDK yet. Support for it is coming soon. We store only a hash of each key, so a key is shown once."
-msgstr "These keys do not work with the E2B SDK yet. Support for it is coming soon. We store only a hash of each key, so a key is shown once."
 
 #: src/pages/admin/AdminUsersPage.tsx
 msgid "They are signed out at once, can't sign in, and their API keys stop working. You can enable the account again later."
@@ -1403,9 +1439,14 @@ msgstr "Use at least 12 characters, or leave it empty to generate one."
 msgid "Use at most 128 characters, or leave it empty to generate one."
 msgstr "Use at most 128 characters, or leave it empty to generate one."
 
+#: src/components/AppShell.tsx
+#: src/pages/CiPage.tsx
+msgid "Use in CI"
+msgstr "Use in CI"
+
 #: src/pages/ApiKeysPage.tsx
-msgid "Use it as a bearer token against the Rookbox API. It does not work with the E2B SDK yet."
-msgstr "Use it as a bearer token against the Rookbox API. It does not work with the E2B SDK yet."
+msgid "Use it as <0>E2B_API_KEY</0> with the E2B SDK, or as a bearer token against the Rookbox API."
+msgstr "Use it as <0>E2B_API_KEY</0> with the E2B SDK, or as a bearer token against the Rookbox API."
 
 #: src/components/CreateMachineDialog.tsx
 msgid "Use lowercase letters, digits and dashes."
@@ -1414,6 +1455,10 @@ msgstr "Use lowercase letters, digits and dashes."
 #: src/pages/LoginPage.tsx
 msgid "Use the account you were given."
 msgstr "Use the account you were given."
+
+#: src/components/E2bSnippets.tsx
+msgid "Use with the E2B SDK"
+msgstr "Use with the E2B SDK"
 
 #: src/components/AdminUsage.tsx
 #: src/components/AppShell.tsx
@@ -1450,9 +1495,17 @@ msgstr "Wait about {minutes} minutes, then try again."
 msgid "Wait for it to finish what it's doing, then try again."
 msgstr "Wait for it to finish what it's doing, then try again."
 
+#: src/pages/ApiKeysPage.tsx
+msgid "We store only a hash of each key, so a key is shown once. If you lose it, revoke it and create a new one."
+msgstr "We store only a hash of each key, so a key is shown once. If you lose it, revoke it and create a new one."
+
 #: src/components/AppShell.tsx
 msgid "Webhooks"
 msgstr "Webhooks"
+
+#: src/pages/MachinePage.tsx
+msgid "With E2B_API_KEY set to one of your Rookbox keys and E2B_API_URL set to the API address (see API keys), the E2B SDK reaches this machine by its id."
+msgstr "With E2B_API_KEY set to one of your Rookbox keys and E2B_API_URL set to the API address (see API keys), the E2B SDK reaches this machine by its id."
 
 #: src/components/AppShell.tsx
 msgid "Workspace"
@@ -1485,6 +1538,10 @@ msgstr "Your account doesn't have access to it."
 #: src/components/ErrorNote.tsx
 msgid "Your account doesn't have permission for this action."
 msgstr "Your account doesn't have permission for this action."
+
+#: src/components/E2bSnippets.tsx
+msgid "Your Rookbox key works with the standard E2B SDK, with no changes to your code. Set two environment variables and use the SDK as usual."
+msgstr "Your Rookbox key works with the standard E2B SDK, with no changes to your code. Set two environment variables and use the SDK as usual."
 
 #: src/components/ErrorNote.tsx
 msgid "Your session ended."

@@ -33,6 +33,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { CopyButton } from "../components/CopyButton";
+import { E2bSnippets } from "../components/E2bSnippets";
 import { ErrorNote, useToastError } from "../components/ErrorNote";
 import { PageHeader } from "../components/PageHeader";
 import { orpc } from "../lib/api";
@@ -88,8 +89,8 @@ function CreateKeyDialog({
             </div>
             <p className="text-label text-muted-foreground">
               <Trans>
-                Use it as a bearer token against the Rookbox API. It does not work with the E2B SDK
-                yet.
+                Use it as <span className="font-mono">E2B_API_KEY</span> with the E2B SDK, or as a
+                bearer token against the Rookbox API.
               </Trans>
             </p>
             <DialogFooter>
@@ -214,15 +215,16 @@ export function ApiKeysPage() {
       <div className="flex max-w-[640px] flex-col gap-2 text-muted-foreground">
         <p>
           <Trans>
-            Rookbox keys start with <span className="font-mono text-foreground">rbx_</span> and work
-            with the Rookbox API only. Send one as{" "}
-            <span className="font-mono text-foreground">Authorization: Bearer rbx_…</span>.
+            Rookbox keys start with <span className="font-mono text-foreground">rbx_</span>. Use one
+            with the E2B SDK (below) or send it as{" "}
+            <span className="font-mono text-foreground">Authorization: Bearer rbx_…</span> to the
+            Rookbox API.
           </Trans>
         </p>
         <p className="rounded-xl border border-border bg-card p-3 text-body2 text-foreground">
           <Trans>
-            These keys do not work with the E2B SDK yet. Support for it is coming soon. We store
-            only a hash of each key, so a key is shown once.
+            We store only a hash of each key, so a key is shown once. If you lose it, revoke it and
+            create a new one.
           </Trans>
         </p>
       </div>
@@ -297,6 +299,8 @@ export function ApiKeysPage() {
           </Table>
         </div>
       )}
+
+      <E2bSnippets />
 
       <CreateKeyDialog open={creating} onOpenChange={setCreating} />
     </div>

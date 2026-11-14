@@ -6,6 +6,7 @@ import { createAuth, createIdentity, createIsActive, seedOwner } from "./auth.js
 import { createDb } from "./db.js";
 import { createDesktopProxy } from "./desktop.js";
 import { createDesktopTokens, deriveSecret } from "./desktop-token.js";
+import { createE2bFront } from "./e2b/front.js";
 import { adminEmails, desktopOrigin, loadEnv, routeLimits } from "./env.js";
 import { createLogger } from "./logger.js";
 import { createMachineService } from "./machines/service.js";
@@ -126,7 +127,24 @@ try {
         )
       : () => undefined;
 
+  const throttle = createThrottle(routeLimits(env), { enabled: env.RATE_LIMITS_ENABLED });
+  const e2b = createE2bFront({
+    upstream: {
+      baseUrl: env.SPACE_ECW_API_URL,
+      apiKey: env.SPACE_ECW_API_KEY,
+      timeoutMs: env.SPACE_TIMEOUT_MS,
+    },
+    apiKeys,
+    isActive: createIsActive(db),
+    machines,
+    throttle,
+    logger,
+    domain: env.E2B_DOMAIN,
+    allowInternet: env.MACHINE_ALLOW_INTERNET,
+  });
+
   const app = createApp({
+    e2b,
     appOrigin: env.APP_ORIGIN,
     logger,
     identity,
@@ -135,7 +153,7 @@ try {
     apiKeys,
     desktop,
     desktopHost: env.DESKTOP_HOST ?? null,
-    throttle: createThrottle(routeLimits(env), { enabled: env.RATE_LIMITS_ENABLED }),
+    throttle,
     trustedProxyHops: env.TRUSTED_PROXY_HOPS,
     admins: new Set(adminEmails(env)),
     users: {
