@@ -1,0 +1,106 @@
+/* Shared tokens and parts for the X brand kit. Same values as apps/www/src/styles/global.css. */
+@font-face {
+  font-family: "Instrument Sans";
+  font-weight: 400 700;
+  src: url("{{fontUrl}}") format("woff2");
+}
+:root {
+  --paper: #ffffff;
+  --ink: #0a0a0a;
+  --mut: #4a4a4a;
+  --line: #d9d9d9;
+  --green: #0b7a5a;
+  --green-lit: #3fd6a8;
+  --panel: #0a0a0a;
+  --panel-fg: #f5f5f5;
+  --panel-mut: #a3a3a3;
+  --panel-line: #2a2a2a;
+  --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+* {
+  box-sizing: border-box;
+  margin: 0;
+}
+html,
+body {
+  width: var(--w);
+  height: var(--h);
+  overflow: hidden;
+}
+body {
+  font-family: "Instrument Sans", sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  position: relative;
+}
+body.dark {
+  --paper: #0a0a0a;
+  --ink: #f5f5f5;
+  --mut: #a3a3a3;
+  --line: #2a2a2a;
+  --green: #3fd6a8;
+  --panel: #141414;
+  background: var(--paper);
+}
+h1 {
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.04;
+  text-wrap: balance;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.38em;
+  font-weight: 700;
+  letter-spacing: -0.055em;
+  line-height: 1;
+}
+.logo svg {
+  height: 1.2em;
+  width: 0.96em;
+  display: block;
+  fill: currentColor;
+}
+
+/* Terminal panel: always dark, mono, one green for output. */
+.term {
+  background: var(--panel);
+  color: var(--panel-fg);
+  font-family: var(--mono);
+  border-radius: 14px;
+  border: 1px solid var(--panel-line);
+  overflow: hidden;
+}
+.term .bar {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border-bottom: 1px solid var(--panel-line);
+  font-family: "Instrument Sans", sans-serif;
+  color: var(--panel-mut);
+}
+.term .bar i {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #3a3a3a;
+  display: block;
+}
+.term .bar span {
+  margin-left: 8px;
+}
+.term .l {
+  white-space: pre;
+}
+.m {
+  color: var(--panel-mut);
+}
+.o {
+  color: var(--green-lit);
+}
+.hl {
+  background: rgba(63, 214, 168, 0.13);
+  box-shadow: -4px 0 0 0 var(--green-lit);
+  margin-left: 4px;
+}
