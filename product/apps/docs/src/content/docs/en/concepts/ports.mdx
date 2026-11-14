@@ -1,0 +1,54 @@
+---
+title: Ports and URLs
+description: Every port of the machine has a public address. It requires a traffic token.
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+A server running in the machine is at `https://<port>-<id>.box.rookbox.run`.
+
+```python
+sandbox.commands.run("python3 -m http.server 8000", background=True)
+host = sandbox.get_host(8000)   # 8000-<id>.box.rookbox.run
+```
+
+```ts
+await sandbox.commands.run("python3 -m http.server 8000", { background: true });
+const host = sandbox.getHost(8000); // 8000-<id>.box.rookbox.run
+```
+
+## Traffic token
+
+The address only answers with the `e2b-traffic-access-token` header. The SDK already holds the machine's token. Use it in requests:
+
+<Tabs syncKey="lang">
+  <TabItem label="Python">
+    ```python
+    import urllib.request
+
+    req = urllib.request.Request(
+        f"https://{host}",
+        headers={"e2b-traffic-access-token": sandbox.traffic_access_token},
+    )
+    print(urllib.request.urlopen(req).read().decode())
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```ts
+    const res = await fetch(`https://${host}`, {
+      headers: { "e2b-traffic-access-token": sandbox.trafficAccessToken ?? "" },
+    });
+    console.log(await res.text());
+    ```
+  </TabItem>
+</Tabs>
+
+Without the header, the answer is an access error.
+
+## In a browser tab
+
+A link opened straight in the browser does not send the header, so it does not work. To see the machine's screen, use the [Desktop](/en/concepts/desktop/). For your own web app, call the URL from your code, as above.
+
+```sh
+rookbox url <id> 8000
+```

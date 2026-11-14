@@ -1,0 +1,36 @@
+---
+title: Perguntas frequentes
+description: Cobrança, suporte, compatibilidade e dúvidas comuns.
+---
+
+## Quanto custa?
+
+O uso é medido (máquinas rodando, memória, disco), mas a cobrança não está ativada no beta. Você acompanha o seu uso na página **Uso** do [Painel](https://app.rookbox.run). A cobrança em reais, com Pix, está planejada, sem preço nem data definidos.
+
+## Tem suporte em português?
+
+Sim. O suporte é em português.
+
+## Preciso mudar meu código da E2B?
+
+Não. Defina `E2B_API_KEY` e `E2B_API_URL` e o código segue igual. O que muda e o que não existe está em [Compatibilidade](/reference/compat/).
+
+## Posso escolher o tamanho da máquina?
+
+Pelo SDK, não: é sempre 2 vCPU, 2 GiB de RAM e 10 GiB de disco.
+
+## Minha máquina sumiu. Por quê?
+
+O prazo acabou. Sem suspensão automática, o fim do prazo remove a máquina. Veja [Ciclo de vida](/concepts/lifecycle/).
+
+## A máquina tem internet?
+
+Tem, aberta. Veja [Segurança](/security/).
+
+## Onde ficam meus dados?
+
+No disco da máquina, que é seu até você remover. Suspender guarda disco e memória. Remover apaga tudo.
+
+## Recebi 429. E agora?
+
+Pode ser o limite de 3 máquinas ou o limite de requisições. A mensagem diz qual. Veja [Erros](/reference/errors/).

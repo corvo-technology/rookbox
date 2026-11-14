@@ -1,0 +1,34 @@
+---
+/** Header links: back to the site and on to the dashboard. */
+const en = Astro.currentLocale === "en";
+const links = [
+  { href: "https://rookbox.run", label: "rookbox.run" },
+  { href: "https://app.rookbox.run", label: en ? "Dashboard" : "Painel" },
+];
+---
+
+<nav class="header-links" aria-label="Rookbox">
+  {links.map((link) => <a href={link.href}>{link.label}</a>)}
+</nav>
+
+<style>
+  .header-links {
+    display: none;
+    gap: 1.25rem;
+    align-items: center;
+  }
+  .header-links a {
+    color: var(--sl-color-gray-2);
+    font-size: var(--sl-text-sm);
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .header-links a:hover {
+    color: var(--sl-color-white);
+  }
+  @media (min-width: 50rem) {
+    .header-links {
+      display: flex;
+    }
+  }
+</style>

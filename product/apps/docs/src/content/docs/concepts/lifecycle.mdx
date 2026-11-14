@@ -1,0 +1,43 @@
+---
+title: Ciclo de vida
+description: Criar, suspender, retomar, fazer fork e remover. Como funcionam o prazo e a suspensão automática.
+---
+
+```text
+criar -> rodando -> suspensa -> rodando -> ... -> removida
+```
+
+| Ação | O que acontece | SDK da E2B | CLI |
+| --- | --- | --- | --- |
+| Criar | Liga uma máquina nova. | `Sandbox.create()` | `rookbox new` |
+| Suspender | Guarda memória e estado e libera os recursos. | `beta_pause()` | `rookbox pause` |
+| Retomar | Volta exatamente de onde parou. | `Sandbox.connect(id)` | `rookbox resume` |
+| Remover | Apaga a máquina e o disco. | `kill()` | `rookbox kill` |
+| Fork | Copia o disco, não a memória. | só no Painel | |
+
+No SDK da E2B, `pause` é o `suspend` do Rookbox e `resume` é o `restore`. Uma máquina suspensa não gasta CPU nem memória.
+
+## Prazo (timeout)
+
+Toda máquina criada pelo SDK tem um prazo.
+
+```python
+sandbox = Sandbox.create(timeout=15 * 60)  # segundos
+sandbox.set_timeout(30 * 60)               # estende
+```
+
+```ts
+const sandbox = await Sandbox.create({ timeoutMs: 15 * 60_000 });
+await sandbox.setTimeout(30 * 60_000);
+```
+
+- Sem `timeout`, vale o padrão do beta: 30 minutos.
+- Mínimo de 60 s, máximo de 24 h. Valores fora disso são ajustados.
+- Quando o prazo acaba, a máquina é **removida**. A suspensão automática fica desligada, a menos que você peça.
+- Para pedir a suspensão automática no fim do prazo, use `Sandbox.beta_create(auto_pause=True)` no Python.
+
+Se você não precisa do estado, deixe o prazo cuidar da limpeza. Se precisa, chame `beta_pause()` antes do fim do prazo.
+
+## Fork
+
+O Painel tem **Fork** em cada máquina. Ele cria uma máquina nova a partir do disco da original. A memória não vai junto: os processos em andamento não continuam. O fork não está disponível pelo SDK.

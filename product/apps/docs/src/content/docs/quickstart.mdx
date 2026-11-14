@@ -1,0 +1,119 @@
+---
+title: Quickstart
+description: Crie uma máquina, rode um comando, abra uma porta, suspenda e retome. Cinco minutos com o SDK da E2B.
+---
+
+import { Tabs, TabItem, Steps } from "@astrojs/starlight/components";
+
+O Rookbox fala o protocolo da E2B. Você usa o SDK da E2B sem alterações e aponta para a API do Rookbox.
+
+<Steps>
+
+1. **Pegue uma chave.** O Rookbox está em beta fechado: entre na lista de espera em [rookbox.run](https://rookbox.run). Com o convite, abra o [Painel](https://app.rookbox.run), vá em **Chaves de API** e crie uma. A chave começa com `rbx_` e aparece uma única vez. Copie na hora.
+
+2. **Instale o SDK.**
+
+   <Tabs syncKey="lang">
+     <TabItem label="Python">
+       ```sh
+       pip install e2b
+       ```
+     </TabItem>
+     <TabItem label="TypeScript">
+       ```sh
+       npm i e2b
+       ```
+     </TabItem>
+   </Tabs>
+
+3. **Configure duas variáveis.**
+
+   ```sh
+   export E2B_API_KEY=rbx_...
+   export E2B_API_URL=https://api.rookbox.run
+   ```
+
+4. **Crie uma máquina e rode um comando.**
+
+   <Tabs syncKey="lang">
+     <TabItem label="Python">
+       ```python
+       from e2b import Sandbox
+
+       sandbox = Sandbox.create(timeout=15 * 60)  # 15 minutos
+       print(sandbox.commands.run("uname -a").stdout)
+       ```
+     </TabItem>
+     <TabItem label="TypeScript">
+       ```ts
+       import { Sandbox } from "e2b";
+
+       const sandbox = await Sandbox.create({ timeoutMs: 15 * 60_000 }); // 15 minutos
+       const result = await sandbox.commands.run("uname -a");
+       console.log(result.stdout);
+       ```
+     </TabItem>
+   </Tabs>
+
+5. **Exponha uma porta.**
+
+   <Tabs syncKey="lang">
+     <TabItem label="Python">
+       ```python
+       sandbox.commands.run("python3 -m http.server 8000", background=True)
+       print(sandbox.get_host(8000))  # 8000-<id>.box.rookbox.run
+       ```
+     </TabItem>
+     <TabItem label="TypeScript">
+       ```ts
+       await sandbox.commands.run("python3 -m http.server 8000", { background: true });
+       console.log(sandbox.getHost(8000)); // 8000-<id>.box.rookbox.run
+       ```
+     </TabItem>
+   </Tabs>
+
+   O endereço exige um token de tráfego. Veja [Portas e URLs](/concepts/ports/).
+
+6. **Suspenda e retome.** No SDK da E2B, `pause` é o `suspend` do Rookbox: a memória fica guardada.
+
+   <Tabs syncKey="lang">
+     <TabItem label="Python">
+       ```python
+       sandbox_id = sandbox.sandbox_id
+       sandbox.beta_pause()                  # suspende, memória guardada
+       sandbox = Sandbox.connect(sandbox_id) # retoma, cerca de 1 s
+       ```
+     </TabItem>
+     <TabItem label="TypeScript">
+       ```ts
+       const id = sandbox.sandboxId;
+       await sandbox.betaPause();               // suspende, memória guardada
+       const back = await Sandbox.connect(id);  // retoma, cerca de 1 s
+       ```
+     </TabItem>
+   </Tabs>
+
+   Nas versões atuais do SDK o método se chama `beta_pause` (Python) e `betaPause` (TypeScript).
+
+7. **Remova.**
+
+   <Tabs syncKey="lang">
+     <TabItem label="Python">
+       ```python
+       sandbox.kill()
+       ```
+     </TabItem>
+     <TabItem label="TypeScript">
+       ```ts
+       await sandbox.kill();
+       ```
+     </TabItem>
+   </Tabs>
+
+</Steps>
+
+## Próximos passos
+
+- [CLI](/cli/): o mesmo fluxo no terminal.
+- [Ciclo de vida](/concepts/lifecycle/): prazo, suspensão e remoção.
+- [Limites](/concepts/limits/): máquinas por conta e o que fazer no 429 e no 503.

@@ -1,0 +1,57 @@
+---
+title: CLI
+description: Crie e controle máquinas pelo terminal com o comando rookbox.
+---
+
+{/* TODO(docs): conferir comandos, argumentos e saídas com apps/cli quando ele entrar. */}
+
+## Instalar
+
+```sh
+curl -fsSL https://rookbox.run/install | sh
+```
+
+## Entrar
+
+```sh
+rookbox login
+```
+
+O login abre o navegador e guarda a credencial neste computador. Para sair: `rookbox logout`.
+
+## Primeira máquina
+
+```sh
+rookbox new                  # cria uma máquina
+rookbox ls                   # lista as suas
+rookbox run <id> uname -a    # roda um comando
+rookbox shell <id>           # abre um terminal
+rookbox pause <id>           # suspende, memória guardada
+rookbox resume <id>          # retoma
+rookbox kill <id>            # remove
+```
+
+## Comandos
+
+| Comando | O que faz |
+| --- | --- |
+| `rookbox new` | Cria uma máquina. |
+| `rookbox ls` | Lista as suas máquinas e o estado de cada uma. |
+| `rookbox run <id> <comando>` | Roda um comando na máquina e mostra a saída. |
+| `rookbox shell <id>` | Abre um terminal interativo na máquina. |
+| `rookbox pause <id>` | Suspende a máquina. A memória fica guardada. |
+| `rookbox resume <id>` | Retoma uma máquina suspensa. |
+| `rookbox kill <id>` | Remove a máquina e o disco dela. |
+| `rookbox url <id> <porta>` | Mostra o endereço público de uma porta. |
+| `rookbox desktop <id>` | Abre o desktop da máquina no navegador. |
+| `rookbox whoami` | Mostra a conta conectada. |
+| `rookbox logout` | Apaga a credencial deste computador. |
+| `rookbox version` | Mostra a versão instalada. |
+| `rookbox update` | Atualiza a CLI. |
+
+Todo comando aceita `--help`.
+
+## Veja também
+
+- [Variáveis de ambiente](/reference/env/)
+- [Ciclo de vida](/concepts/lifecycle/)

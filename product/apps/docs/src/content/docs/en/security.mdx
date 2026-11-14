@@ -1,0 +1,31 @@
+---
+title: API keys and security
+description: How keys work, what isolates one account from another and what leaves the machine.
+---
+
+## API keys
+
+- Create and revoke them under **API keys** in the [Dashboard](https://app.rookbox.run).
+- The key is shown **once**, when you create it. After that neither you nor we can see it again.
+- Rookbox stores only the key's hash (SHA-256). Lost it? Revoke it and create another.
+- One key per use (a pipeline, an agent). That way you revoke only the one that leaked.
+- A revoked key stops working immediately.
+- Do not put the key in code, in a repository or inside the machine. In CI, use a secret.
+
+## Isolation
+
+- Each machine is a microVM with its own kernel. Machines cannot talk to each other.
+- Each account only sees its own machines. Asking for another account's machine id returns 404, the same as a machine that does not exist.
+- The traffic token and the desktop token never go to the browser. Desktop links are signed and expire in 2 minutes.
+
+## What leaves the machine
+
+**The machine's network has open outbound access to the internet.** Code running in it can send anything it has to anywhere.
+
+So:
+
+- Treat the machine as the computer of whoever wrote the code running in it.
+- Do not put secrets in it that you would not hand to that code.
+- Use scoped, short-lived third-party API keys.
+
+Even with the internet open, Rookbox blocks the cloud metadata address, internal network ranges and the server's loopback. A machine also cannot reach another one.

@@ -1,0 +1,184 @@
+/*
+ * Rookbox docs theme: paper and near-black bands, one green accent, Instrument Sans.
+ * The green is the same as the site's: #0b7a5a on paper (5.4:1 on white), #3fd6a8 on ink.
+ * Starlight's dark theme is the default scope; the light theme overrides it below.
+ */
+:root {
+  --sl-font: "Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --sl-text-body: 1rem;
+  --sl-text-h1: 2.25rem;
+  --sl-text-h2: 1.6rem;
+  --sl-text-h3: 1.25rem;
+  --sl-content-width: 46rem;
+
+  /* Dark: ink background, light text. */
+  --sl-color-white: #f5f5f5;
+  --sl-color-gray-1: #e4e4e6;
+  --sl-color-gray-2: #c4c4c8;
+  --sl-color-gray-3: #9a9a9f;
+  --sl-color-gray-4: #6e6e72;
+  --sl-color-gray-5: #2e2e31;
+  --sl-color-gray-6: #1a1a1c;
+  --sl-color-gray-7: #121213;
+  --sl-color-black: #0a0a0a;
+
+  --sl-color-accent-low: #0f2e25;
+  --sl-color-accent: #2bbf93;
+  --sl-color-accent-high: #3fd6a8;
+
+  --sl-color-hairline: #ffffff1f;
+  --sl-color-hairline-light: #ffffff14;
+  --sl-color-hairline-shade: #ffffff0d;
+  --sl-color-bg-nav: #0a0a0a;
+  --sl-color-bg-sidebar: #0a0a0a;
+  --sl-color-bg-inline-code: #1a1a1c;
+  --sl-color-text-accent: #3fd6a8;
+  --sl-color-text-invert: #0a0a0a;
+  --sl-color-bg-accent: #3fd6a8;
+
+  --sl-shadow-sm: none;
+  --sl-shadow-md: none;
+  --sl-shadow-lg: none;
+}
+
+:root[data-theme="light"] {
+  --sl-color-white: #0a0a0a;
+  --sl-color-gray-1: #151515;
+  --sl-color-gray-2: #2a2a2d;
+  --sl-color-gray-3: #55555a;
+  --sl-color-gray-4: #77777c;
+  --sl-color-gray-5: #cfcfcb;
+  --sl-color-gray-6: #f3f3f1;
+  --sl-color-gray-7: #f8f8f6;
+  --sl-color-black: #ffffff;
+
+  --sl-color-accent-low: #e3f3ee;
+  --sl-color-accent: #0b7a5a;
+  --sl-color-accent-high: #0b7a5a;
+
+  --sl-color-hairline: #e2e2df;
+  --sl-color-hairline-light: #ebebe8;
+  --sl-color-hairline-shade: #f1f1ee;
+  --sl-color-bg-nav: #ffffff;
+  --sl-color-bg-sidebar: #ffffff;
+  --sl-color-bg-inline-code: #f3f3f1;
+  --sl-color-text-accent: #0b7a5a;
+  --sl-color-text-invert: #ffffff;
+  --sl-color-bg-accent: #0b7a5a;
+}
+
+body {
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Headings: tight and heavy, like the site. */
+.sl-markdown-content h1,
+h1#_top {
+  font-weight: 700;
+  letter-spacing: -0.035em;
+}
+.sl-markdown-content h2,
+.sl-markdown-content h3 {
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+/* Header and sidebar: flat, one hairline, no fills. */
+header.header {
+  border-bottom: 1px solid var(--sl-color-hairline);
+}
+.sidebar-pane {
+  border-inline-end: 1px solid var(--sl-color-hairline);
+}
+.sidebar-content a[aria-current="page"] {
+  background: var(--sl-color-accent-low);
+  color: var(--sl-color-text-accent);
+  font-weight: 600;
+  border-radius: 6px;
+}
+.sidebar-content a {
+  border-radius: 6px;
+}
+.sidebar-content summary .large {
+  letter-spacing: 0.01em;
+}
+
+/* Links in the body use the accent, underlined softly. */
+.sl-markdown-content a:not(.sl-link-button):not([class*="card"]) {
+  color: var(--sl-color-text-accent);
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 1px;
+}
+
+/* Inline code: a quiet chip. */
+.sl-markdown-content :not(pre) > code {
+  border: 1px solid var(--sl-color-hairline);
+  border-radius: 5px;
+  padding: 0.1em 0.35em;
+  font-size: 0.875em;
+}
+
+/* Wide tables scroll on their own instead of being cut off on a phone. */
+.sl-markdown-content table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* Code blocks and tabs. */
+:root {
+  --ec-brdRad: 10px;
+  --ec-brdCol: var(--sl-color-hairline);
+}
+starlight-tabs .tab > [role="tab"][aria-selected="true"] {
+  border-color: var(--sl-color-text-accent);
+}
+
+/* Buttons and cards. */
+.sl-link-button.primary {
+  background: var(--sl-color-bg-accent);
+  border-color: var(--sl-color-bg-accent);
+  color: var(--sl-color-text-invert);
+  font-weight: 600;
+  border-radius: 8px;
+}
+.sl-link-button.secondary {
+  border-radius: 8px;
+}
+.sl-markdown-content .card {
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+/* Callouts: flat, left rule. */
+.starlight-aside {
+  border-radius: 10px;
+}
+
+/* Header pickers: let the language name fit instead of truncating it. */
+starlight-lang-select select,
+starlight-theme-select select {
+  width: auto;
+  min-width: 0;
+  padding-inline-end: 1.5rem;
+}
+
+/* Sidebar links that duplicate the header on small screens. */
+@media (min-width: 50rem) {
+  .sidebar-content li:has(> a.only-mobile),
+  .sidebar-content li:has(a.only-mobile) {
+    display: none;
+  }
+}
+
+/* Splash home. */
+[data-has-hero] .hero h1 {
+  letter-spacing: -0.045em;
+  font-weight: 700;
+}
+
+/* The page's own focus ring uses the accent. */
+:focus-visible {
+  outline-color: var(--sl-color-accent);
+}
