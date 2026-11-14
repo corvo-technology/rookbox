@@ -8,6 +8,7 @@ import {
   MACHINE_NAME_MAX_LENGTH,
   SIZE_PRESETS,
 } from "@rookbox/contracts";
+import { sampleUsage } from "./fake-usage";
 
 /**
  * An in-memory stand-in for the Rookbox API, so the dashboard runs with no server. It implements
@@ -272,6 +273,19 @@ export function createFakeApi(options: FakeApiOptions = {}): AppClient {
         await latency();
         if (!keys.delete(input.id)) throw errors.NOT_FOUND();
         return { ok: true as const };
+      }),
+    },
+    usage: {
+      summary: os.usage.summary.handler(async ({ input }) => {
+        await latency();
+        return sampleUsage(input.period, now(), [...machines.values()]);
+      }),
+    },
+    admin: {
+      // Nobody is an admin in the fake.
+      usage: os.admin.usage.handler(async ({ errors }) => {
+        await latency();
+        throw errors.FORBIDDEN();
       }),
     },
     config: {

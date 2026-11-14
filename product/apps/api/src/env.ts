@@ -141,6 +141,13 @@ const EnvObject = z.object({
   MACHINE_ALLOW_INTERNET: flag.default(true),
   /** Most machines one account may hold at once (a cost guard). */
   MAX_MACHINES_PER_USER: z.coerce.number().int().min(1).max(100).default(10),
+  /**
+   * Shared secret the usage reporter signs its requests with. Without it, `POST
+   * /ingest/usage-events` answers 503 and no usage is recorded.
+   */
+  INGEST_SECRET: z.string().min(32, "Use at least 32 characters (openssl rand -hex 32)").optional(),
+  /** Emails that may see everyone's usage. Defaults to the owner, the first allowed email. */
+  ADMIN_EMAILS: z.string().transform(csv).pipe(z.array(z.email())).optional(),
 });
 
 export const EnvSchema = EnvObject.superRefine((env, ctx) => {

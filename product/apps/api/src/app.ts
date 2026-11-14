@@ -14,6 +14,7 @@ import type { RateLimiter } from "./rate-limit.js";
 import type { Throttle } from "./route-limits.js";
 import { createRouter } from "./router.js";
 import type { SpaceClient } from "./space/client.js";
+import type { UsageService } from "./usage/service.js";
 
 export type AppDeps = {
   appOrigin: string;
@@ -45,6 +46,10 @@ export type AppDeps = {
   admins?: ReadonlySet<string>;
   users?: { findIdByEmail(email: string): Promise<string | null> };
   reconcile?: (mode: { act: boolean; killOrphans: boolean }) => Promise<ReconcileReport>;
+  /** Measured usage for the dashboard and the admin view. Without it those answer 503. */
+  usage?: UsageService;
+  /** `POST /ingest/usage-events`, signed by the usage reporter. Without it the route is absent. */
+  ingestUsage?: (request: Request) => Promise<Response>;
   now?: () => number;
 };
 
@@ -85,6 +90,7 @@ export function createApp(deps: AppDeps) {
           throw new Error("The reconciler is not configured.");
         }),
       logger,
+      usage: deps.usage,
     }),
     { plugins: [new ResponseHeadersPlugin()] },
   );
@@ -198,6 +204,10 @@ export function createApp(deps: AppDeps) {
   });
 
   main.on(["GET", "POST"], "/api/auth/*", (c) => deps.authHandler(c.req.raw));
+
+  // The usage reporter's door: not a user session, so it is signed instead (see usage/ingest.ts).
+  const ingestUsage = deps.ingestUsage;
+  if (ingestUsage) main.post("/ingest/usage-events", (c) => ingestUsage(c.req.raw));
 
   main.use("/rpc/*", async (c, next) => {
     // Preflight carries no credentials; the cors middleware above has already answered it.

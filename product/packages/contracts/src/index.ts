@@ -4,3 +4,4 @@ export * from "./config.js";
 export * from "./errors.js";
 export * from "./machines.js";
 export * from "./rpc.js";
+export * from "./usage.js";
