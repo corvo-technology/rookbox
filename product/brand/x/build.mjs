@@ -28,7 +28,7 @@ const FONT = pathToFileURL(
   join(HERE, "../../apps/www/public/fonts/instrument-sans-latin.woff2"),
 ).href;
 const DOMAIN = "rookbox.run";
-const API_DOMAIN = "box.rookbox.run";
+const API_URL = "https://api.rookbox.run";
 const HANDLE = "@rookboxx";
 
 const CHROME = [
@@ -67,7 +67,7 @@ const COPY = {
     ready: "# pronta em cerca de 2 s",
     label: "Sessão de exemplo",
     waitTitle: "Lista de espera aberta.",
-    waitSub: "Máquinas Linux sob demanda para agentes. Acesso por convite, em lotes pequenos.",
+    waitSub: "Máquinas Linux sob demanda para agentes.",
   },
   en: {
     lang: "en",
@@ -75,15 +75,15 @@ const COPY = {
     ready: "# ready in about 2 s",
     label: "Sample session",
     waitTitle: "Waitlist is open.",
-    waitSub: "On-demand Linux machines for agents. Invitation only, in small batches.",
+    waitSub: "On-demand Linux machines for agents.",
   },
 };
 const createLines = (c) => [
-  ["from e2b import Sandbox", ""],
+  [`E2B_API_URL=${API_URL}`, "hl"],
+  ["E2B_API_KEY=rbx_...", "hl"],
   ["", ""],
-  ["sbx = Sandbox.create(", ""],
-  [`    domain="${API_DOMAIN}",`, "hl"],
-  ['    template="seed")', ""],
+  ["from e2b import Sandbox", ""],
+  ["sbx = Sandbox.create()", ""],
   [c.ready, "m"],
 ];
 
@@ -209,7 +209,7 @@ const carousel = () => [
       <p class="lead">Quatro chamadas cobrem boa parte do dia de um agente.</p></div>
       ${term(
         [
-          ['sbx = Sandbox.create(template="seed")', ""],
+          ["sbx = Sandbox.create()", ""],
           ["# pronta em cerca de 2 s", "m"],
           ["", ""],
           ['sbx.commands.run("uname -sr").stdout', ""],
@@ -225,25 +225,23 @@ const carousel = () => [
   }),
   slide(3, {
     css: `h1{font-size:116px}
-      .stack{position:absolute;left:84px;right:84px;top:570px;display:flex;flex-direction:column;gap:24px}
+      .stack{position:absolute;left:84px;right:84px;top:630px;display:flex;flex-direction:column;gap:24px}
       .stack .term{position:static}`,
-    body: `<div class="head"><h1>Mude uma linha.</h1>
-      <p class="lead">Se você já usa o SDK da E2B, aponte o domínio para o Rookbox. O resto do código continua igual.</p></div>
+    body: `<div class="head"><h1>Troque duas variáveis.</h1>
+      <p class="lead">Se você já usa o SDK da E2B, o código continua igual. Só mudam duas variáveis de ambiente.</p></div>
       <div class="stack">${term(
         [
-          ["sbx = Sandbox.create(", ""],
-          ["    api_key=API_KEY,", ""],
-          [")", ""],
+          ["E2B_API_KEY=rbx_...", "hl"],
+          [`E2B_API_URL=${API_URL}`, "hl"],
         ],
-        { size: 26, bar: "Antes", pad: 36 },
+        { size: 26, bar: "Variáveis de ambiente", pad: 36 },
       )}${term(
         [
-          ["sbx = Sandbox.create(", ""],
-          [`    domain="${API_DOMAIN}",`, "hl"],
-          ["    api_key=API_KEY,", ""],
-          [")", ""],
+          ["from e2b import Sandbox", ""],
+          ["", ""],
+          ["sbx = Sandbox.create()", ""],
         ],
-        { size: 26, bar: "Com o Rookbox", pad: 36 },
+        { size: 26, bar: "Código, sem mudanças", pad: 36 },
       )}</div>`,
   }),
   slide(4, {
@@ -252,9 +250,9 @@ const carousel = () => [
       .url{position:absolute;left:84px;top:830px;font-size:104px;font-weight:700;letter-spacing:-0.04em;color:var(--green)}
       .note{position:absolute;left:84px;top:980px;width:820px;font-size:30px;line-height:1.4;color:var(--mut);text-wrap:pretty}`,
     body: `<div class="head"><h1>Entre na lista de espera.</h1>
-      <p class="lead">O acesso é só por convite, em lotes pequenos, para as máquinas continuarem rápidas.</p></div>
+      <p class="lead">Liberamos o acesso em lotes pequenos, para as máquinas continuarem rápidas.</p></div>
       <div class="url">${DOMAIN}</div>
-      <p class="note">Deixe seu email no site. Escrevemos quando o seu convite estiver pronto.</p>`,
+      <p class="note">Deixe seu email no site. Escrevemos quando a sua vaga abrir.</p>`,
   }),
 ];
 

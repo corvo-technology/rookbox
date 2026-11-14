@@ -34,9 +34,9 @@ and is still readable at 48 px.
 ## Claims the images make
 
 Only what the site already says: Firecracker microVM with its own kernel, about 2 s to start,
-about 1 s to resume, E2B SDK compatible, invitation-only waitlist, billing per second with prices
+about 1 s to resume, E2B SDK compatible (unmodified SDK, two env vars), waitlist, billing per second with prices
 not published. The code is real E2B SDK usage (`Sandbox.create`, `commands.run`, `pause`,
-`Sandbox.connect`) against `box.rookbox.run`. Pix billing is **not live**; the Pix image says
+`Sandbox.connect`) with `E2B_API_KEY` and `E2B_API_URL=https://api.rookbox.run`, as in `apps/web/src/lib/snippets.ts`. Pix billing is **not live**; the Pix image says
 "Previsto. Ainda não está no ar." Update or drop that image before billing changes.
 
 ## Bio (max 160 characters)
@@ -62,9 +62,7 @@ Portuguese (attach `launch-pt.png`):
 ```
 A lista de espera do Rookbox está aberta.
 
-Máquinas Linux sob demanda para agentes. Cada uma é uma microVM Firecracker com kernel próprio, inicia em cerca de 2 s e funciona com o SDK da E2B: você muda uma linha.
-
-O acesso é só por convite, em lotes pequenos.
+Máquinas Linux sob demanda para agentes. Cada uma é uma microVM Firecracker com kernel próprio, inicia em cerca de 2 s e funciona com o SDK da E2B: basta trocar duas variáveis de ambiente.
 
 rookbox.run
 ```
@@ -74,15 +72,13 @@ English (attach `launch-en.png`):
 ```
 The Rookbox waitlist is open.
 
-On-demand Linux machines for agents. Each one is a Firecracker microVM with its own kernel, starts in about 2 s and works with the E2B SDK: you change one line.
-
-Access is by invitation, in small batches.
+On-demand Linux machines for agents. Each one is a Firecracker microVM with its own kernel, starts in about 2 s and works with the E2B SDK: you only change two environment variables.
 
 rookbox.run
 ```
 
 Thread for the carousel (pt, one slide per post): 1 "Um computador para cada agente." 2 "Crie,
-rode, suspenda, retome." 3 "Mude uma linha." 4 "Entre na lista de espera: rookbox.run".
+rode, suspenda, retome." 3 "Troque duas variáveis." 4 "Entre na lista de espera: rookbox.run".
 
 Pix post (pt, attach `launch-pt-pix.png`):
 
@@ -98,12 +94,12 @@ Keep these when posting; X allows 1000 characters.
 
 - `avatar.png`: Castle tower mark of Rookbox in black on a white background.
 - `avatar-dark.png`: Castle tower mark of Rookbox in white on a near-black background.
-- `banner-pt.png`: Fundo preto com o título "Dê a cada agente o próprio computador.", o perfil @rookboxx e rookbox.run, ao lado de um terminal com código Python do SDK da E2B criando uma máquina com domain="box.rookbox.run".
-- `banner-en.png`: Black background with the headline "Give every agent its own computer.", the handle @rookboxx and rookbox.run, next to a terminal showing Python E2B SDK code creating a machine with domain="box.rookbox.run".
-- `launch-pt.png`: Logo do Rookbox e o título "Lista de espera aberta.", com o texto "Máquinas Linux sob demanda para agentes. Acesso por convite, em lotes pequenos.", rookbox.run e @rookboxx. À direita, um terminal com código Python do SDK da E2B criando uma máquina, com a linha domain="box.rookbox.run" destacada.
-- `launch-en.png`: Rookbox logo and the headline "Waitlist is open.", with the text "On-demand Linux machines for agents. Invitation only, in small batches.", rookbox.run and @rookboxx. On the right, a terminal with Python E2B SDK code creating a machine, the line domain="box.rookbox.run" highlighted.
+- `banner-pt.png`: Fundo preto com o título "Dê a cada agente o próprio computador.", o perfil @rookboxx e rookbox.run, ao lado de um terminal com código Python do SDK da E2B criando uma máquina com E2B_API_URL=https://api.rookbox.run.
+- `banner-en.png`: Black background with the headline "Give every agent its own computer.", the handle @rookboxx and rookbox.run, next to a terminal showing Python E2B SDK code creating a machine with E2B_API_URL=https://api.rookbox.run.
+- `launch-pt.png`: Logo do Rookbox e o título "Lista de espera aberta.", com o texto "Máquinas Linux sob demanda para agentes.", rookbox.run e @rookboxx. À direita, um terminal com código Python do SDK da E2B criando uma máquina, com as variáveis E2B_API_URL e E2B_API_KEY destacadas.
+- `launch-en.png`: Rookbox logo and the headline "Waitlist is open.", with the text "On-demand Linux machines for agents.", rookbox.run and @rookboxx. On the right, a terminal with Python E2B SDK code creating a machine, the E2B_API_URL and E2B_API_KEY variables highlighted.
 - `launch-pt-pix.png`: Fundo preto com o título "Pague em reais, com Pix." e a etiqueta tracejada "Previsto. Ainda não está no ar.". Texto: "Previsto para a cobrança, que será por segundo. Os preços ainda não foram publicados." Abaixo, uma fileira de traços representando segundos, de "a máquina inicia" a "a máquina suspende".
 - `carousel-1.png`: Slide 1 de 4. Título "Um computador para cada agente." Texto: máquinas Linux sob demanda, cada uma uma microVM Firecracker, não um contêiner compartilhado. Lista: kernel próprio, inicia em cerca de 2 s, retoma em cerca de 1 s.
-- `carousel-2.png`: Slide 2 de 4. Título "Crie, rode, suspenda, retome." Um terminal com código Python: Sandbox.create com template "seed", commands.run("uname -sr") que devolve Linux, sbx.pause() e Sandbox.connect(sbx.sandbox_id), com comentários sobre iniciar em cerca de 2 s e retomar em cerca de 1 s.
-- `carousel-3.png`: Slide 3 de 4. Título "Mude uma linha." Dois terminais, "Antes" e "Com o Rookbox". O segundo tem a mesma chamada Sandbox.create com uma linha a mais, destacada: domain="box.rookbox.run".
-- `carousel-4.png`: Slide 4 de 4, fundo preto. Título "Entre na lista de espera." Texto: o acesso é só por convite, em lotes pequenos. Endereço rookbox.run em verde e a frase "Deixe seu email no site."
+- `carousel-2.png`: Slide 2 de 4. Título "Crie, rode, suspenda, retome." Um terminal com código Python: Sandbox.create(), commands.run("uname -sr") que devolve Linux, sbx.pause() e Sandbox.connect(sbx.sandbox_id), com comentários sobre iniciar em cerca de 2 s e retomar em cerca de 1 s.
+- `carousel-3.png`: Slide 3 de 4. Título "Troque duas variáveis." Texto: com o SDK da E2B o código continua igual, só mudam duas variáveis de ambiente. Dois terminais: um com E2B_API_KEY=rbx_... e E2B_API_URL=https://api.rookbox.run, outro com o código sem mudanças, Sandbox.create().
+- `carousel-4.png`: Slide 4 de 4, fundo preto. Título "Entre na lista de espera." Texto: liberamos o acesso em lotes pequenos, para as máquinas continuarem rápidas. Endereço rookbox.run em verde e a frase "Deixe seu email no site."
