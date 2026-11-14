@@ -4,9 +4,16 @@ export const MachineId = z.string().min(1).max(64);
 
 /**
  * `seed` is the general Linux template. `desktop` adds Xvfb, noVNC and Chromium. `corvo-computer`
- * is the computer-use image.
+ * is the computer-use image. The `-v2` templates are the same images with the desktop stack
+ * starting on its own at boot (and restarted by a supervisor), so they are offered first.
  */
-export const TEMPLATES = ["seed", "desktop", "corvo-computer"] as const;
+export const TEMPLATES = [
+  "seed",
+  "desktop",
+  "corvo-computer",
+  "desktop-v2",
+  "corvo-computer-v2",
+] as const;
 export const MachineTemplate = z.enum(TEMPLATES);
 export type MachineTemplate = z.infer<typeof MachineTemplate>;
 
@@ -17,7 +24,12 @@ export type MachineTemplate = z.infer<typeof MachineTemplate>;
 export const AVAILABLE_TEMPLATES: readonly MachineTemplate[] = [...TEMPLATES];
 
 /** Templates that serve a VNC desktop on port 6080. */
-export const DESKTOP_TEMPLATES: readonly MachineTemplate[] = ["desktop", "corvo-computer"];
+export const DESKTOP_TEMPLATES: readonly MachineTemplate[] = [
+  "desktop",
+  "corvo-computer",
+  "desktop-v2",
+  "corvo-computer-v2",
+];
 
 /**
  * Lifecycle, in the sandbox engine vocabulary: `suspend` keeps the machine's memory and releases the worker,

@@ -72,9 +72,23 @@ describe("the E2B front", () => {
     const res = await w.call(w.alice, "POST", "/sandboxes", { templateID: "base" });
     expect(res.status).toBe(201);
     const forwarded = w.ecw.requests[0]?.body as Record<string, unknown>;
-    expect(forwarded.templateID).toBe("desktop");
+    expect(forwarded.templateID).toBe("desktop-v2");
     expect(forwarded.timeout).toBe(900);
     expect(forwarded.autoPause).toBe(false);
+  });
+
+  it("creates from the v2 templates by name and refuses a template that is not allowed", async () => {
+    const w = await world();
+    for (const templateID of ["desktop-v2", "corvo-computer-v2"]) {
+      expect((await w.call(w.alice, "POST", "/sandboxes", { templateID })).status).toBe(201);
+    }
+    expect(w.ecw.requests.map((r) => (r.body as Record<string, unknown>).templateID)).toEqual([
+      "desktop-v2",
+      "corvo-computer-v2",
+    ]);
+    const unknown = await w.call(w.alice, "POST", "/sandboxes", { templateID: "nope" });
+    expect(unknown.status).toBe(400);
+    expect(w.ecw.requests).toHaveLength(2);
   });
 
   it("creates through the v2 path the newer SDKs use", async () => {

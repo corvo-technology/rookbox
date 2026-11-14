@@ -24,11 +24,20 @@ describe("loadEnv", () => {
   });
 
   it("offers every template by default, and takes an allowlist from the environment", () => {
-    expect(loadEnv(valid).SPACE_TEMPLATES).toEqual(["desktop", "corvo-computer", "seed"]);
+    expect(loadEnv(valid).SPACE_TEMPLATES).toEqual([
+      "desktop-v2",
+      "corvo-computer-v2",
+      "desktop",
+      "corvo-computer",
+      "seed",
+    ]);
     expect(loadEnv({ ...valid, SPACE_TEMPLATES: " Seed , desktop" }).SPACE_TEMPLATES).toEqual([
       "seed",
       "desktop",
     ]);
+    expect(
+      loadEnv({ ...valid, SPACE_TEMPLATES: "corvo-computer-v2,desktop-v2,seed" }).SPACE_TEMPLATES,
+    ).toEqual(["corvo-computer-v2", "desktop-v2", "seed"]);
     expect(() => loadEnv({ ...valid, SPACE_TEMPLATES: "seed,nope" })).toThrow(/SPACE_TEMPLATES/);
     expect(() => loadEnv({ ...valid, SPACE_TEMPLATES: "" })).toThrow(/SPACE_TEMPLATES/);
   });

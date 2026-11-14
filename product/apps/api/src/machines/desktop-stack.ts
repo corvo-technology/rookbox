@@ -1,5 +1,6 @@
 /**
- * The desktop stack a `desktop` or `corvo-computer` machine needs before its noVNC page answers:
+ * The desktop stack a `desktop` or `corvo-computer` machine needs before its noVNC page answers
+ * (the `-v2` twins start it at boot, so for them this is normally just the first curl):
  * Xvfb, the xfce session, x11vnc and noVNC on port 6080. The E2B desktop SDK starts these from
  * the client; machines created through the API never run that code, so opening the desktop starts
  * them here. Every part is guarded by `pgrep`, so a stack that already runs (one started by the
@@ -17,6 +18,14 @@ export const DESKTOP_SCRIPT = `
 export DISPLAY=:0
 ready() { curl -s -o /dev/null --max-time 2 ${DESKTOP_READY_URL}; }
 if ready; then exit 0; fi
+# A template that starts the stack at boot (and restarts crashed parts through its own supervisor)
+# has noVNC listening already, or is a few seconds from answering again. Never start a second
+# stack, and never clear the X lock under the running one: only wait for it.
+if (echo >/dev/tcp/127.0.0.1/6080) 2>/dev/null; then
+  for _ in $(seq 1 ${DESKTOP_WAIT_S * 2}); do ready && exit 0; sleep 0.5; done
+  echo "noVNC did not answer on port 6080" >&2
+  exit 1
+fi
 bg() { setsid nohup "$@" >/dev/null 2>&1 </dev/null & }
 if ! pgrep -x Xvfb >/dev/null; then
   rm -f /tmp/.X0-lock /tmp/.X11-unix/X0

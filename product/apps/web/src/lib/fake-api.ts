@@ -347,7 +347,7 @@ export function createFakeApi(options: FakeApiOptions = {}): AppClient {
       get: os.config.get.handler(async () => {
         await latency();
         return {
-          templates: ["desktop", "corvo-computer", "seed"],
+          templates: ["desktop-v2", "corvo-computer-v2", "desktop", "corvo-computer", "seed"],
           maxMachines: MAX_MACHINES,
           defaultIdleTimeoutS: 1_800,
           domain: "box.example.com",

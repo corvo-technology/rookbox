@@ -15,7 +15,7 @@ variables.
 
 ## What you get
 
-- **Machines in ~2 s.** Fast creation from templates (`desktop`, `seed`, ...).
+- **Machines in ~2 s.** Fast creation from templates (`desktop-v2`, `seed`, ...).
 - **Suspend and resume.** An idle machine suspends and comes back where it left off.
 - **E2B SDK compatible.** `Sandbox.create()`, commands, files and ports, nothing reimplemented.
 - **Desktop.** A full desktop in the browser for agents that drive a GUI.

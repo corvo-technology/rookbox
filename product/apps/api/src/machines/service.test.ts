@@ -44,6 +44,22 @@ describe("create", () => {
     });
   });
 
+  it("creates the v2 templates, keeping the size handling of the originals", async () => {
+    const { service, space } = newMachineService();
+    const m = await service.create("alice", {
+      name: "c",
+      template: "corvo-computer-v2",
+      size: SIZE_PRESETS.medium,
+    });
+    expect(m.template).toBe("corvo-computer-v2");
+    const call = space.calls.find((c) => c.op === "create")?.args[0] as {
+      size: unknown;
+      templateId: string;
+    };
+    expect(call.templateId).toBe("corvo-computer-v2");
+    expect(call.size).toEqual(SIZE_PRESETS.medium);
+  });
+
   it("marks a desktop template as having a desktop while it runs, and no link in the record", async () => {
     const { service } = newMachineService();
     const desktop = await service.create("alice", { name: "d", template: "desktop", size: small });
@@ -490,6 +506,38 @@ describe("ensureDesktop", () => {
     expect(script).not.toMatch(/pgrep -f '?novnc/);
     expect(script).toContain("pgrep -f '[x]fce4-session'");
     expect(script).toContain("/dev/tcp/127.0.0.1/6080");
+  });
+
+  it("puts a fast path ahead of every start, so a self-starting stack is never touched", async () => {
+    const { space, service } = await desktop();
+    const v2 = await service.create("alice", { name: "v2", template: "desktop-v2", size: small });
+    await service.ensureDesktop("alice", v2.id);
+    const script = String(space.calls.filter((c) => c.op === "exec")[0]?.args[2]);
+    const ready = script.indexOf("if ready; then exit 0; fi");
+    const listening = script.indexOf("if (echo >/dev/tcp/127.0.0.1/6080)");
+    const firstStart = script.indexOf("bg Xvfb");
+    const lockRemoval = script.indexOf("rm -f /tmp/.X0-lock");
+    expect(ready).toBeGreaterThan(-1);
+    expect(listening).toBeGreaterThan(ready);
+    // Both the port fast path and the answered page come before anything that starts or clears.
+    expect(firstStart).toBeGreaterThan(listening);
+    expect(lockRemoval).toBeGreaterThan(listening);
+    expect(script.slice(listening, firstStart)).toContain("exit 1");
+  });
+
+  it("opens the desktop of every desktop template and refuses seed", async () => {
+    const { space, service } = newMachineService();
+    for (const template of [
+      "desktop",
+      "corvo-computer",
+      "desktop-v2",
+      "corvo-computer-v2",
+    ] as const) {
+      const m = await service.create("alice", { name: template, template, size: small });
+      expect(m.access.desktop).toBe(true);
+      await service.ensureDesktop("alice", m.id);
+    }
+    expect(space.calls.filter((c) => c.op === "exec")).toHaveLength(4);
   });
 
   it("reports a stack that did not come up as a host error, without the output", async () => {
