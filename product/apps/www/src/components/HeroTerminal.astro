@@ -1,0 +1,24 @@
+---
+import type { Copy } from "../i18n/copy";
+import type { Sessions } from "../snippets";
+
+type Props = { sessions: Sessions; copy: Copy["visual"] };
+const { sessions, copy } = Astro.props;
+---
+
+<figure class="ht">
+  <div class="ht__win">
+    <div class="ht__bar" aria-hidden="true">
+      <span class="ht__dots"><i></i><i></i><i></i></span>
+      <span class="ht__name mono">python</span>
+    </div>
+    <div class="ht__body mono" role="img" aria-label={copy.label}>
+      {
+        sessions.py.map(([, text, tone], i) => (
+          <div class={`ln ln--${tone}`} style={`--l:${i}`} aria-hidden="true">{text}</div>
+        ))
+      }
+    </div>
+  </div>
+  <figcaption class="fine">{copy.caption}</figcaption>
+</figure>

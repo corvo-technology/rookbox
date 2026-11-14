@@ -28,6 +28,12 @@ if (!reduce && "IntersectionObserver" in window) {
     { rootMargin: "0px 0px -8% 0px", threshold: 0.12 },
   );
   for (const el of targets) observer.observe(el);
+  // Fail open: anything already on screen after a moment is shown even if the observer never fired.
+  window.setTimeout(() => {
+    for (const el of targets) {
+      if (el.getBoundingClientRect().top < window.innerHeight) el.classList.add("is-in");
+    }
+  }, 1500);
 } else {
   for (const el of targets) el.classList.add("is-in");
 }
