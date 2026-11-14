@@ -40,7 +40,9 @@ export function initE2b(reduce: boolean) {
   if (!root || !env || !code || !status) return;
 
   root.setAttribute("data-js", "");
-  for (const bar of root.querySelectorAll<HTMLElement>("[data-env-bar], [data-code-bar]"))
+  for (const bar of root.querySelectorAll<HTMLElement>(
+    "[data-env-bar], [data-code-bar], [data-cli-bar]",
+  ))
     bar.hidden = false;
 
   /* The morph */
@@ -99,7 +101,10 @@ export function initE2b(reduce: boolean) {
       if (!block) return;
       let text: string;
       let shown: HTMLElement | null = null;
-      if (block === env) {
+      if (block.dataset.copyText) {
+        text = block.dataset.copyText;
+        shown = block.querySelector(".cli__cmd");
+      } else if (block === env) {
         text =
           env.dataset.state === "before"
             ? (env.dataset.copyBefore ?? "")

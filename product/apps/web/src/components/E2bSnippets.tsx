@@ -4,6 +4,7 @@ import { useState } from "react";
 import { orpc } from "../lib/api";
 import { DEFAULT_TEMPLATE, envSnippet, jsSnippet, pythonSnippet } from "../lib/snippets";
 import { CodeBlock } from "./CodeBlock";
+import { DocsLink } from "./DocsLink";
 import { Panel } from "./Panel";
 import { Segmented } from "./Segmented";
 
@@ -47,6 +48,11 @@ export function E2bSnippets() {
             Machines you create this way show up in your dashboard and count toward your machine
             limit. Do not set E2B_DOMAIN: the API tells the SDK where the machine is.
           </Trans>
+        </p>
+        <p className="text-label">
+          <DocsLink page="quickstart">
+            <Trans>Read the docs</Trans>
+          </DocsLink>
         </p>
       </div>
     </Panel>

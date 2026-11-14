@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { en } from "./i18n/copy/en";
 import { es } from "./i18n/copy/es";
 import { pt } from "./i18n/copy/pt";
+import { CLI_INSTALL, docsUrl } from "./site";
 import { buildE2bSnippets, buildSessions } from "./snippets";
 
 const COPIES = { en, pt, es };
@@ -89,6 +90,33 @@ describe("interactive labels", () => {
     const source = readFileSync(join(HERE, "components/Demo.astro"), "utf8");
     expect(source).toContain("sessions[tab.id].map");
     expect(source).not.toMatch(/\shidden[\s=>]|display:\s*none/);
+  });
+});
+
+describe("docs and CLI links", () => {
+  it("opens the docs in the visitor's language", () => {
+    expect(docsUrl("pt")).toBe("https://docs.rookbox.run/");
+    expect(docsUrl("en")).toBe("https://docs.rookbox.run/en/");
+    expect(docsUrl("es")).toBe("https://docs.rookbox.run/en/");
+    expect(docsUrl("pt", "cli")).toBe("https://docs.rookbox.run/cli/");
+    expect(docsUrl("en", "cli")).toBe("https://docs.rookbox.run/en/cli/");
+  });
+
+  it("offers the one-liner, and only to people who already have access", () => {
+    expect(CLI_INSTALL).toBe("curl -fsSL https://rookbox.run/install | sh");
+    for (const copy of Object.values(COPIES)) {
+      expect(copy.nav.docs.length).toBeGreaterThan(1);
+      expect(copy.footer.docs.length).toBeGreaterThan(1);
+      expect(copy.e2b.cli.lead).toMatch(/acesso|acceso|access/i);
+      expect(copy.e2b.cli.lead).not.toMatch(/sign up|cadastr|registr/i);
+    }
+  });
+
+  it("keeps the CLI block fixed in height and selectable", () => {
+    const source = readFileSync(join(HERE, "components/E2b.astro"), "utf8");
+    expect(source).toContain("data-copy-text={CLI_INSTALL}");
+    const css = readFileSync(join(HERE, "styles/global.css"), "utf8");
+    expect(css).not.toMatch(/\.code--cli[^{]*\{[^}]*user-select:\s*none/);
   });
 });
 

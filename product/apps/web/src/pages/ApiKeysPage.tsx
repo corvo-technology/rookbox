@@ -32,6 +32,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { useState } from "react";
+import { CliHint } from "../components/CliHint";
 import { CopyButton } from "../components/CopyButton";
 import { E2bSnippets } from "../components/E2bSnippets";
 import { ErrorNote, useToastError } from "../components/ErrorNote";
@@ -301,6 +302,7 @@ export function ApiKeysPage() {
       )}
 
       <E2bSnippets />
+      <CliHint />
 
       <CreateKeyDialog open={creating} onOpenChange={setCreating} />
     </div>

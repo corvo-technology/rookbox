@@ -3,7 +3,9 @@ import { Button, cn } from "@rookbox/ui-web";
 import type { LucideIcon } from "lucide-react";
 import {
   Activity,
+  BookOpen,
   ChartColumn,
+  ExternalLink,
   GitBranch,
   HardDrive,
   KeyRound,
@@ -27,11 +29,18 @@ import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useIsAdmin } from "../lib/admin";
 import { setAppearance } from "../lib/appearance";
 import { useSession } from "../lib/auth";
-import { DOCS_URL, FILTER_INPUT_ID } from "../lib/site";
+import { docsUrl, FILTER_INPUT_ID } from "../lib/site";
 import { LanguageSelect } from "./LanguageSelect";
 import { Logo } from "./Logo";
 
-type NavItem = { icon: LucideIcon; label: string; to?: string; end?: boolean };
+type NavItem = {
+  icon: LucideIcon;
+  label: string;
+  to?: string;
+  /** An external page, opened in a new tab. */
+  href?: string;
+  end?: boolean;
+};
 
 /**
  * Entries with no page behind them yet (no `to`) are left out of the nav during the beta. Set this
@@ -40,7 +49,7 @@ type NavItem = { icon: LucideIcon; label: string; to?: string; end?: boolean };
 const SHOW_COMING_SOON = false;
 
 function useNav(): { heading?: string; items: NavItem[] }[] {
-  const { t } = useLingui();
+  const { t, i18n } = useLingui();
   const { isAdmin } = useIsAdmin();
   const operator = isAdmin
     ? [
@@ -70,6 +79,7 @@ function useNav(): { heading?: string; items: NavItem[] }[] {
       items: [
         { icon: Unplug, label: t`Webhooks` },
         { icon: GitBranch, label: t`Use in CI`, to: "/ci" },
+        { icon: BookOpen, label: t`Docs`, href: docsUrl(i18n.locale) },
       ],
     },
     {
@@ -84,7 +94,7 @@ function useNav(): { heading?: string; items: NavItem[] }[] {
   ];
   if (SHOW_COMING_SOON) return groups;
   return groups
-    .map((group) => ({ ...group, items: group.items.filter((item) => item.to) }))
+    .map((group) => ({ ...group, items: group.items.filter((item) => item.to || item.href) }))
     .filter((group) => group.items.length > 0);
 }
 
@@ -93,6 +103,24 @@ const ITEM =
 
 function SidebarItem({ item, onNavigate }: { item: NavItem; onNavigate?: () => void }) {
   const Icon = item.icon;
+  if (item.href) {
+    return (
+      <a
+        href={item.href}
+        target="_blank"
+        rel="noopener"
+        onClick={onNavigate}
+        className={cn(
+          ITEM,
+          "text-muted-foreground transition-colors duration-150 hover:bg-accent hover:text-foreground",
+        )}
+      >
+        <Icon className="size-[18px]" strokeWidth={1.8} aria-hidden="true" />
+        {item.label}
+        <ExternalLink className="ml-auto size-3.5" aria-hidden="true" />
+      </a>
+    );
+  }
   if (!item.to) {
     return (
       <span aria-disabled="true" className={cn(ITEM, "cursor-not-allowed text-faint-foreground")}>
@@ -206,14 +234,6 @@ function TopBar({ menuOpen, onMenu }: { menuOpen: boolean; onMenu: () => void })
         <Logo className="max-[380px]:text-[18px]" />
       </Link>
       <span className="flex-1" />
-      {DOCS_URL ? (
-        <a
-          href={DOCS_URL}
-          className="inline-flex min-h-11 items-center rounded-[10px] px-3 text-body1 text-muted-foreground hover:bg-accent hover:text-foreground max-sm:hidden"
-        >
-          <Trans>Docs</Trans>
-        </a>
-      ) : null}
       <LanguageSelect />
       <ThemeToggle />
       <Link

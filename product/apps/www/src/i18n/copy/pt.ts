@@ -1,9 +1,5 @@
 import type { Copy } from "./types";
 
-// TODO(content): the quickstart (install, env vars, first machine, first command, open a port) was
-// removed from the landing and is meant to live in the docs. Decide the docs URL, then link it from
-// the header. The old component is in git history (apps/www/src/components/Quickstart.tsx).
-
 export const pt: Copy = {
   meta: {
     title: "Rookbox: um computador para cada agente",
@@ -19,6 +15,7 @@ export const pt: Copy = {
     demo: "Demo",
     e2b: "E2B",
     pix: "Pix",
+    docs: "Documentação",
     join: "Entrar na lista",
     signIn: "Entrar",
   },
@@ -51,6 +48,11 @@ export const pt: Copy = {
     before: "Antes",
     after: "Com o Rookbox",
     code: "O seu código continua igual",
+    cli: {
+      title: "Prefere o terminal?",
+      lead: "Já tem acesso? Instale o CLI.",
+      docs: "Ver os docs",
+    },
   },
   brazil: {
     // TODO(content): confirm before launch: the legal entity that bills in BRL and issues the nota
@@ -80,5 +82,5 @@ export const pt: Copy = {
     errorRate: "Tentativas demais desta conexão. Tente de novo em alguns minutos.",
     errorGeneric: "Não conseguimos falar com o servidor. Seu e-mail não foi salvo. Tente de novo.",
   },
-  footer: { tagline: "Máquinas para agentes de IA." },
+  footer: { tagline: "Máquinas para agentes de IA.", docs: "Documentação" },
 };

@@ -18,6 +18,7 @@ export const es: Copy = {
     demo: "Demo",
     e2b: "E2B",
     pix: "Pix",
+    docs: "Documentación",
     join: "Unirme a la lista",
     signIn: "Entrar",
   },
@@ -50,6 +51,11 @@ export const es: Copy = {
     before: "Antes",
     after: "Con Rookbox",
     code: "Tu código sigue igual",
+    cli: {
+      title: "¿Prefieres la terminal?",
+      lead: "¿Ya tienes acceso? Instala el CLI.",
+      docs: "Ver la documentación",
+    },
   },
   brazil: {
     // TODO(content): see pt.ts. Legal entity and nota fiscal for BRL billing, the IOF wording
@@ -77,5 +83,5 @@ export const es: Copy = {
     errorGeneric:
       "No pudimos conectar con el servidor. Tu correo no se guardó. Inténtalo de nuevo.",
   },
-  footer: { tagline: "Máquinas para agentes de IA." },
+  footer: { tagline: "Máquinas para agentes de IA.", docs: "Documentación" },
 };

@@ -1,14 +1,16 @@
 ---
 import type { Copy } from "../i18n/copy";
+import { CLI_INSTALL, docsUrl } from "../site";
 import type { E2bSnippets } from "../snippets";
 
 type Props = {
   snippets: E2bSnippets;
   copy: Copy["e2b"];
   ui: Copy["ui"];
+  locale: string;
 };
 
-const { snippets, copy, ui } = Astro.props;
+const { snippets, copy, ui, locale } = Astro.props;
 
 const TABS = [
   { id: "py", label: "Python" },
@@ -74,6 +76,19 @@ const newValue = keyAfter.slice(KEY.length);
       </span>
     </figcaption>
     {TABS.map((tab) => <pre data-lang={tab.id}>{snippets.code[tab.id]}</pre>)}
+  </figure>
+  <figure class="code mono code--cli" data-cli data-copy-text={CLI_INSTALL}>
+    <figcaption>
+      <span>{copy.cli.title}</span>
+      <span class="bar" hidden data-cli-bar>
+        <button type="button" class="copy" data-copy>{ui.copy}</button>
+      </span>
+    </figcaption>
+    <p class="cli__lead">{copy.cli.lead}</p>
+    <pre><span class="cli__cmd">{CLI_INSTALL}</span>
+rookbox login
+rookbox new</pre>
+    <a class="cli__docs" href={docsUrl(locale, "cli")} rel="noopener">{copy.cli.docs} <span aria-hidden="true">→</span></a>
   </figure>
   <p class="sr-only" role="status" aria-live="polite" data-copy-status></p>
 </div>

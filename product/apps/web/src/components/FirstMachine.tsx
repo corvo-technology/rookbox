@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import { orpc } from "../lib/api";
 import { DEFAULT_TEMPLATE, envSnippet, jsSnippet, pythonSnippet } from "../lib/snippets";
 import { CodeBlock } from "./CodeBlock";
+import { DocsLink } from "./DocsLink";
 import { Segmented } from "./Segmented";
 
 /** What the machines list shows before the first machine: make one here, or from code. */
@@ -38,6 +39,9 @@ export function FirstMachine({ onCreate }: { onCreate: () => void }) {
           <Plus aria-hidden="true" />
           <Trans>New machine</Trans>
         </Button>
+        <DocsLink page="quickstart">
+          <Trans>Read the docs</Trans>
+        </DocsLink>
       </div>
 
       <div className="flex min-w-0 flex-col gap-3">

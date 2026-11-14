@@ -348,6 +348,10 @@ msgstr "Create account"
 msgid "Create an API key on the <0>API keys</0> page. Name it after the pipeline, so you can revoke the right one later."
 msgstr "Create an API key on the <0>API keys</0> page. Name it after the pipeline, so you can revoke the right one later."
 
+#: src/components/CliHint.tsx
+msgid "Create and control machines from your terminal. Install it, sign in, then run <0>rookbox new</0>."
+msgstr "Create and control machines from your terminal. Install it, sign in, then run <0>rookbox new</0>."
+
 #: src/pages/ApiKeysPage.tsx
 msgid "Create API key"
 msgstr "Create API key"
@@ -617,6 +621,10 @@ msgstr "If they are locked out, reset their password instead."
 #: src/pages/UsagePage.tsx
 msgid "in this period"
 msgstr "in this period"
+
+#: src/components/CliHint.tsx
+msgid "Install the CLI"
+msgstr "Install the CLI"
 
 #: src/components/AppShell.tsx
 msgid "Integrations"
@@ -971,6 +979,13 @@ msgstr "Preparing the machine…"
 msgid "RAM (GiB)"
 msgstr "RAM (GiB)"
 
+#: src/components/CliHint.tsx
+#: src/components/E2bSnippets.tsx
+#: src/components/FirstMachine.tsx
+#: src/pages/CiPage.tsx
+msgid "Read the docs"
+msgstr "Read the docs"
+
 #: src/components/DesktopDialog.tsx
 msgid "Reconnect"
 msgstr "Reconnect"
@@ -1281,6 +1296,7 @@ msgstr "Template"
 msgid "Temporary password (optional)"
 msgstr "Temporary password (optional)"
 
+#: src/components/CliHint.tsx
 #: src/pages/MachinePage.tsx
 msgid "Terminal"
 msgstr "Terminal"

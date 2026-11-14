@@ -2,7 +2,7 @@
 import type { Copy } from "../i18n/copy";
 import type { Locale } from "../i18n/locales";
 import { LOCALE_HREFLANG, LOCALES, localeHomePath } from "../i18n/locales";
-import { DASHBOARD_URL } from "../site";
+import { DASHBOARD_URL, docsUrl } from "../site";
 import Logo from "./Logo.astro";
 
 type Props = {
@@ -24,6 +24,7 @@ const NAV_LINKS = [
     <Logo href={localeHomePath(locale)} label={copy.home} />
     <nav class="nav__links" aria-label={copy.primary}>
       {NAV_LINKS.map((link) => <a href={link.href}>{link.label}</a>)}
+      <a class="nav__docs" href={docsUrl(locale)} rel="noopener">{copy.docs}</a>
     </nav>
     <div class="nav__actions">
       <nav class="langs" aria-label={copy.languages} data-langs>

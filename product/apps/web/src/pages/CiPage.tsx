@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { CodeBlock } from "../components/CodeBlock";
+import { DocsLink } from "../components/DocsLink";
 import { PageHeader } from "../components/PageHeader";
 import { Panel } from "../components/Panel";
 import { orpc } from "../lib/api";
@@ -39,6 +40,11 @@ export function CiPage() {
           Run a step of your pipeline on a fresh Rookbox machine: start it, run commands in it, then
           remove it. It works with the standard E2B SDK, so there is nothing new to learn.
         </Trans>
+      </p>
+      <p>
+        <DocsLink page="guides/ci">
+          <Trans>Read the docs</Trans>
+        </DocsLink>
       </p>
 
       <Panel title={<Trans>Set it up</Trans>}>

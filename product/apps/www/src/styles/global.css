@@ -1147,7 +1147,56 @@ main {
   text-align: center;
 }
 
+/* The CLI block: quiet, under the code sample, for people who already have access. */
+.code--cli figcaption {
+  margin-bottom: 4px;
+}
+
+.cli__lead {
+  margin: 0 0 12px;
+  font-family: "Instrument Sans", system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink-mut);
+}
+
+.code--cli pre {
+  color: var(--ink-mut);
+  user-select: text;
+}
+
+.cli__cmd {
+  color: var(--green-lit);
+}
+
+.cli__docs {
+  display: inline-block;
+  margin-top: 12px;
+  font-family: "Instrument Sans", system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #e6e6e6;
+  text-decoration: underline;
+  text-decoration-color: var(--ink-line);
+  text-underline-offset: 4px;
+}
+
+.cli__docs:hover {
+  color: var(--green-lit);
+}
+
 /* Footer */
+
+.foot__link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 4px;
+}
+
+.foot__link:hover {
+  color: var(--ink);
+}
 
 .foot {
   border-top: 1px solid var(--line);
@@ -1353,6 +1402,14 @@ main {
 }
 
 @media (max-width: 480px) {
+  .code--cli {
+    padding: 18px 16px;
+  }
+
+  .code--cli pre {
+    font-size: 12px;
+  }
+
   .wl__row {
     flex-direction: column;
   }
