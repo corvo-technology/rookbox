@@ -9,7 +9,6 @@ const ADMIN_ERRORS = { FORBIDDEN: API_ERRORS.FORBIDDEN, NOT_FOUND: API_ERRORS.NO
 /** Why a user-management call was refused, so the dashboard can say it in the reader's language. */
 export const USER_ADMIN_REASONS = [
   "name_required",
-  "not_allowed",
   "exists",
   "password_short",
   "password_long",
@@ -63,8 +62,6 @@ export const AdminUserSchema = z.object({
   email: z.string(),
   name: z.string(),
   status: z.enum(["active", "disabled"]),
-  /** In `ROOKBOX_ALLOWED_EMAILS`; an account outside it cannot sign in. */
-  allowed: z.boolean(),
   /** In `ADMIN_EMAILS`. */
   admin: z.boolean(),
   createdAt: z.iso.datetime(),

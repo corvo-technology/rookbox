@@ -17,11 +17,6 @@ export function useErrorText() {
       switch (reason) {
         case "name_required":
           return { title: t`A name is required.`, hint: t`Type the person's name.` };
-        case "not_allowed":
-          return {
-            title: t`That email isn't on the allowed list.`,
-            hint: t`Add it to ROOKBOX_ALLOWED_EMAILS on the server and deploy, then create the account.`,
-          };
         case "exists":
           return {
             title: t`An account with that email already exists.`,
