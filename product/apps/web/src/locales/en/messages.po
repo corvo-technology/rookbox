@@ -216,6 +216,10 @@ msgstr "Creating"
 msgid "Custom size"
 msgstr "Custom size"
 
+#: src/components/AdminUsage.tsx
+msgid "Customers"
+msgstr "Customers"
+
 #: src/pages/SettingsPage.tsx
 msgid "Dark"
 msgstr "Dark"
@@ -273,6 +277,7 @@ msgstr "Disk"
 msgid "Disk (GiB)"
 msgstr "Disk (GiB)"
 
+#: src/components/AdminUsage.tsx
 #: src/pages/UsagePage.tsx
 msgid "Disk GiB h"
 msgstr "Disk GiB h"
@@ -441,6 +446,7 @@ msgstr "machine-hours"
 msgid "Machine-hours running per day"
 msgstr "Machine-hours running per day"
 
+#: src/components/AdminUsage.tsx
 #: src/components/AppShell.tsx
 #: src/pages/MachinePage.tsx
 #: src/pages/MachinesPage.tsx
@@ -465,6 +471,7 @@ msgstr "Members"
 msgid "Memory"
 msgstr "Memory"
 
+#: src/components/AdminUsage.tsx
 #: src/pages/UsagePage.tsx
 msgid "Memory GiB h"
 msgstr "Memory GiB h"
@@ -474,6 +481,7 @@ msgstr "Memory GiB h"
 msgid "Most in a day: {0} h"
 msgstr "Most in a day: {0} h"
 
+#: src/components/AdminUsage.tsx
 #: src/components/CreateMachineDialog.tsx
 #: src/pages/ApiKeysPage.tsx
 #: src/pages/MachinesPage.tsx
@@ -492,6 +500,10 @@ msgstr "Never"
 #: src/pages/MachinesPage.tsx
 msgid "New machine"
 msgstr "New machine"
+
+#: src/components/AdminUsage.tsx
+msgid "No customer app has used machines in this period."
+msgstr "No customer app has used machines in this period."
 
 #: src/pages/ApiKeysPage.tsx
 msgid "No keys yet"
@@ -512,6 +524,10 @@ msgstr "No machines yet"
 #: src/pages/UsagePage.tsx
 msgid "No usage in this period"
 msgstr "No usage in this period"
+
+#: src/components/AdminUsage.tsx
+msgid "No user has used machines in this period."
+msgstr "No user has used machines in this period."
 
 #: src/pages/UsagePage.tsx
 msgid "Nothing has been reported yet."
@@ -655,10 +671,12 @@ msgstr "Run a command to see its output here."
 msgid "Running"
 msgstr "Running"
 
+#: src/components/AdminUsage.tsx
 #: src/pages/UsagePage.tsx
 msgid "Running h"
 msgstr "Running h"
 
+#: src/components/AdminUsage.tsx
 #: src/pages/UsagePage.tsx
 msgid "Running now"
 msgstr "Running now"
@@ -922,6 +940,10 @@ msgstr "Try again. If it keeps happening, tell the administrator."
 msgid "Type"
 msgstr "Type"
 
+#: src/components/AdminUsage.tsx
+msgid "Unassigned"
+msgstr "Unassigned"
+
 #: src/components/AppShell.tsx
 #: src/pages/UsagePage.tsx
 msgid "Usage and billing"
@@ -943,10 +965,15 @@ msgstr "Use lowercase letters, digits and dashes."
 msgid "Use the account you were given."
 msgstr "Use the account you were given."
 
+#: src/components/AdminUsage.tsx
+msgid "Users"
+msgstr "Users"
+
 #: src/components/CreateMachineDialog.tsx
 msgid "vCPU"
 msgstr "vCPU"
 
+#: src/components/AdminUsage.tsx
 #: src/pages/UsagePage.tsx
 msgid "vCPU h"
 msgstr "vCPU h"

@@ -28,7 +28,10 @@ function setup() {
     apiKeys: createApiKeyService(memoryApiKeyStore()),
     desktop: {
       http: async () => new Response(""),
-      issueLink: async () => ({ url: "https://desk.example.test/x", expiresAt: "2026-01-01T00:00:00Z" }),
+      issueLink: async () => ({
+        url: "https://desk.example.test/x",
+        expiresAt: "2026-01-01T00:00:00Z",
+      }),
       open: async () => new Response(""),
     },
     usage: usage.service,
@@ -95,5 +98,22 @@ describe("usage over HTTP", () => {
     });
     const report = await client("admin").admin.usage({ period: "7d" });
     expect(report.unassigned.machines).toBe(1);
+  });
+
+  it("shows customer usage to an admin and never to a dashboard user", async () => {
+    const { client, ingest, usage } = setup();
+    await ingest(
+      events([ev("seen", "bot1", 0, { owner: "customer:rook" }), ev("seen", "mine", 0)]),
+    );
+    usage.setNow(3_600);
+    const summary = await client("u1").usage.summary({ period: "7d" });
+    expect(summary.byMachine.map((m) => m.machineId)).toEqual(["mine"]);
+    expect(summary.running.map((m) => m.machineId)).toEqual(["mine"]);
+    await expect(client("u1").admin.usage({ period: "7d" })).rejects.toMatchObject({ status: 403 });
+    const report = await client("admin").admin.usage({ period: "7d" });
+    expect(report.customers).toEqual([
+      expect.objectContaining({ customerId: "rook", machines: 1, machinesNow: 1 }),
+    ]);
+    expect(report.users.map((user) => user.userId)).toEqual(["u1"]);
   });
 });

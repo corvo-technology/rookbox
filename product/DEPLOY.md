@@ -187,9 +187,43 @@ To turn it on:
    unassigned bucket and how long ago the reporter last got through.
 
 How machines get an owner: the `rookbox.owner` tag when it names an account, else the API's own
-record of the machine (a fork loses the tag), else "unassigned", which only an admin sees. The tag
+record of the machine (a fork loses the tag), else the customer a reporter rule names (below),
+else "unassigned", which only an admin sees. The tag
 is set by whoever creates the machine, so before giving customers their own keys to the sandbox
 server, move ownership to the key's organization instead of trusting the tag.
+
+### Customer apps (Rook)
+
+A customer app such as Rook creates machines with the same sandbox key through the E2B SDK. Its
+machines carry its own metadata (for Rook, `botId` and `corvo`) and no `rookbox.owner` tag, so
+they would land in "unassigned". A reporter rule files them under a named customer instead:
+`CUSTOMER_RULES=corvo=rook` (a comma list of `metadataKey=customerId`, or a JSON object). A machine
+whose metadata has that key and no owner tag is reported as `customer:rook`. Customer usage is a
+separate list in the admin view (the Customers panel on the Usage page, and `usage:report`), and a
+dashboard user's own usage can never include it.
+
+To set it: on the sandbox server, add the line `CUSTOMER_RULES=corvo=rook` to
+`/etc/rookbox-reporter.env` and recreate the container (`docker rm -f rookbox-reporter`, then the
+same `docker run` as in `apps/reporter/README.md`; a plain restart does not re-read the file).
+Deploy the API with this change first, so it knows the `customer:` owner.
+
+History: events already stored carry no owner for these machines, and the API cannot tell from
+them which are Rook's. Machines that are still alive fix themselves: after the restart the next
+snapshot (within `SNAPSHOT_INTERVAL_S`, 5 minutes) restates them as `customer:rook` and the API
+re-derives all their stored time under it. Machines that no longer exist need the one-off CLI, in
+the API's shell. It moves only time with no owner, never a user's, and is safe to run twice:
+
+```bash
+node dist/cli/usage-reassign.js --customer rook --metadata-key corvo          # dry run: lists live machines with that key
+node dist/cli/usage-reassign.js --customer rook --machine ID1 --machine ID2   # dry run: deleted machines, by id
+node dist/cli/usage-reassign.js --customer rook --machine ID1 --apply         # write it
+```
+
+`--metadata-key` needs `SPACE_ECW_API_URL` and `SPACE_ECW_API_KEY` in the shell and only sees
+machines that exist now; deleted ones can be taken from the admin view's "unassigned" machines.
+Nothing is billed yet, so a wrong guess can be corrected by running it again with the right id.
+Note the tag is set by whoever creates a machine: someone who writes `customer:rook` into their
+own machine's `rookbox.owner` tag only hides their own usage from themselves, not anyone else's.
 
 Precision: time is measured to the reporter's poll interval (30 seconds). A machine created and
 deleted between two polls is not measured. If the reporter stops, machines still open stop
