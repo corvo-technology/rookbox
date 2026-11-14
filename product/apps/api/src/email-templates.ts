@@ -140,7 +140,9 @@ function layout(input: {
   footer: string;
 }): { html: string; text: string } {
   const { lang, title, preheader, blocks, footer } = input;
-  const logo = `${input.siteUrl.replace(/\/+$/, "")}/email/logo.png`;
+  const base = input.siteUrl.replace(/\/+$/, "");
+  const logo = `${base}/email/logo.png`;
+  const logoDark = `${base}/email/logo-dark.png`;
   const html = `<!doctype html>
 <html lang="${lang}" xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -153,6 +155,8 @@ function layout(input: {
 @media (prefers-color-scheme: dark) {
   .page { background:#0b0b0b !important; }
   .card { background:#151515 !important; border-color:#2a2a2a !important; }
+  .logo-light { display:none !important; }
+  .logo-dark { display:block !important; max-height:none !important; }
   .hd, .fg { color:#f2f2f2 !important; }
   .mut { color:#a0a0a0 !important; }
   .box { background:#1d1d1d !important; border-color:#2f2f2f !important; }
@@ -168,7 +172,7 @@ function layout(input: {
 <tr><td align="center" style="padding:40px 12px;">
 <table role="presentation" width="480" cellpadding="0" cellspacing="0" border="0" class="card" style="width:100%;max-width:480px;background:#ffffff;border:1px solid ${LINE};border-radius:12px;" bgcolor="#ffffff">
 <tr><td class="pad" style="padding:36px 36px 32px;">
-<img src="${escapeHtml(logo)}" width="128" height="32" alt="Rookbox" style="display:block;margin:0 0 36px;border:0;outline:none;height:32px;width:128px;">
+<div style="margin:0 0 36px;"><img class="logo-light" src="${escapeHtml(logo)}" width="128" height="32" alt="Rookbox" style="display:block;border:0;outline:none;height:32px;width:128px;"><!--[if !mso]><!--><img class="logo-dark" src="${escapeHtml(logoDark)}" width="128" height="32" alt="" style="display:none;max-height:0;overflow:hidden;border:0;outline:none;height:32px;width:128px;"><!--<![endif]--></div>
 <h1 class="hd" style="margin:0 0 14px;font:600 26px/1.2 ${FONT};letter-spacing:-0.02em;color:${INK};">${escapeHtml(title)}</h1>
 ${blocks.map((block) => block.html).join("\n")}
 </td></tr>
