@@ -16,7 +16,6 @@ export type Copy = {
     dashboard: string;
   };
   hero: {
-    eyebrow: string;
     title: string;
     lead: string;
     start: string;
@@ -24,20 +23,9 @@ export type Copy = {
     /** Three short facts shown under the buttons. */
     facts: [string, string, string];
   };
-  /** The machines-list picture next to the headline. Every name in it is made up. */
-  visual: {
-    illustration: string;
-    title: string;
-    newMachine: string;
-    running: string;
-    suspended: string;
-    starting: string;
-    columns: { name: string; status: string; size: string; created: string };
-    ages: [string, string, string, string];
-    publicUrl: string;
-  };
+  /** The terminal session next to the headline. */
+  visual: { label: string; caption: string };
   demo: {
-    eyebrow: string;
     title: string;
     lead: string;
     languageLabel: string;
@@ -48,28 +36,22 @@ export type Copy = {
     session: { ready: string; pause: string; saved: string; resumed: string };
   };
   desktop: {
-    eyebrow: string;
     title: string;
     lead: string;
-    illustration: string;
     points: [string, string, string];
-    terminal: string;
-    browser: string;
-    viewer: string;
   };
   features: {
-    eyebrow: string;
     title: string;
+    /** The two capabilities shown large, each with one number. */
+    lead: { stat: string; statLabel: string; title: string; body: string }[];
     items: { title: string; body: string }[];
   };
   lifecycle: {
-    eyebrow: string;
     title: string;
     lead: string;
     cards: { state: string; value: string; title: string; body: string }[];
   };
   usecases: {
-    eyebrow: string;
     title: string;
     items: { title: string; body: string }[];
   };

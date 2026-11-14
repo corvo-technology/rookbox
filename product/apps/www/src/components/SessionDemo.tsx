@@ -17,8 +17,11 @@ type Props = {
 /**
  * The animated terminal and the steps beside it. Python and TypeScript tabs replay the
  * same session. The server renders the finished session; with reduced motion it stays finished,
- * otherwise it replays from the top once the page is interactive.
+ * otherwise it replays once the page is interactive, always from a frame that already shows the
+ * first command so the terminal is never an empty box.
  */
+const FIRST_FRAME = 2;
+
 export function SessionDemo({ sessions, steps, languageLabel, terminalLabel }: Props) {
   const [tab, setTab] = useState<TabId>("py");
   const [shown, setShown] = useState(sessions.py.length);
@@ -30,7 +33,7 @@ export function SessionDemo({ sessions, steps, languageLabel, terminalLabel }: P
       prefers = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     } catch {}
     setReduce(prefers);
-    if (!prefers) setShown(0);
+    if (!prefers) setShown(FIRST_FRAME);
   }, []);
 
   const script = sessions[tab];
@@ -38,7 +41,7 @@ export function SessionDemo({ sessions, steps, languageLabel, terminalLabel }: P
   useEffect(() => {
     if (reduce) return;
     const timer = window.setInterval(() => {
-      setShown((n) => (n > script.length + 3 ? 0 : n + 1));
+      setShown((n) => (n > script.length + 3 ? FIRST_FRAME : n + 1));
     }, 650);
     return () => window.clearInterval(timer);
   }, [reduce, script.length]);
@@ -49,7 +52,7 @@ export function SessionDemo({ sessions, steps, languageLabel, terminalLabel }: P
 
   const pick = (id: TabId) => {
     setTab(id);
-    setShown(reduce ? sessions[id].length : 0);
+    setShown(reduce ? sessions[id].length : FIRST_FRAME);
   };
 
   return (
@@ -83,7 +86,7 @@ export function SessionDemo({ sessions, steps, languageLabel, terminalLabel }: P
               {text}
             </div>
           ))}
-          {!reduce && <span className="cursor" aria-hidden="true" />}
+          {!reduce && !done && <span className="cursor" aria-hidden="true" />}
         </div>
       </div>
       <ol className="steps">

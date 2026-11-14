@@ -20,7 +20,6 @@ export const en: Copy = {
     dashboard: "Open the dashboard",
   },
   hero: {
-    eyebrow: "Machines for AI agents",
     title: "Give every agent its own computer.",
     lead: "Rookbox gives your agents on-demand Linux machines. Each one is a Firecracker microVM with its own kernel, and it works with the E2B SDK you may already use.",
     start: "Open the dashboard",
@@ -28,18 +27,10 @@ export const en: Copy = {
     facts: ["Its own kernel", "Boots in about 2 s", "Resumes in about 1 s"],
   },
   visual: {
-    illustration: "Illustration",
-    title: "Machines",
-    newMachine: "New machine",
-    running: "Running",
-    suspended: "Suspended",
-    starting: "Starting",
-    columns: { name: "Name", status: "Status", size: "Size", created: "Created" },
-    ages: ["2 min ago", "14 min ago", "1 h ago", "just now"],
-    publicUrl: "Public URL for port 3000",
+    label: "Sample session: the E2B SDK pointed at Rookbox",
+    caption: "The E2B SDK pointed at Rookbox. Output is simplified.",
   },
   demo: {
-    eyebrow: "How it feels",
     title: "Create, run, expose, suspend, resume.",
     lead: "A few calls cover most of an agent's day. Pick your language and watch a session.",
     languageLabel: "Language",
@@ -60,31 +51,31 @@ export const en: Copy = {
     },
   },
   desktop: {
-    eyebrow: "A desktop in the browser",
     title: "When an agent needs to see a screen, it has one.",
     lead: "Every machine can run a full Linux desktop with Chromium. Watch it live in your browser over VNC, or let the agent drive it.",
-    illustration: "Illustration of a machine's desktop",
     points: [
       "Chromium installed and ready",
       "Viewable in your browser over VNC",
       "The same machine as your terminal and files",
     ],
-    terminal: "Terminal",
-    browser: "Chromium",
-    viewer: "Desktop viewer",
   },
   features: {
-    eyebrow: "What you get",
     title: "A real machine, not a shared container.",
-    items: [
+    lead: [
       {
+        stat: "~2 s",
+        statLabel: "to boot",
         title: "Its own kernel and root",
         body: "Every machine is a Firecracker microVM. Your agent can install packages, run services and break things without touching a neighbour.",
       },
       {
+        stat: "~1 s",
+        statLabel: "to resume",
         title: "Suspend keeps memory",
         body: "Park a machine while its agent waits. Resuming brings back memory and running processes in about a second.",
       },
+    ],
+    items: [
       {
         title: "Fork a working setup",
         body: "Copy the disk into a new machine and try a second approach in parallel. Fork copies the disk, not memory.",
@@ -104,7 +95,6 @@ export const en: Copy = {
     ],
   },
   lifecycle: {
-    eyebrow: "Lifecycle",
     title: "Four moves, all measured in seconds.",
     lead: "Timings are typical, not guarantees.",
     cards: [
@@ -135,7 +125,6 @@ export const en: Copy = {
     ],
   },
   usecases: {
-    eyebrow: "What agents do with it",
     title: "Made for work that needs a real computer.",
     items: [
       {

@@ -297,16 +297,6 @@ a {
   overflow: hidden;
 }
 
-.hero::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(#d9d9d9 1px, transparent 1.2px);
-  background-size: 22px 22px;
-  mask-image: radial-gradient(ellipse 70% 60% at 70% 40%, #000 20%, transparent 75%);
-  pointer-events: none;
-}
-
 .hero__wrap {
   position: relative;
   display: grid;
@@ -563,44 +553,6 @@ a {
   border-color: var(--green);
 }
 
-/* Features */
-
-.cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
-  gap: 20px;
-}
-
-.card {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 28px;
-  border-radius: 18px;
-  background: var(--card);
-}
-
-.card h3 {
-  font-size: 20px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-
-.card p {
-  font-size: 16px;
-  color: var(--mut);
-}
-
-.ico {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: var(--ink);
-  color: #fff;
-}
-
 /* E2B */
 
 .env {
@@ -608,10 +560,6 @@ a {
   grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr));
   gap: 40px;
   align-items: center;
-}
-
-.env .eyebrow + .sh {
-  margin-top: 14px;
 }
 
 .env .lead {
@@ -874,4 +822,8 @@ a {
   .btn {
     transition: none;
   }
+}
+
+.eyebrow + .sh {
+  margin-top: 14px;
 }

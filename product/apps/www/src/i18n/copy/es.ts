@@ -20,7 +20,6 @@ export const es: Copy = {
     dashboard: "Abrir el panel",
   },
   hero: {
-    eyebrow: "Máquinas para agentes de IA",
     title: "Dale a cada agente su propio ordenador.",
     lead: "Rookbox da a tus agentes máquinas Linux bajo demanda. Cada una es una microVM Firecracker con kernel propio y funciona con el SDK de E2B que quizá ya uses.",
     start: "Abrir el panel",
@@ -28,18 +27,10 @@ export const es: Copy = {
     facts: ["Kernel propio", "Arranca en unos 2 s", "Se reanuda en aprox. 1 s"],
   },
   visual: {
-    illustration: "Ilustración",
-    title: "Máquinas",
-    newMachine: "Nueva máquina",
-    running: "En ejecución",
-    suspended: "Suspendida",
-    starting: "Iniciando",
-    columns: { name: "Nombre", status: "Estado", size: "Tamaño", created: "Creada" },
-    ages: ["hace 2 min", "hace 14 min", "hace 1 h", "ahora"],
-    publicUrl: "URL pública del puerto 3000",
+    label: "Sesión de ejemplo: el SDK de E2B apuntando a Rookbox",
+    caption: "El SDK de E2B apuntando a Rookbox. La salida está simplificada.",
   },
   demo: {
-    eyebrow: "Cómo se siente",
     title: "Crear, ejecutar, exponer, suspender, reanudar.",
     lead: "Unas pocas llamadas cubren casi todo el día de un agente. Elige tu lenguaje y mira una sesión.",
     languageLabel: "Lenguaje",
@@ -60,31 +51,31 @@ export const es: Copy = {
     },
   },
   desktop: {
-    eyebrow: "Un escritorio en el navegador",
     title: "Cuando un agente necesita ver una pantalla, la tiene.",
     lead: "Cada máquina puede ejecutar un escritorio Linux completo con Chromium. Míralo en vivo en tu navegador por VNC o deja que el agente lo maneje.",
-    illustration: "Ilustración del escritorio de una máquina",
     points: [
       "Chromium instalado y listo",
       "Visible en tu navegador por VNC",
       "La misma máquina que tu terminal y tus archivos",
     ],
-    terminal: "Terminal",
-    browser: "Chromium",
-    viewer: "Visor del escritorio",
   },
   features: {
-    eyebrow: "Lo que obtienes",
     title: "Una máquina de verdad, no un contenedor compartido.",
-    items: [
+    lead: [
       {
+        stat: "~2 s",
+        statLabel: "para arrancar",
         title: "Kernel y raíz propios",
         body: "Cada máquina es una microVM Firecracker. Tu agente puede instalar paquetes, ejecutar servicios y romper cosas sin afectar a las vecinas.",
       },
       {
+        stat: "~1 s",
+        statLabel: "para reanudar",
         title: "Suspender conserva la memoria",
         body: "Deja la máquina en espera mientras el agente aguarda. Al reanudar, la memoria y los procesos en ejecución vuelven en aproximadamente un segundo.",
       },
+    ],
+    items: [
       {
         title: "Fork de un entorno listo",
         body: "Copia el disco en una máquina nueva y prueba otro enfoque en paralelo. El fork copia el disco, no la memoria.",
@@ -104,7 +95,6 @@ export const es: Copy = {
     ],
   },
   lifecycle: {
-    eyebrow: "Ciclo de vida",
     title: "Cuatro movimientos, todos medidos en segundos.",
     lead: "Los tiempos son típicos, no garantizados.",
     cards: [
@@ -135,7 +125,6 @@ export const es: Copy = {
     ],
   },
   usecases: {
-    eyebrow: "Qué hacen los agentes con él",
     title: "Hecho para trabajos que piden un ordenador de verdad.",
     items: [
       {
