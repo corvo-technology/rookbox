@@ -1,25 +1,22 @@
 ---
 import { getCopy } from "../i18n/copy";
 import type { Locale } from "../i18n/locales";
-import { DEFAULT_LOCALE, isLocale, localeHomePath } from "../i18n/locales";
-import { rich } from "../i18n/rich";
+import { DEFAULT_LOCALE, isLocale } from "../i18n/locales";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { SDK_DOMAIN } from "../site";
-import { buildE2bSnippets, buildQuickstart, buildSessions } from "../snippets";
+import { E2B_API_URL, SDK_DOMAIN } from "../site";
+import { buildE2bSnippets, buildSessions } from "../snippets";
 import { E2bSnippet } from "./E2bSnippet";
 import Footer from "./Footer.astro";
 import Header from "./Header.astro";
-import HeroTerminal from "./HeroTerminal.astro";
-import { Quickstart } from "./Quickstart";
+import Rook from "./Rook.astro";
 import { SessionDemo } from "./SessionDemo";
 import WaitlistForm from "./WaitlistForm.astro";
 
 const locale: Locale = isLocale(Astro.currentLocale) ? Astro.currentLocale : DEFAULT_LOCALE;
 const copy = getCopy(locale);
-const { hero, visual, access, brazil, demo, features, e2b, quickstart, cta, waitlist } = copy;
+const { hero, visual, brazil, demo, e2b, cta, waitlist } = copy;
 const sessions = buildSessions(SDK_DOMAIN, demo.session);
-const e2bSnippets = buildE2bSnippets(SDK_DOMAIN);
-const quickstartCode = buildQuickstart(SDK_DOMAIN);
+const e2bSnippets = buildE2bSnippets(E2B_API_URL);
 ---
 
 <BaseLayout
@@ -29,52 +26,28 @@ const quickstartCode = buildQuickstart(SDK_DOMAIN);
   skipLabel={copy.meta.skipToContent}
   imageAlt={copy.meta.ogAlt}
 >
-  <Header copy={copy.nav} homeHref={localeHomePath(locale)} />
+  <Header copy={copy.nav} locale={locale} />
 
   <main id="main">
     <section class="hero" aria-labelledby="hero-title">
       <div class="wrap hero__wrap">
         <div class="hero__copy">
-          <p class="hero__tag hero__in" style="--i:0"><span class="live-dot" aria-hidden="true"></span>{hero.eyebrow}</p>
-          <h1 id="hero-title" class="hd hero__in" style="--i:1">{hero.title}</h1>
-          <p class="lead hero__in" style="--i:2">{hero.lead}</p>
-          <div class="hero__in hero__form" id="waitlist" style="--i:3">
-            <WaitlistForm copy={waitlist} locale={locale} id="hero" />
+          <h1 id="hero-title" class="hd hero__in" style="--i:0">{hero.title}</h1>
+          <p class="hero__lead hero__in" style="--i:1">{hero.lead}</p>
+          <div class="hero__form hero__in" id="waitlist" style="--i:2">
+            <WaitlistForm copy={waitlist} locale={locale} id="hero" tone="dark" />
           </div>
-          <ul class="facts hero__in" style="--i:4">
-            {hero.facts.map((fact) => <li>{fact}</li>)}
-          </ul>
         </div>
-        <div class="hero__visual hero__in" style="--i:2">
-          <HeroTerminal sessions={sessions} copy={visual} placeholder={waitlist.placeholder} />
+        <div class="hero__visual hero__in" style="--i:1">
+          <Rook copy={visual} />
         </div>
       </div>
     </section>
 
-    <section class="sec sec--access" id="access" aria-labelledby="access-title">
+    <section class="sec sec--demo" id="demo" aria-labelledby="demo-title">
       <div class="wrap">
-        <h2 id="access-title" class="sh acc__title" data-reveal>{access.title}</h2>
-        <ol class="acc">
-          {
-            access.steps.map((step, i) => (
-              <li class="acc__step" data-reveal style={`--d:${i * 80}ms`}>
-                <span class="acc__n mono" aria-hidden="true">{`0${i + 1}`}</span>
-                <h3>{step.title}</h3>
-                <p>{step.body}</p>
-              </li>
-            ))
-          }
-        </ol>
-      </div>
-    </section>
-
-    <section class="sec sec--alt sec--how" id="how" aria-labelledby="how-title">
-      <div class="wrap">
-        <div class="split" data-reveal>
-          <h2 id="how-title" class="sh">{demo.title}</h2>
-          <p class="lead">{demo.lead}</p>
-        </div>
-        <div data-reveal>
+        <h2 id="demo-title" class="sh" data-reveal>{demo.title}</h2>
+        <div class="demo-wrap" data-reveal>
           <SessionDemo
             client:visible
             sessions={sessions}
@@ -83,128 +56,47 @@ const quickstartCode = buildQuickstart(SDK_DOMAIN);
             terminalLabel={demo.terminalLabel}
           />
         </div>
-        <p class="fine demo-note">{demo.note}</p>
+        <ul class="facts" data-reveal>
+          {demo.facts.map((fact) => <li>{fact}</li>)}
+        </ul>
       </div>
     </section>
 
-    <section class="sec" id="e2b" aria-labelledby="e2b-title">
+    <section class="sec sec--e2b" id="e2b" aria-labelledby="e2b-title">
       <div class="wrap">
-        <div class="env">
-          <div data-reveal>
-            <p class="eyebrow">{e2b.eyebrow}</p>
-            <h2 id="e2b-title" class="sh">{e2b.title}</h2>
-            <p class="lead">{e2b.lead}</p>
-            <p class="fine env__note" set:html={rich(e2b.envLine)} />
-            <p class="fine env__note">{e2b.keyLine} <a class="env__link" href="#waitlist">{e2b.keyLink}</a></p>
-          </div>
-          <div data-reveal style="--d:100ms">
-            <E2bSnippet
-              client:visible
-              snippets={e2bSnippets}
-              languageLabel={e2b.languageLabel}
-              before={e2b.before}
-              after={e2b.after}
-            />
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="sec sec--br" id="brasil" aria-labelledby="brasil-title">
-      <div class="wrap br">
-        <div class="br__copy" data-reveal>
-          <p class="br__eyebrow">{brazil.eyebrow}</p>
-          <h2 id="brasil-title" class="sh">{brazil.title}</h2>
-          <p class="lead">{brazil.lead}</p>
-          <p class="br__note">{brazil.note}</p>
-        </div>
-        <div class="br__sheet" data-reveal style="--d:100ms">
-          <div class="br__head">
-            <span class="pix">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 2.5 21.5 12 12 21.5 2.5 12Z"></path>
-                <path d="M12 8 16 12 12 16 8 12Z"></path>
-              </svg>
-              {brazil.badge}
-            </span>
-            <span class="br__status">{brazil.status}</span>
-          </div>
-          <dl class="br__rows">
-            {
-              brazil.rows.map((row) => (
-                <div class="br__row">
-                  <dt class="mono">{row.label}</dt>
-                  <dd>{row.value}</dd>
-                </div>
-              ))
-            }
-          </dl>
-        </div>
-      </div>
-    </section>
-
-    <section class="sec sec--feat" id="features" aria-labelledby="features-title">
-      <div class="wrap">
-        <h2 id="features-title" class="sh feat__title" data-reveal>{features.title}</h2>
-        <div class="feat">
-          <div class="feat__lead">
-            {
-              features.lead.map((item) => (
-                <article class="big" data-reveal>
-                  <p class="big__stat">{item.stat}<span>{item.statLabel}</span></p>
-                  <div>
-                    <h3>{item.title}</h3>
-                    <p set:html={rich(item.body)} />
-                  </div>
-                </article>
-              ))
-            }
-          </div>
-          <dl class="spec" data-reveal style="--d:100ms">
-            {
-              features.items.map((item) => (
-                <div class="spec__row">
-                  <dt>{item.title}</dt>
-                  <dd set:html={rich(item.body)} />
-                </div>
-              ))
-            }
-          </dl>
-        </div>
-      </div>
-    </section>
-
-    <section class="sec sec--alt" id="start" aria-labelledby="start-title">
-      <div class="wrap">
-        <div class="shead" data-reveal>
-          <p class="eyebrow">{quickstart.eyebrow}</p>
-          <h2 id="start-title" class="sh">{quickstart.title}</h2>
-          <p class="lead">{quickstart.lead}</p>
-        </div>
-        <div data-reveal>
-          <Quickstart
+        <h2 id="e2b-title" class="sh" data-reveal>{e2b.title}</h2>
+        <div class="e2b-wrap" data-reveal>
+          <E2bSnippet
             client:visible
-            code={quickstartCode}
-            steps={quickstart.steps}
-            languageLabel={quickstart.languageLabel}
+            snippets={e2bSnippets}
+            languageLabel={e2b.languageLabel}
+            before={e2b.before}
+            after={e2b.after}
+            code={e2b.code}
           />
         </div>
-        <p class="fine demo-note">
-          {quickstart.keyLine} <a class="env__link" href="#waitlist">{quickstart.keyLink}</a>. {quickstart.note}
-        </p>
       </div>
     </section>
 
-    <section class="sec sec--cta" id="pricing" aria-labelledby="cta-title">
-      <div class="wrap">
-        <div class="cta" data-reveal>
-          <p class="cta__eyebrow">{cta.eyebrow}</p>
-          <h2 id="cta-title" class="sh">{cta.title}</h2>
-          <p>{cta.lead}</p>
-          <div class="cta__form">
-            <WaitlistForm copy={waitlist} locale={locale} id="cta" tone="dark" />
-          </div>
-          <p class="cta__note">{cta.priceNote}</p>
+    <section class="sec sec--pix" id="pix" aria-labelledby="pix-title">
+      <div class="wrap pix-wrap" data-reveal>
+        <p class="pix">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 2.5 21.5 12 12 21.5 2.5 12Z"></path>
+            <path d="M12 8 16 12 12 16 8 12Z"></path>
+          </svg>
+          {brazil.badge}
+        </p>
+        <h2 id="pix-title" class="sh">{brazil.title}</h2>
+        <p class="pix__lead">{brazil.lead}</p>
+      </div>
+    </section>
+
+    <section class="sec sec--cta" aria-labelledby="cta-title">
+      <div class="wrap cta" data-reveal>
+        <h2 id="cta-title" class="sh">{cta.title}</h2>
+        <div class="cta__form">
+          <WaitlistForm copy={waitlist} locale={locale} id="cta" />
         </div>
       </div>
     </section>

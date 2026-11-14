@@ -14,3 +14,6 @@ export const DASHBOARD_URL = new URL(
 const API_BASE: string = import.meta.env.PUBLIC_API_URL ?? "https://api.rookbox.run";
 
 export const WAITLIST_URL = new URL("/waitlist", API_BASE).href;
+
+/** What customers set `E2B_API_URL` to. */
+export const E2B_API_URL: string = API_BASE.replace(/\/$/, "");
