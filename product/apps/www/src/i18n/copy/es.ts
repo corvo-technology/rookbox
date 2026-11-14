@@ -59,6 +59,13 @@ export const es: Copy = {
     badge: "Pix",
   },
   cta: { title: "Súmate a la lista." },
+  ui: {
+    copy: "Copiar",
+    copied: "Copiado",
+    memory: "memoria mantenida",
+    fork: "fork",
+    steps: "Pasos",
+  },
   waitlist: {
     label: "Correo electrónico",
     placeholder: "tu@empresa.com",

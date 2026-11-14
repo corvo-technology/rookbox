@@ -63,6 +63,13 @@ export const pt: Copy = {
     badge: "Pix",
   },
   cta: { title: "Entre na lista." },
+  ui: {
+    copy: "Copiar",
+    copied: "Copiado",
+    memory: "memória mantida",
+    fork: "fork",
+    steps: "Etapas",
+  },
   waitlist: {
     label: "Endereço de e-mail",
     placeholder: "voce@empresa.com",

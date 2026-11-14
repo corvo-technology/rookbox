@@ -1,0 +1,100 @@
+---
+import type { Copy } from "../i18n/copy";
+import type { Sessions } from "../snippets";
+import Castle from "./Castle.astro";
+
+type Props = {
+  sessions: Sessions;
+  steps: string[];
+  languageLabel: string;
+  terminalLabel: string;
+  visual: Copy["visual"];
+  ui: Copy["ui"];
+};
+
+const { sessions, steps, languageLabel, terminalLabel, visual, ui } = Astro.props;
+
+const TABS = [
+  { id: "py", label: "Python" },
+  { id: "ts", label: "TypeScript" },
+] as const;
+---
+
+<!--
+  The finished session, fully visible, is the markup: without JavaScript, or with reduced motion,
+  nothing is hidden. scripts/story.ts replays it step by step. On wide, tall screens it pins the
+  section while the page scrolls through the steps; everywhere else the step buttons drive it.
+-->
+<div class="story" data-story style={`--n:${steps.length}`}>
+  <div class="story__pin" data-pin>
+    <div class="demo-grid">
+      <div class="term" data-term>
+        <div class="term__tabs" role="tablist" aria-label={languageLabel}>
+          {
+            TABS.map((tab) => (
+              <button
+                type="button"
+                role="tab"
+                class="term__tab"
+                id={`tab-${tab.id}`}
+                data-tab={tab.id}
+                aria-selected="false"
+                aria-controls={`panel-${tab.id}`}
+                tabindex="-1"
+              >
+                {tab.label}
+              </button>
+            ))
+          }
+        </div>
+        {
+          TABS.map((tab) => (
+            <div
+              class="term__body mono"
+              role="tabpanel"
+              id={`panel-${tab.id}`}
+              data-panel={tab.id}
+              aria-label={`${terminalLabel}: ${tab.label}`}
+            >
+              {sessions[tab.id].map(([step, text, tone]) => (
+                <div class={`ln ln--${tone}`} data-step={step}>
+                  {text}
+                </div>
+              ))}
+            </div>
+          ))
+        }
+      </div>
+      <div class="demo-side">
+        <div
+          class="mini"
+          data-mini
+          data-booting={visual.booting}
+          data-ready={visual.ready}
+          data-memory={ui.memory}
+          data-fork={ui.fork}
+        >
+          <div class="mini__stage">
+            <Castle class="mini__svg" />
+            <div class="mini__forkbox" data-fork-box aria-hidden="true">
+              <Castle class="mini__svg mini__svg--fork" />
+            </div>
+          </div>
+          <p class="mini__tag mono" aria-live="polite"><span class="mini__dot" aria-hidden="true"></span><span data-mini-tag>{visual.ready}</span></p>
+        </div>
+        <ol class="steps" aria-label={ui.steps}>
+          {
+            steps.map((step, i) => (
+              <li>
+                <button type="button" class="step step--done" data-step-btn={i} disabled>
+                  <i>{i + 1}</i>
+                  <span>{step}</span>
+                </button>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>

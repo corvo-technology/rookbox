@@ -1,18 +1,37 @@
 /**
- * The page's small behaviours: a hairline under the nav once the page scrolls, sections that rise
- * in as they enter the screen, the pixel castle that reacts to the signup form, and the waitlist
- * forms. Without JavaScript, or with reduced motion, everything is simply visible.
+ * The page's behaviours: the header, sections that arrive as they scroll in, the pixel castle that
+ * boots and reacts to the signup form, the demo, the E2B block, the rolling numbers, and the
+ * waitlist forms. Without JavaScript, or with reduced motion, everything is simply visible.
  */
-const nav = document.querySelector<HTMLElement>("[data-nav]");
-const onScroll = () => nav?.toggleAttribute("data-scrolled", window.scrollY > 8);
-onScroll();
-window.addEventListener("scroll", onScroll, { passive: true });
+import { Castle } from "./castle";
+import { initE2b } from "./e2b";
+import { BOOT_MS, BOOT_STAGES, rollDuration, typedFrac } from "./lifecycle";
+import { initStory } from "./story";
+
+const sleep = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
 let reduce = true;
 try {
   reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 } catch {}
 
+/* Header: a solid edge once the page scrolls, and a hairline that fills as you read. */
+const nav = document.querySelector<HTMLElement>("[data-nav]");
+let navFrame = 0;
+const onScroll = () => {
+  if (navFrame) return;
+  navFrame = requestAnimationFrame(() => {
+    navFrame = 0;
+    nav?.toggleAttribute("data-scrolled", window.scrollY > 8);
+    const room = document.documentElement.scrollHeight - window.innerHeight;
+    if (nav && !reduce && room > 0)
+      nav.style.setProperty("--p", String(Math.min(1, window.scrollY / room)));
+  });
+};
+onScroll();
+window.addEventListener("scroll", onScroll, { passive: true });
+
+/* Sections arrive with their own direction (see data-reveal in global.css). */
 const targets = document.querySelectorAll<HTMLElement>("[data-reveal]");
 if (!reduce && "IntersectionObserver" in window) {
   document.documentElement.classList.add("js-reveal");
@@ -38,6 +57,39 @@ if (!reduce && "IntersectionObserver" in window) {
   for (const el of targets) el.classList.add("is-in");
 }
 
+/* Numbers that move: a stopwatch roll, once, in real time. Transform only, so nothing reflows. */
+const rolls = document.querySelectorAll<HTMLElement>("[data-roll]");
+if (!reduce && "IntersectionObserver" in window && rolls.length) {
+  const counter = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        counter.unobserve(entry.target);
+        const el = entry.target as HTMLElement;
+        const column = el.querySelector<HTMLElement>(".num__col");
+        const value = Number(el.dataset.roll);
+        if (!column) continue;
+        const final = `translateY(${-1.5 * value}em)`;
+        const animation = column.animate([{ transform: "translateY(0)" }, { transform: final }], {
+          duration: rollDuration(value),
+          easing: "linear",
+          fill: "forwards",
+        });
+        animation.finished.then(() => {
+          column.style.transform = final;
+          animation.cancel();
+        });
+      }
+    },
+    { threshold: 0.9 },
+  );
+  for (const el of rolls) {
+    const column = el.querySelector<HTMLElement>(".num__col");
+    if (column) column.style.transform = "translateY(0)";
+    counter.observe(el);
+  }
+}
+
 /** Remember a language picked in the header, so the home page stops guessing from the browser. */
 for (const link of document.querySelectorAll<HTMLAnchorElement>("[data-langs] a[hreflang]")) {
   link.addEventListener("click", () => {
@@ -59,75 +111,62 @@ for (const join of document.querySelectorAll<HTMLAnchorElement>("[data-join]")) 
 }
 
 /**
- * The pixel castle. Marked up fully lit; with JavaScript it starts dark, builds itself from the
- * foundation up to about 40%, then lights more pixels as an address is typed. A valid address lights
- * every wall pixel; a successful signup also lights the doorway and says "ready".
+ * The hero castle is a machine. It boots in about two seconds (kernel, root filesystem, waiting),
+ * then idles with a few pixels flickering and brightens near the pointer. Typing lights more of it,
+ * a valid address provisions all of it, and a successful signup lights the doorway with a pulse.
+ * With reduced motion it is never dimmed: a finished, static picture.
  */
 const rook = document.querySelector<HTMLElement>("[data-rook]");
 const rookState = rook?.querySelector<HTMLElement>("[data-rook-state]");
-const pixels = rook
-  ? [...rook.querySelectorAll<SVGRectElement>(".px:not(.px--door)")].sort(
-      (a, b) => Number(a.dataset.o) - Number(b.dataset.o),
-    )
-  : [];
-const total = pixels.length;
-const base = Math.round(total * 0.4);
-let shown = 0;
-let target = 0;
-let ticker: number | undefined;
+const rookSvg = rook?.querySelector<SVGSVGElement>(".rook__svg");
+const live = rook?.querySelector<HTMLElement>("[data-rook-state]")?.parentElement ?? null;
+const castle =
+  rook && rookSvg && rook.hasAttribute("data-js")
+    ? new Castle(rookSvg, { idle: true, spotlight: true })
+    : null;
+let bootRun = 0;
 
-const paint = () => {
-  pixels.forEach((pixel, i) => {
-    pixel.classList.toggle("on", i < shown);
-  });
-};
-const tick = () => {
-  shown += shown < target ? 1 : -1;
-  paint();
-  if (shown === target) {
-    window.clearInterval(ticker);
-    ticker = undefined;
-  }
-};
-const moveTo = (next: number) => {
-  target = Math.max(0, Math.min(total, next));
-  window.clearInterval(ticker);
-  ticker = undefined;
-  if (reduce) {
-    shown = target;
-    paint();
-  } else if (shown !== target) {
-    ticker = window.setInterval(tick, 14);
-  }
-};
-const setRookText = (key: "booting" | "waiting" | "ready") => {
-  if (rook && rookState) rookState.textContent = rook.dataset[key] ?? "";
+const setRookText = (text: string) => {
+  if (rookState) rookState.textContent = text;
 };
 
-if (rook && total) {
-  setRookText("booting");
-  window.setTimeout(
-    () => {
-      moveTo(base);
-      window.setTimeout(() => setRookText("waiting"), reduce ? 0 : base * 14 + 200);
-    },
-    reduce ? 0 : 450,
-  );
+if (castle && rook) {
+  const mine = ++bootRun;
+  live?.setAttribute("aria-live", "off");
+  (async () => {
+    await sleep(250);
+    const started = performance.now();
+    for (const stage of BOOT_STAGES) {
+      await sleep(Math.max(0, stage.at - (performance.now() - started)));
+      if (bootRun !== mine) return;
+      castle.setFrac(stage.frac, 650);
+      setRookText(stage.key === "waiting" ? (rook.dataset.waiting ?? "") : stage.key);
+    }
+    await sleep(Math.max(0, BOOT_MS - (performance.now() - started)));
+    if (bootRun === mine) live?.setAttribute("aria-live", "polite");
+  })();
 }
 
-const showRook = (state: "idle" | "typed" | "done", address: string) => {
-  if (!rook || !total) return;
+const showRook = (state: "idle" | "typed" | "done", length: number) => {
+  if (!rook) return;
+  bootRun++;
+  live?.setAttribute("aria-live", "polite");
   if (state === "done") {
     rook.classList.add("is-ready");
-    moveTo(total);
-    setRookText("ready");
+    castle?.setFrac(1, 500);
+    castle?.setDoor(true);
+    window.setTimeout(() => castle?.pulse(), 380);
+    setRookText(rook.dataset.ready ?? "");
     return;
   }
   rook.classList.remove("is-ready");
-  setRookText("waiting");
-  const progress = Math.min(1, address.length / 22);
-  moveTo(state === "typed" ? total : base + Math.round((total - base) * progress * 0.9));
+  castle?.setDoor(false);
+  setRookText(rook.dataset.waiting ?? "");
+  castle?.setFrac(typedFrac(state === "typed", length), 420);
 };
+
+initStory(reduce);
+initE2b(reduce);
 
 /**
  * The waitlist forms. They post JSON to the API and show success or a plain error in place; the
@@ -153,7 +192,7 @@ for (const form of document.querySelectorAll<HTMLFormElement>("form[data-waitlis
   if (mirrors) {
     email.addEventListener("input", () => {
       const value = email.value.trim();
-      showRook(value && email.checkValidity() ? "typed" : "idle", value);
+      showRook(value && email.checkValidity() ? "typed" : "idle", value.length);
     });
   }
 
@@ -181,7 +220,7 @@ for (const form of document.querySelectorAll<HTMLFormElement>("form[data-waitlis
         form.hidden = true;
         done.hidden = false;
         done.focus();
-        showRook("done", address);
+        showRook("done", address.length);
         return;
       }
       fail(
@@ -200,5 +239,3 @@ for (const form of document.querySelectorAll<HTMLFormElement>("form[data-waitlis
     }
   });
 }
-
-export {};

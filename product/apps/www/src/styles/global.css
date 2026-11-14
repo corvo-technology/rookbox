@@ -141,6 +141,24 @@ a {
   border-bottom-color: var(--ink-line);
 }
 
+/* A 2px line that fills as the page is read. Transform only. */
+.nav::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--green-lit);
+  transform: scaleX(var(--p, 0));
+  transform-origin: left;
+  pointer-events: none;
+}
+
+main {
+  overflow-x: clip;
+}
+
 .nav .logo {
   color: #fff;
 }
@@ -231,11 +249,16 @@ a {
   cursor: pointer;
   transition:
     background-color 150ms ease,
-    transform 150ms ease;
+    transform 120ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.btn:hover {
+  transform: translateY(-1px);
 }
 
 .btn:active {
-  transform: scale(0.98);
+  transform: translateY(1px) scale(0.97);
+  transition-duration: 60ms;
 }
 
 .btn--accent {
@@ -327,7 +350,6 @@ a {
 
 .px {
   fill: var(--green-lit);
-  transition: fill 260ms ease;
 }
 
 .px--door {
@@ -340,10 +362,6 @@ a {
 
 .rook[data-js] .px--door {
   fill: #ffffff08;
-}
-
-.rook[data-js].is-ready .px--door {
-  fill: #f5f5f5;
 }
 
 .rook__state {
@@ -504,13 +522,13 @@ a {
   margin-top: clamp(28px, 4vw, 48px);
 }
 
-/* Demo: terminal and steps */
+/* Demo: terminal and steps. Nothing in here may change height: every line is always in the box. */
 
 .demo-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.5fr);
   gap: 24px;
-  align-items: stretch;
+  align-items: start;
 }
 
 .term {
@@ -529,6 +547,10 @@ a {
   border-bottom: 1px solid var(--ink-line);
 }
 
+.term:not([data-js]) .term__tabs {
+  display: none;
+}
+
 .term__tab {
   min-height: 44px;
   padding: 0 16px;
@@ -541,6 +563,7 @@ a {
     system-ui,
     sans-serif;
   cursor: pointer;
+  transition: color 150ms ease;
 }
 
 .term__tab:hover {
@@ -557,15 +580,30 @@ a {
 }
 
 .term__body {
-  min-height: 300px;
+  height: 312px;
+  box-sizing: border-box;
   padding: 24px;
   overflow-x: auto;
+  overflow-y: hidden;
   font-size: 15px;
-  line-height: 1.75;
+  line-height: 26px;
+}
+
+.term__body + .term__body {
+  border-top: 1px solid var(--ink-line);
+}
+
+.term[data-js] [data-panel]:not(.is-sel) {
+  display: none;
 }
 
 .ln {
+  min-height: 26px;
   white-space: pre;
+}
+
+.term[data-js] .ln:not(.is-on) {
+  visibility: hidden;
 }
 
 .ln--c {
@@ -580,10 +618,13 @@ a {
   color: var(--ink-mut);
 }
 
-.cursor {
+/* The typing cursor is a pseudo-element on the line being typed: it takes no space of its own. */
+.ln.is-typing::after {
+  content: "";
   display: inline-block;
   width: 8px;
   height: 16px;
+  margin-left: 2px;
   vertical-align: -3px;
   background: var(--green-lit);
   animation: blink 1s steps(1) infinite;
@@ -595,11 +636,89 @@ a {
   }
 }
 
+.demo-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* The small castle: the machine's state, in step with the terminal. */
+.mini {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-sizing: border-box;
+  height: 112px;
+  padding: 0 18px;
+  border-radius: 20px;
+  background: var(--ink);
+  color: var(--ink-mut);
+}
+
+.mini__stage {
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: flex-end;
+  gap: 8px;
+  width: 112px;
+}
+
+.mini__svg {
+  display: block;
+  width: 64px;
+  height: 80px;
+  flex: none;
+}
+
+.mini__forkbox {
+  position: relative;
+  width: 40px;
+  opacity: 0;
+}
+
+.mini__forkbox .mini__svg {
+  width: 40px;
+  height: 50px;
+}
+
+.mini__forkbox::after {
+  content: attr(data-label);
+  position: absolute;
+  left: 0;
+  bottom: 100%;
+  margin-bottom: 4px;
+  font: 14px var(--font-mono);
+  color: var(--green-lit);
+}
+
+.mini__tag {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+.mini__dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green-lit);
+  transition: background-color 200ms ease;
+}
+
+.mini.is-suspended .mini__dot {
+  background: var(--ink-mut);
+}
+
 .steps {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 4px;
+  gap: 2px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -609,11 +728,31 @@ a {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 10px 0;
-  font-size: 18px;
-  font-weight: 600;
+  box-sizing: border-box;
+  width: 100%;
+  height: 48px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  font:
+    600 18px "Instrument Sans",
+    system-ui,
+    sans-serif;
+  text-align: left;
   color: var(--mut);
-  transition: color 250ms;
+  cursor: pointer;
+  transition:
+    color 250ms,
+    background-color 150ms;
+}
+
+.step:disabled {
+  cursor: default;
+}
+
+.step:not(:disabled):hover {
+  background: var(--card);
 }
 
 .step i {
@@ -626,6 +765,10 @@ a {
   border-radius: 50%;
   font-size: 14px;
   font-style: normal;
+  transition:
+    background-color 250ms,
+    border-color 250ms,
+    color 250ms;
 }
 
 .step--now {
@@ -644,6 +787,16 @@ a {
 
 .step--done i {
   border-color: var(--green);
+}
+
+/* Wide and tall: the section pins while the page scrolls through the steps (see scripts/story.ts). */
+.story.is-pinned {
+  height: calc(var(--n) * 42svh + 60svh);
+}
+
+.story.is-pinned .story__pin {
+  position: sticky;
+  top: max(92px, calc(50svh - 215px));
 }
 
 /* Three facts, one thin row */
@@ -667,6 +820,32 @@ a {
 .facts li + li {
   padding-left: 24px;
   border-left: 1px solid var(--line);
+}
+
+/* Numbers that roll like a stopwatch: a window one line high over a column of digits. */
+.num {
+  position: relative;
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+  vertical-align: bottom;
+}
+
+.num__win {
+  display: block;
+  height: 1.5em;
+  overflow: hidden;
+}
+
+.num__col {
+  display: block;
+  transform: translateY(calc(var(--n) * -1.5em));
+}
+
+.num__col i {
+  display: block;
+  height: 1.5em;
+  line-height: 1.5;
+  font-style: normal;
 }
 
 /* E2B: two env vars, then the code that does not change */
@@ -736,6 +915,7 @@ a {
 }
 
 .toggle__btn {
+  white-space: nowrap;
   min-height: 36px;
   padding: 0 16px;
   border: 0;
@@ -758,6 +938,117 @@ a {
   outline-color: var(--green-lit);
 }
 
+.code pre[hidden] {
+  display: none;
+}
+
+.bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.bar[hidden] {
+  display: none;
+}
+
+.copy {
+  min-width: 88px;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--ink-line);
+  border-radius: 999px;
+  background: transparent;
+  color: #e6e6e6;
+  font:
+    600 14px "Instrument Sans",
+    system-ui,
+    sans-serif;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    border-color 150ms ease,
+    transform 120ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.copy:hover {
+  background: #ffffff14;
+}
+
+.copy:active {
+  transform: scale(0.96);
+}
+
+.copy--done {
+  border-color: var(--green-lit);
+  color: var(--green-lit);
+}
+
+/* The env block: the key's value swaps, one line is added, both highlighted like a diff. */
+.code--env pre {
+  color: var(--ink-fg);
+}
+
+.dl {
+  position: relative;
+  display: block;
+  margin: 0 -26px;
+  padding: 0 26px;
+  white-space: pre;
+}
+
+.code--env[data-state="after"] .dl {
+  background: #3fd6a81f;
+  color: var(--green-lit);
+}
+
+.code--env[data-state="after"] .dl::before {
+  content: "+";
+  position: absolute;
+  left: 10px;
+  color: var(--green-lit);
+}
+
+.swap {
+  display: inline-grid;
+}
+
+.swap > * {
+  grid-area: 1 / 1;
+}
+
+.code--env[data-state="after"] .swap__old {
+  color: var(--ink-mut);
+  text-decoration: line-through;
+}
+
+.code--env[data-state="after"] .swap__old,
+.code--env[data-state="before"] .swap__new {
+  opacity: 0;
+}
+
+.code--env[data-state="before"] .dl--add {
+  opacity: 0;
+}
+
+.e2b-code[data-js] .code--before,
+.e2b-code[data-js] [data-env-title] {
+  display: none;
+}
+
+.e2b-code[data-js] .e2b-code__pair {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.code--env .bar {
+  flex: 1;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
 /* Pix: a near-black band */
 
 .sec--pix {
@@ -766,10 +1057,36 @@ a {
 }
 
 .pix-wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 48px;
+}
+
+.pix-copy {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 24px;
+}
+
+/* A grid of pixels that resolves into a diamond with a check, echoing the castle. */
+.pixgrid {
+  display: block;
+  width: clamp(150px, 20vw, 260px);
+  height: auto;
+}
+
+.pg {
+  fill: #ffffff0f;
+}
+
+.pg--d {
+  fill: var(--green-lit);
+}
+
+.pg--c {
+  fill: #f5f5f5;
 }
 
 .pix {
@@ -852,28 +1169,73 @@ a {
 
 /* Motion */
 
-/* The hero only moves; it is never transparent, so a slow or captured page still shows it all. */
+/*
+ * The hero only moves. It starts at 0.01 opacity, never display:none or a layout change, so a slow
+ * or captured page still shows it all and nothing reflows.
+ */
 @keyframes rise {
   from {
-    transform: translateY(10px);
+    opacity: 0.01;
+    transform: translateY(18px);
+  }
+}
+
+@keyframes settle {
+  from {
+    opacity: 0.01;
+    transform: scale(0.94);
   }
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .hero__in {
-    animation: rise 700ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
-    animation-delay: calc(var(--i, 0) * 90ms);
+    animation: rise 800ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    animation-delay: calc(var(--i, 0) * 110ms);
   }
 
+  .hero__visual.hero__in {
+    animation: settle 1100ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    animation-delay: 200ms;
+  }
+
+  /* Each kind of section arrives its own way. */
   .js-reveal [data-reveal] {
     transition:
-      opacity 600ms cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0ms),
-      transform 600ms cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0ms);
+      opacity 700ms cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0ms),
+      transform 700ms cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0ms);
   }
 
   .js-reveal [data-reveal]:not(.is-in) {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(24px);
+  }
+
+  .js-reveal [data-reveal="left"]:not(.is-in) {
+    transform: translateX(-32px);
+  }
+
+  .js-reveal [data-reveal="right"]:not(.is-in) {
+    transform: translateX(32px);
+  }
+
+  .js-reveal [data-reveal="scale"]:not(.is-in) {
+    transform: scale(0.97) translateY(12px);
+  }
+
+  .js-reveal [data-reveal="none"]:not(.is-in) {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* The Pix pixels light one after another once the grid is on screen. */
+  .pg--d,
+  .pg--c {
+    transition: fill 380ms cubic-bezier(0.22, 1, 0.36, 1) calc(var(--k) * 34ms + 250ms);
+  }
+
+  .js-reveal .pixgrid:not(.is-in) .pg--d,
+  .js-reveal .pixgrid:not(.is-in) .pg--c {
+    fill: #ffffff0f;
   }
 }
 
@@ -882,14 +1244,18 @@ a {
     scroll-behavior: auto;
   }
 
-  .cursor {
+  .ln.is-typing::after {
     animation: none;
   }
 
-  .px,
   .step,
-  .btn {
+  .btn,
+  .copy {
     transition: none;
+  }
+
+  .nav::after {
+    display: none;
   }
 }
 
@@ -911,13 +1277,23 @@ a {
 
   .steps {
     flex-direction: row;
-    justify-content: flex-start;
     flex-wrap: wrap;
-    gap: 4px 20px;
+    gap: 2px 8px;
   }
 
   .step {
+    width: auto;
+    padding: 0 12px 0 6px;
     font-size: 16px;
+  }
+
+  .pix-wrap {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
+  }
+
+  .pixgrid {
+    width: 140px;
   }
 }
 
@@ -956,9 +1332,14 @@ a {
   }
 
   .term__body {
-    min-height: 0;
+    height: 286px;
     padding: 18px;
     font-size: 13.5px;
+    line-height: 24px;
+  }
+
+  .ln {
+    min-height: 24px;
   }
 
   .code {

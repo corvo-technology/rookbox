@@ -37,6 +37,8 @@ export type Copy = {
   };
   brazil: { title: string; lead: string; badge: string };
   cta: { title: string };
+  /** Small labels on the interactive parts: copy buttons, the suspended tag, the step list. */
+  ui: { copy: string; copied: string; memory: string; fork: string; steps: string };
   /** The waitlist form, in the hero and again at the end of the page. */
   waitlist: {
     label: string;
