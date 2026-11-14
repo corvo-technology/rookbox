@@ -106,3 +106,23 @@ describe("snippets", () => {
     expect(py[1]).toContain("E2B_DOMAIN=box.rookbox.run");
   });
 });
+
+describe("share images", () => {
+  const PUBLIC = join(HERE, "../public");
+
+  it.each(["en", "pt", "es"])("has a 1200x630 PNG for %s under 300 KB", (locale) => {
+    const file = join(PUBLIC, "og", `${locale}.png`);
+    expect(existsSync(file), file).toBe(true);
+    const bytes = readFileSync(file);
+    expect(bytes.subarray(1, 4).toString("ascii")).toBe("PNG");
+    // IHDR: width and height are the first two big-endian uint32 after the chunk header.
+    expect(bytes.readUInt32BE(16)).toBe(1200);
+    expect(bytes.readUInt32BE(20)).toBe(630);
+    expect(bytes.length).toBeLessThan(300 * 1024);
+  });
+
+  it("keeps the x-default fallback the same size", () => {
+    const bytes = readFileSync(join(PUBLIC, "og.png"));
+    expect([bytes.readUInt32BE(16), bytes.readUInt32BE(20)]).toEqual([1200, 630]);
+  });
+});
