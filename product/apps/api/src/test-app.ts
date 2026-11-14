@@ -6,6 +6,8 @@ import { createApp } from "./app.js";
 import type { AuthUser, Identity } from "./auth.js";
 import { createDesktopProxy } from "./desktop.js";
 import { createDesktopTokens } from "./desktop-token.js";
+import { fakeEcwFetch } from "./e2b/fake-ecw.js";
+import { createE2bFront } from "./e2b/front.js";
 import { silentLogger } from "./logger.js";
 import { reconcile } from "./reconcile.js";
 import { memoryApiKeyStore, newMachineService } from "./test-support.js";
@@ -64,7 +66,18 @@ export function setupApp(
       });
     },
   });
+  const ecw = fakeEcwFetch(space);
+  const e2b = createE2bFront({
+    upstream: { baseUrl: "http://ecw.test", apiKey: ecw.serviceKey, fetch: ecw.fetch },
+    apiKeys,
+    isActive: async (userId) => !disabled.has(userId),
+    machines: service,
+    throttle: extra.throttle ?? { hit: () => ({ allowed: true }) },
+    logger: silentLogger,
+    domain: "box.example.test",
+  });
   const app = createApp({
+    e2b,
     appOrigin: APP,
     logger: silentLogger,
     identity,
@@ -101,5 +114,18 @@ export function setupApp(
         },
       }),
     ) as ServerClient;
-  return { app, client, space, store, keys, apiKeys, upstream, tokens, desktop, service, disabled };
+  return {
+    app,
+    ecw,
+    client,
+    space,
+    store,
+    keys,
+    apiKeys,
+    upstream,
+    tokens,
+    desktop,
+    service,
+    disabled,
+  };
 }

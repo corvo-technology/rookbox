@@ -32,6 +32,12 @@ import { Logo } from "./Logo";
 
 type NavItem = { icon: LucideIcon; label: string; to?: string; end?: boolean };
 
+/**
+ * Entries with no page behind them yet (no `to`) are left out of the nav during the beta. Set this
+ * to true to show them again, tagged "Soon"; nothing else needs to change.
+ */
+const SHOW_COMING_SOON = false;
+
 function useNav(): { heading?: string; items: NavItem[] }[] {
   const { t } = useLingui();
   const { isAdmin } = useIsAdmin();
@@ -48,7 +54,7 @@ function useNav(): { heading?: string; items: NavItem[] }[] {
         },
       ]
     : [];
-  return [
+  const groups: { heading?: string; items: NavItem[] }[] = [
     {
       items: [
         { icon: Server, label: t`Machines`, to: "/machines" },
@@ -61,7 +67,7 @@ function useNav(): { heading?: string; items: NavItem[] }[] {
       heading: t`Integrations`,
       items: [
         { icon: Unplug, label: t`Webhooks` },
-        { icon: GitBranch, label: t`CI` },
+        { icon: GitBranch, label: t`Use in CI`, to: "/ci" },
       ],
     },
     {
@@ -74,6 +80,10 @@ function useNav(): { heading?: string; items: NavItem[] }[] {
     },
     ...operator,
   ];
+  if (SHOW_COMING_SOON) return groups;
+  return groups
+    .map((group) => ({ ...group, items: group.items.filter((item) => item.to) }))
+    .filter((group) => group.items.length > 0);
 }
 
 const ITEM =

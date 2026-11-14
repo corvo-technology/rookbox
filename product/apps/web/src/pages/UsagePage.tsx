@@ -271,7 +271,7 @@ export function UsagePage() {
       )}
       <AdminUsage period={period} locale={i18n.locale} />
       <p className="text-label text-muted-foreground">
-        <Trans>Billing is coming soon.</Trans>
+        <Trans>Billing is not enabled yet; usage is measured.</Trans>
       </p>
     </div>
   );

@@ -281,20 +281,54 @@ use rather than its provisioned size; verify against a machine you know.
 - **Public ports** appear as `https://<port>-<id>.box.rookbox.run`. They need the traffic token
   header, so they work from code (the E2B SDK) and not from a plain browser tab.
 
+## E2B-compatible API (use a Rookbox key with the E2B SDK)
+
+The API host serves an E2B-compatible control plane, so customers use the unmodified E2B SDKs with
+a Rookbox key (created on the dashboard's API keys page). It needs no new setting: it uses the
+same `SPACE_ECW_API_URL`, `SPACE_ECW_API_KEY`, `SPACE_TEMPLATES`, `MAX_MACHINES_PER_USER`,
+`MAX_RUNNING_MACHINES_TOTAL` and `MACHINE_IDLE_TIMEOUT_S` as the dashboard.
+
+**What the customer sets.** Only these two variables (checked against the JavaScript SDK 2.64 and
+the Python SDK 2.10, whose connection code reads exactly these):
+
+```sh
+export E2B_API_KEY=rbx_...                       # the Rookbox key
+export E2B_API_URL=https://api.rookbox.run       # the API host
+```
+
+Do **not** set `E2B_DOMAIN` to `rookbox.run`: the SDKs build the API address from it only when
+`E2B_API_URL` is unset (`https://api.<E2B_DOMAIN>`), and they read where a machine lives from the
+`domain` field of each answer, which the API always sets to `E2B_DOMAIN` (`box.rookbox.run`). The SDK
+then reaches the machine directly at `https://<port>-<id>.box.rookbox.run` with the access tokens the
+upstream returned.
+
+**How it works.** The key goes in the `X-API-Key` header, as the SDKs send it. The API looks the key
+up by hash, refuses a disabled account (the kill switch) and forwards the call to ECW with the
+shared service key. Create tags the sandbox with `rookbox.owner=<user id>` (so Usage attributes
+it), records a row (so the dashboard, the machine cap and the reconciler see it) and always sizes it
+as the `small` preset. Every by-id call first reads the sandbox and answers 404 unless its owner tag
+is the caller's, so another account's sandbox is indistinguishable from a missing one. A caller's
+own metadata keys starting with `rookbox.` or `space.` are dropped.
+
+| Route | Notes |
+| --- | --- |
+| `POST /sandboxes`, `POST /v2/sandboxes` | `templateID` must be in `SPACE_TEMPLATES`; the SDK default `base` (or none) means the first one. Timeout defaults to `MACHINE_IDLE_TIMEOUT_S` and is capped at 24 h. Auto-pause is off unless the caller asks, so a forgotten sandbox ends at its timeout instead of lingering paused. Over the machine cap: 429; deployment full: 503. |
+| `GET /sandboxes`, `GET /v2/sandboxes` | Only the caller's; states `running` and `paused`; pagination token passes through. |
+| `GET /sandboxes/{id}` | Passes ECW's answer through, tokens included. |
+| `DELETE /sandboxes/{id}` | 204 or 202 as ECW answers. |
+| `POST /sandboxes/{id}/pause`, `/resume`, `/connect`, `/v2/sandboxes/{id}/connect` | Waking a paused sandbox checks deployment capacity first. |
+| `POST /sandboxes/{id}/timeout`, `/refreshes` | Timeout capped at 24 h. |
+| `GET /sandboxes/{id}/metrics` | 501: ECW has no metrics. |
+
+Not offered: templates, volumes, fork through the SDK, metrics. Customers cannot choose a size.
+If ECW refuses the service key the customer sees a generic 502 and the log says why.
+
 ## Known gaps
 
-- **Rookbox API keys are product-only.** They authenticate calls to the Rookbox API
-  (`Authorization: Bearer rbx_...`); the secret is shown once and only its SHA-256 is stored. They
-  are not E2B keys, so the E2B SDK cannot use them against `box.rookbox.run` yet.
-  SPACE does have an admin API for this (`POST /orgs/{org_id}/api-keys` with
-  `allowed_surfaces: ["ecw"]` and `user_id`, `DELETE /orgs/{org_id}/api-keys/{id}`), which needs a
-  managing-organization admin credential. Wiring it in means storing that credential on Guará and
-  accepting that a SPACE key sees every sandbox of the organization (SPACE scopes keys to an
-  organization, not to a Rookbox user). Until then, create an E2B key for yourself with
-  `scripts/seed-api-key.sh` and use that with the SDK.
 - **Usage is measured, billing is not.** Once the reporter runs, the Usage page shows machine
   hours and sizes. There are no prices, credits or invoices yet.
-- **Snapshots, secrets, webhooks, CI and members** are still "Soon" in the dashboard.
+- **Snapshots, secrets, webhooks and members** do not exist yet; the dashboard hides them (see
+  `SHOW_COMING_SOON` in `apps/web/src/components/AppShell.tsx`).
 - The SPACE side (`api.box.rookbox.run`) was not reachable while this was written, so the SPACE
   client was built from the ECW source and docs and tested against mocks. Run one real create,
   suspend, restore, exec and desktop pass after the first deploy.
@@ -371,7 +405,10 @@ own host, so the desktop still works but shares the API's origin.
 
 Fixed windows, counted in memory per API process, per signed-in user and per client address. A
 refused request gets HTTP 429, the coded error `RATE_LIMITED` with `data.retryAfterS`, and a
-`Retry-After` header; the dashboard shows it translated (en, pt-BR, es). Reads are not limited.
+`Retry-After` header; the dashboard shows it translated (en, pt-BR, es). The dashboard's reads are
+not limited; the E2B front's reads are (`RATE_LIMIT_E2B_READ`), and its creates, deletes and
+lifecycle calls share the machine classes with the dashboard. A wrong key counts against the
+address's `auth` budget.
 
 Each class is one variable, `user=<max>/<seconds>,ip=<max>/<seconds>`; either scope can be `off`,
 and `off` alone turns the class off. Defaults:
@@ -383,6 +420,7 @@ and `off` alone turns the class off. Defaults:
 | `RATE_LIMIT_MACHINE_FORK` | `user=20/3600,ip=60/3600` | `machines.fork` |
 | `RATE_LIMIT_MACHINE_LIFECYCLE` | `user=60/600,ip=180/600` | `machines.suspend`, `machines.restore` |
 | `RATE_LIMIT_MACHINE_EXEC` | `user=120/60,ip=300/60` | `machines.exec` (output is also capped by `EXEC_MAX_OUTPUT_BYTES`) |
+| `RATE_LIMIT_E2B_READ` | `user=300/60,ip=900/60` | E2B front: `GET /sandboxes`, `GET /v2/sandboxes`, `GET /sandboxes/{id}` |
 | `RATE_LIMIT_API_KEY_CREATE` | `user=10/3600,ip=30/3600` | `apiKeys.create` |
 | `RATE_LIMIT_DESKTOP_LINK` | `user=30/600,ip=90/600` | `machines.desktopLink` |
 | `RATE_LIMIT_AUTH` | `ip=60/600` | every POST to `/api/auth/*` (sign-in also keeps `SIGNIN_MAX_ATTEMPTS`) |
