@@ -6,6 +6,8 @@ import type { DesktopProxy } from "./desktop.js";
 import type { Logger } from "./logger.js";
 import { MachineError, type MachineService, toMachineError } from "./machines/service.js";
 import type { LimitClass, Throttle } from "./route-limits.js";
+import { usageHandlers } from "./usage/router.js";
+import type { UsageService } from "./usage/service.js";
 
 export type RpcContext = {
   user: AuthUser;
@@ -25,6 +27,7 @@ export type RouterDeps = {
   users: { findIdByEmail(email: string): Promise<string | null> };
   reconcile(mode: { act: boolean; killOrphans: boolean }): Promise<ReconcileReport>;
   logger: Logger;
+  usage?: UsageService;
 };
 
 export function createRouter({
@@ -36,7 +39,9 @@ export function createRouter({
   users,
   reconcile,
   logger,
+  usage,
 }: RouterDeps) {
+  const usageNow = usageHandlers(usage);
   const os = implement(serverContract).$context<RpcContext>();
 
   /** Counts a request against its class's budgets; throws `RATE_LIMITED` with `Retry-After`. */
@@ -154,10 +159,18 @@ export function createRouter({
         return { ok: true as const };
       }),
     },
+    usage: {
+      summary: os.usage.summary.handler(({ input, context }) =>
+        usageNow.summary(context.user, input.period),
+      ),
+    },
     config: {
       get: os.config.get.handler(() => machines.config()),
     },
     admin: {
+      usage: os.admin.usage.handler(({ input, context }) =>
+        usageNow.admin(context.user, input.period),
+      ),
       suspendUserMachines: os.admin.suspendUserMachines.handler(({ input, context }) =>
         run(async () => {
           requireAdmin(context);

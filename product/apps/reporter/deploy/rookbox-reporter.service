@@ -1,0 +1,42 @@
+# Install as /etc/systemd/system/rookbox-reporter.service. See ../README.md.
+[Unit]
+Description=Rookbox usage reporter
+Documentation=https://github.com/corvo-technology/rookbox/tree/main/product/apps/reporter
+# Start after the network is up. It does not need the sandbox server to be up first: it keeps
+# trying, and it keeps its outbox on disk.
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=rookbox-reporter
+Group=rookbox-reporter
+# One KEY=value per line, mode 0600, owned by root: see ../README.md for the variables.
+EnvironmentFile=/etc/rookbox-reporter.env
+Environment=REPORTER_DB_PATH=/var/lib/rookbox-reporter/reporter.sqlite
+# node:sqlite prints one "experimental" warning per start; it is expected.
+ExecStart=/usr/bin/node --enable-source-maps --disable-warning=ExperimentalWarning /opt/rookbox-reporter/main.js
+Restart=always
+RestartSec=5
+# SIGTERM lets it finish the request in flight and close the database.
+TimeoutStopSec=30
+StateDirectory=rookbox-reporter
+StateDirectoryMode=0700
+
+# Hardening: it only needs the network and its own state directory.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=false
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target

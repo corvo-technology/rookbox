@@ -15,6 +15,9 @@ import { createRateLimiter } from "./rate-limit.js";
 import { reconcile, startReconciler } from "./reconcile.js";
 import { createThrottle } from "./route-limits.js";
 import { createEcwClient } from "./space/client.js";
+import { createIngestHandler } from "./usage/ingest.js";
+import { createPrismaUsageStore } from "./usage/prisma-store.js";
+import { createUsageService } from "./usage/service.js";
 
 const bootLogger = createLogger("info", { service: "rookbox-api" });
 
@@ -94,6 +97,13 @@ try {
     logger,
   });
 
+  const usage = createUsageService({
+    store: createPrismaUsageStore(db),
+    logger,
+    adminEmails: env.ADMIN_EMAILS ?? env.ROOKBOX_ALLOWED_EMAILS.slice(0, 1),
+  });
+  if (!env.INGEST_SECRET) logger.warn("INGEST_SECRET is not set: usage is not being recorded");
+
   const seeded = await seedOwner(db, env, logger);
   if (seeded === "skipped") logger.info("no owner seed requested");
 
@@ -132,6 +142,8 @@ try {
     },
     reconcile: (mode) => reconcile(reconcileDeps, mode),
     space,
+    usage,
+    ingestUsage: createIngestHandler({ secret: env.INGEST_SECRET, usage, logger }),
     signInLimiter: createRateLimiter({
       max: env.SIGNIN_MAX_ATTEMPTS,
       windowMs: env.SIGNIN_WINDOW_S * 1_000,

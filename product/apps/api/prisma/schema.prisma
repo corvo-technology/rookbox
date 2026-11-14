@@ -113,3 +113,70 @@ model Machine {
   @@index([ownerId])
   @@map("machine")
 }
+
+/// One thing the usage reporter saw happen to a machine. Append-only; `idempotencyKey` makes a
+/// repeated delivery a no-op. Amounts are in integer units (MiB, vCPUs).
+model UsageEvent {
+  id               Int      @id @default(autoincrement())
+  reporterId       String
+  /// The reporter's own sequence number; only ever grows.
+  seq              Int
+  idempotencyKey   String   @unique
+  /// `seen`, `resumed`, `suspended`, `resized` or `gone`.
+  type             String
+  machineId        String
+  observedAt       DateTime
+  receivedAt       DateTime @default(now())
+  /// The state after the event: `running` or `suspended`. Null for `gone`.
+  state            String?
+  /// The `rookbox.owner` tag at that moment, when the machine had one.
+  ownerTag         String?
+  template         String
+  vcpu             Int
+  memoryMib        Int
+  diskMib          Int
+  machineStartedAt DateTime?
+  /// `reporter` for an event the reporter sent, `snapshot` for one made from a snapshot.
+  source           String   @default("reporter")
+
+  @@index([machineId, observedAt])
+  @@index([reporterId, machineId])
+  @@map("usage_event")
+}
+
+/// A stretch of time a machine spent in one state at one size, derived from its events and
+/// rebuilt whenever one arrives. `endedAt` is null while it is still open. No FK to the user:
+/// usage outlives an account.
+model UsageInterval {
+  id          Int       @id @default(autoincrement())
+  machineId   String
+  /// Null for machines with no known owner (the "unassigned" bucket, visible to admins only).
+  ownerUserId String?
+  template    String
+  vcpu        Int
+  memoryMib   Int
+  diskMib     Int
+  /// `running` or `suspended`.
+  state       String
+  startedAt   DateTime
+  endedAt     DateTime?
+  /// Whole seconds from `startedAt` to `endedAt`; null while open.
+  seconds     Int?
+
+  @@index([machineId])
+  @@index([ownerUserId, startedAt])
+  @@index([endedAt])
+  @@map("usage_interval")
+}
+
+/// One row per usage reporter: when it last got through, for the admin's "gone quiet" check.
+model UsageReporter {
+  id            String    @id
+  lastContactAt DateTime
+  lastEventAt   DateTime?
+  lastSeq       Int       @default(0)
+  /// How often the reporter looks at machines, in seconds.
+  pollIntervalS Int       @default(30)
+
+  @@map("usage_reporter")
+}
