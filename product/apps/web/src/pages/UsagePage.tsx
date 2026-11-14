@@ -26,18 +26,6 @@ import { formatQuantity, toGibHours, toHours } from "../lib/usage-format";
 /** Past this long without a report, recent time may be missing from the numbers. */
 const QUIET_AFTER_MS = 15 * 60_000;
 
-function Stat({ label, value, unit }: { label: string; value: string; unit: string }) {
-  return (
-    <div className="rounded-[14px] border border-border bg-card px-3 py-3 sm:px-[18px] sm:py-4">
-      <span className="text-body2 text-muted-foreground">{label}</span>
-      <strong className="block text-[28px] leading-9 font-semibold tracking-[-0.03em] tabular-nums">
-        {value}
-      </strong>
-      <span className="text-label text-muted-foreground">{unit}</span>
-    </div>
-  );
-}
-
 const head = "text-label font-semibold tracking-[0.06em] uppercase";
 const num = "text-right tabular-nums";
 
@@ -45,31 +33,52 @@ function Totals({ summary, locale }: { summary: UsageSummary; locale: string }) 
   const { t } = useLingui();
   const { totals } = summary;
   const q = (value: number) => formatQuantity(value, locale);
+  const rest: { label: string; value: string; unit: string }[] = [
+    { label: t`Compute`, value: q(toHours(totals.vcpuSeconds)), unit: t`vCPU-hours` },
+    {
+      label: t`Memory`,
+      value: q(toGibHours(totals.memoryMibSeconds)),
+      unit: t`GiB-hours, running`,
+    },
+    {
+      label: t`Disk, running`,
+      value: q(toGibHours(totals.diskMibSeconds)),
+      unit: t`GiB-hours`,
+    },
+    {
+      label: t`Disk, suspended`,
+      value: q(toGibHours(totals.suspendedDiskMibSeconds)),
+      unit: t`GiB-hours`,
+    },
+    { label: t`Machines`, value: q(totals.machines), unit: t`in this period` },
+  ];
   return (
-    <div className="grid grid-cols-2 gap-2 sm:gap-3.5 lg:grid-cols-3">
-      <Stat
-        label={t`Running time`}
-        value={q(toHours(totals.runningSeconds))}
-        unit={t`machine-hours`}
-      />
-      <Stat label={t`Compute`} value={q(toHours(totals.vcpuSeconds))} unit={t`vCPU-hours`} />
-      <Stat
-        label={t`Memory`}
-        value={q(toGibHours(totals.memoryMibSeconds))}
-        unit={t`GiB-hours, running`}
-      />
-      <Stat
-        label={t`Disk, running`}
-        value={q(toGibHours(totals.diskMibSeconds))}
-        unit={t`GiB-hours`}
-      />
-      <Stat
-        label={t`Disk, suspended`}
-        value={q(toGibHours(totals.suspendedDiskMibSeconds))}
-        unit={t`GiB-hours`}
-      />
-      <Stat label={t`Machines`} value={q(totals.machines)} unit={t`in this period`} />
-    </div>
+    <section className="grid gap-x-10 gap-y-6 rounded-2xl border border-border bg-card p-5 sm:p-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+      <div>
+        <h2 className="text-body2 text-muted-foreground">
+          <Trans>Machine hours</Trans>
+        </h2>
+        <p className="m-0 text-[56px] leading-[60px] font-semibold tracking-[-0.04em] tabular-nums">
+          {q(toHours(totals.runningSeconds))}
+        </p>
+        <p className="m-0 mt-1 text-body2 text-muted-foreground">
+          <Trans>hours your machines were running</Trans>
+        </p>
+      </div>
+      <dl className="m-0 grid content-center gap-x-8 sm:grid-cols-2">
+        {rest.map((item) => (
+          <div
+            key={item.label}
+            className="flex items-baseline justify-between gap-3 border-b border-border py-2 last:border-b-0 sm:[&:nth-last-child(2)]:border-b-0"
+          >
+            <dt className="text-body2 text-muted-foreground">
+              {item.label} <span className="text-label">({item.unit})</span>
+            </dt>
+            <dd className="m-0 text-body1 font-semibold tabular-nums">{item.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
   );
 }
 
