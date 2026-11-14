@@ -1,0 +1,44 @@
+---
+title: Browser agent
+description: Run an agent that uses the browser on a desktop machine and watch the screen.
+---
+
+Use a template with a screen: `desktop` or `corvo-computer`. `Sandbox.create()` with no template already creates a `desktop` in the beta.
+
+## 1. Create the machine
+
+```python
+from e2b import Sandbox
+
+sandbox = Sandbox.create("desktop", timeout=60 * 60)
+print(sandbox.sandbox_id)
+```
+
+## 2. Watch the screen
+
+In the [Dashboard](https://app.rookbox.run), open the machine and click **Open desktop**. Or from the CLI:
+
+```sh
+rookbox desktop <id>
+```
+
+You see Chromium and what the agent does in it, live. You can also take over the mouse and keyboard.
+
+## 3. Run the agent in the machine
+
+Install what the agent needs and run it like any other command:
+
+```python
+sandbox.commands.run("pip install playwright && playwright install chromium", timeout=300)
+sandbox.files.write("/home/user/agent.py", open("agent.py").read())
+sandbox.commands.run("python3 /home/user/agent.py", background=True)
+```
+
+## 4. Do the manual login once
+
+If the site asks for a login or CAPTCHA, sign in yourself through the desktop. The agent continues with the open session. To keep that session while you wait, [suspend the machine](/en/guides/long-running/).
+
+## Care
+
+- The desktop is yours: everything logged in on it stays on the machine. Remove it with `kill()` when you are done.
+- The machine's internet is open. See [Security](/en/security/).

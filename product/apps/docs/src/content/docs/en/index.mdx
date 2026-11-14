@@ -1,0 +1,31 @@
+---
+title: Rookbox
+description: Cloud Linux machines for agents. Each one is your own computer, starts in seconds and can be suspended and resumed.
+template: splash
+hero:
+  tagline: Cloud Linux machines for agents. Starts in about 2 s, suspends with memory kept and comes back in about 1 s.
+  actions:
+    - text: Quickstart
+      link: /en/quickstart/
+      icon: right-arrow
+    - text: Install the CLI
+      link: /en/cli/
+      variant: minimal
+---
+
+import { Card, CardGrid } from "@astrojs/starlight/components";
+
+<CardGrid>
+  <Card title="Use the E2B SDK" icon="rocket">
+    Two environment variables and the usual `Sandbox.create()`. [Quickstart](/en/quickstart/)
+  </Card>
+  <Card title="Use the CLI" icon="terminal">
+    `rookbox new`, `rookbox shell`, `rookbox pause`. [CLI](/en/cli/)
+  </Card>
+  <Card title="Run in CI" icon="setting">
+    A fresh machine per job, removed at the end. [CI guide](/en/guides/ci/)
+  </Card>
+  <Card title="Long-running agents" icon="moon">
+    Suspend while you wait and resume where you left off. [Guide](/en/guides/long-running/)
+  </Card>
+</CardGrid>

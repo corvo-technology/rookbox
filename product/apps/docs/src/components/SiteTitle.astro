@@ -1,0 +1,45 @@
+---
+/**
+ * The black "Rookbox" lockup (same markup as the dashboard's Logo) plus a quiet "Docs" tag.
+ * It takes the text colour, so it is black on paper and white on ink.
+ */
+const home = Astro.currentLocale === "en" ? "/en/" : "/";
+---
+
+<a href={home} class="site-title" aria-label="Rookbox Docs">
+  <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false" fill="currentColor" fill-rule="evenodd">
+    <path d="M16 12h8v7h4v-7h8v7h4v-7h8v10.5H16z"></path>
+    <path d="M16 25.3h32V52H16z M27 52V40a5 5 0 0 1 10 0v12z"></path>
+  </svg>
+  <span class="word">Rookbox</span>
+  <span class="tag">Docs</span>
+</a>
+
+<style>
+  .site-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.38em;
+    font-size: 1.3rem;
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: -0.055em;
+    color: var(--sl-color-white);
+    text-decoration: none;
+  }
+  svg {
+    width: 1.2em;
+    height: 1.2em;
+    flex-shrink: 0;
+  }
+  .tag {
+    margin-left: 0.35em;
+    padding: 0.2em 0.5em;
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: 999px;
+    font-size: 0.6em;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--sl-color-gray-3);
+  }
+</style>

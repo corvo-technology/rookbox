@@ -1,0 +1,30 @@
+---
+title: Máquinas
+description: O que é uma máquina do Rookbox, quanto demora para ligar e o que ela tem.
+---
+
+Uma máquina é um computador Linux seu, na nuvem. Roda em uma microVM com kernel próprio, não em um contêiner compartilhado.
+
+| | |
+| --- | --- |
+| Início | cerca de 2 s |
+| Retomada de uma máquina suspensa | cerca de 1 s |
+| Tamanho pelo SDK da E2B | 2 vCPU, 2 GiB de RAM, 10 GiB de disco |
+| Acesso | root |
+| Internet | aberta (veja [Segurança](/security/)) |
+
+Você cria e controla máquinas de três jeitos:
+
+```python
+from e2b import Sandbox
+
+sandbox = Sandbox.create()  # SDK da E2B
+```
+
+```sh
+rookbox new                 # CLI
+```
+
+Ou pelo [Painel](https://app.rookbox.run), em **Máquinas**.
+
+Na E2B, uma máquina se chama sandbox. No Rookbox são a mesma coisa, e o `sandbox_id` é o id da máquina.

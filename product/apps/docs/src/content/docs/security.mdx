@@ -1,0 +1,31 @@
+---
+title: Chaves de API e segurança
+description: Como as chaves funcionam, o que isola uma conta da outra e o que sai da máquina.
+---
+
+## Chaves de API
+
+- Crie e revogue em **Chaves de API**, no [Painel](https://app.rookbox.run).
+- A chave aparece **uma única vez**, na criação. Depois disso nem você nem nós conseguimos ver de novo.
+- O Rookbox guarda só o hash (SHA-256) da chave. Perdeu? Revogue e crie outra.
+- Uma chave por uso (um pipeline, um agente). Assim você revoga só a que vazou.
+- Revogada, a chave para de funcionar na hora.
+- Não coloque a chave no código, no repositório nem dentro da máquina. No CI, use secret.
+
+## Isolamento
+
+- Cada máquina é uma microVM com kernel próprio. Máquinas não falam entre si.
+- Cada conta só enxerga as próprias máquinas. Pedir o id de uma máquina de outra conta devolve 404, igual a uma máquina que não existe.
+- O token de tráfego e o token do desktop nunca vão para o navegador. Os links do desktop são assinados e expiram em 2 minutos.
+
+## O que sai da máquina
+
+**A rede da máquina tem saída aberta para a internet.** O código que roda nela pode enviar qualquer coisa que ela tenha para qualquer lugar.
+
+Por isso:
+
+- Trate a máquina como o computador de quem escreveu o código que roda nela.
+- Não coloque nela segredos que você não entregaria a esse código.
+- Use chaves de API de terceiros com escopo mínimo e validade curta.
+
+Mesmo com a internet aberta, o Rookbox bloqueia o endereço de metadados da nuvem, as faixas de rede interna e o loopback do servidor. Uma máquina também não alcança outra.

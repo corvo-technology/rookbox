@@ -1,0 +1,29 @@
+---
+title: Desktop
+description: Abra a tela da máquina no navegador, direto do Painel.
+---
+
+As máquinas `desktop` e `corvo-computer` rodam um desktop Linux com Chromium. Você vê e controla a tela no navegador, por VNC, sem instalar nada.
+
+## Abrir
+
+No [Painel](https://app.rookbox.run), abra a máquina e clique em **Abrir desktop**. Pela CLI:
+
+```sh
+rookbox desktop <id>
+```
+
+A primeira abertura pode levar alguns segundos.
+
+## Como funciona
+
+- O Painel gera um link assinado que vale por 2 minutos.
+- O link abre uma sessão de desktop de até 4 horas.
+- O desktop é servido por uma origem própria (`desk.rookbox.run`), separada do Painel.
+- O token da máquina nunca chega ao navegador.
+
+Máquinas `seed` não têm tela. Veja [Templates](/concepts/templates/).
+
+## Quando usar
+
+Para acompanhar um agente que usa o navegador, ou para fazer um login manual que o agente continua depois. O guia [Agente com navegador](/guides/browser-agent/) mostra o fluxo.

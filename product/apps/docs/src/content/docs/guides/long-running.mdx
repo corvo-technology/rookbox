@@ -1,0 +1,41 @@
+---
+title: Agentes de longa duração
+description: Suspenda a máquina enquanto o agente espera e retome do mesmo ponto.
+---
+
+Um agente passa a maior parte do tempo esperando: uma aprovação, um e-mail, um prazo. Suspenda a máquina nesse intervalo. A memória e os processos ficam guardados, e a retomada leva cerca de 1 s.
+
+```python
+from e2b import Sandbox
+
+sandbox = Sandbox.create(timeout=2 * 60 * 60)
+sandbox.commands.run("python3 agent.py", background=True)
+sandbox_id = sandbox.sandbox_id  # guarde o id
+
+# o agente pediu aprovação: suspenda
+sandbox.beta_pause()
+
+# ... horas depois, quando a resposta chegar
+sandbox = Sandbox.connect(sandbox_id)  # retoma de onde parou
+sandbox.set_timeout(60 * 60)           # renova o prazo
+```
+
+```ts
+import { Sandbox } from "e2b";
+
+let sandbox = await Sandbox.create({ timeoutMs: 2 * 60 * 60_000 });
+await sandbox.commands.run("python3 agent.py", { background: true });
+const id = sandbox.sandboxId; // guarde o id
+
+await sandbox.betaPause();
+
+sandbox = await Sandbox.connect(id);
+await sandbox.setTimeout(60 * 60_000);
+```
+
+## Regras
+
+- Guarde o `sandbox_id` fora da máquina (banco, arquivo). É ele que liga você de volta.
+- Suspensa, a máquina não gasta CPU nem memória no host, mas continua contando no seu limite de máquinas. Remova o que não vai mais usar.
+- Depois de retomar, renove o prazo com `set_timeout`.
+- Se a retomada responder 503 (`The beta is full right now`), tente de novo em alguns minutos. O estado continua guardado.

@@ -1,0 +1,36 @@
+---
+title: Compatibilidade com a E2B
+description: O que do SDK da E2B funciona no Rookbox e o que não funciona.
+---
+
+O Rookbox implementa o plano de controle da E2B. Você usa o SDK sem alterações, com `E2B_API_KEY` e `E2B_API_URL`.
+
+## Funciona
+
+| Recurso | Observação |
+| --- | --- |
+| Criar | `Sandbox.create()`. O template `base` do SDK vira o primeiro da lista do deploy. |
+| Listar | Só as suas máquinas, rodando e suspensas. Com paginação. |
+| Consultar e conectar | `Sandbox.connect(id)`. Retoma uma máquina suspensa. |
+| Suspender e retomar | `beta_pause()` e `connect`. A memória fica guardada. |
+| Prazo | `set_timeout`, máximo de 24 h. |
+| Remover | `kill()`. |
+| Comandos | `commands.run`, em primeiro plano ou em segundo plano. |
+| Arquivos | `files.read`, `files.write` e o resto da API de arquivos. |
+| Portas | `get_host(porta)`, com o token de tráfego. Veja [Portas e URLs](/concepts/ports/). |
+| Metadados | Seus pares chave/valor. Chaves começando com `rookbox.` são descartadas. |
+
+## Não funciona
+
+| Recurso | O que acontece |
+| --- | --- |
+| Métricas | Resposta 501. |
+| API de templates (`Template.build` e afins) | Não existe. Só os templates do Rookbox. |
+| Volumes | Não existem. |
+| Fork pelo SDK | Não existe. O Painel tem Fork, que copia o disco. |
+| Escolher o tamanho | Sempre 2 vCPU, 2 GiB de RAM e 10 GiB de disco. |
+| Mais de 24 h de prazo | O prazo é limitado a 24 h. |
+
+## Dica
+
+Rotas e recursos que não estão na lista funcionam como 404 ou erro. Se algo do SDK falhar de um jeito que você não entende, veja [Erros](/reference/errors/).

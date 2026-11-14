@@ -1,0 +1,49 @@
+---
+title: Usar no CI
+description: Rode um passo do pipeline numa máquina nova do Rookbox, com GitHub Actions.
+---
+
+Cada job liga uma máquina, roda os comandos nela e remove no fim. É o mesmo fluxo da página **Usar no CI** do Painel.
+
+## Configure
+
+1. No [Painel](https://app.rookbox.run), em **Chaves de API**, crie uma chave com o nome do pipeline. Assim você revoga a certa depois.
+2. No GitHub, abra **Settings**, **Secrets and variables**, **Actions** e crie o secret `ROOKBOX_API_KEY` com a chave.
+3. Salve o workflow abaixo em `.github/workflows/rookbox.yml` e faça push.
+
+```yaml title=".github/workflows/rookbox.yml"
+name: Run on a Rookbox machine
+on: [push]
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    env:
+      E2B_API_KEY: ${{ secrets.ROOKBOX_API_KEY }}
+      E2B_API_URL: https://api.rookbox.run
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install e2b
+      - name: Start a machine, run a command, remove it
+        run: |
+          cat > run.mjs <<'EOF'
+          import { Sandbox } from "e2b";
+          const sandbox = await Sandbox.create({ timeoutMs: 15 * 60_000 });
+          try {
+            const result = await sandbox.commands.run("echo hello from Rookbox");
+            console.log(result.stdout);
+          } finally {
+            await sandbox.kill();
+          }
+          EOF
+          node run.mjs
+```
+
+## Bom saber
+
+- Remova a máquina no fim, como o `finally` acima. Uma esquecida some sozinha quando o prazo acaba, mas conta no seu limite de 3 até lá.
+- Jobs em paralelo contam juntos. Com o limite de 3 máquinas, um quarto job paralelo recebe 429. Veja [Limites](/concepts/limits/).
+- Nunca coloque a chave no código. Só em secret.

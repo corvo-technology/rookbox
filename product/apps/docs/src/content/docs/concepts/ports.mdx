@@ -1,0 +1,54 @@
+---
+title: Portas e URLs
+description: Cada porta da máquina tem um endereço público. Ele exige um token de tráfego.
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+Um servidor rodando na máquina fica em `https://<porta>-<id>.box.rookbox.run`.
+
+```python
+sandbox.commands.run("python3 -m http.server 8000", background=True)
+host = sandbox.get_host(8000)   # 8000-<id>.box.rookbox.run
+```
+
+```ts
+await sandbox.commands.run("python3 -m http.server 8000", { background: true });
+const host = sandbox.getHost(8000); // 8000-<id>.box.rookbox.run
+```
+
+## Token de tráfego
+
+O endereço só responde com o header `e2b-traffic-access-token`. O SDK já guarda o token da máquina. Use-o nas requisições:
+
+<Tabs syncKey="lang">
+  <TabItem label="Python">
+    ```python
+    import urllib.request
+
+    req = urllib.request.Request(
+        f"https://{host}",
+        headers={"e2b-traffic-access-token": sandbox.traffic_access_token},
+    )
+    print(urllib.request.urlopen(req).read().decode())
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```ts
+    const res = await fetch(`https://${host}`, {
+      headers: { "e2b-traffic-access-token": sandbox.trafficAccessToken ?? "" },
+    });
+    console.log(await res.text());
+    ```
+  </TabItem>
+</Tabs>
+
+Sem o header, a resposta é um erro de acesso.
+
+## Na aba do navegador
+
+Um link aberto direto no navegador não envia o header, então não funciona. Para ver a tela da máquina, use o [Desktop](/concepts/desktop/). Para um app web seu, chame a URL do seu código, como acima.
+
+```sh
+rookbox url <id> 8000
+```

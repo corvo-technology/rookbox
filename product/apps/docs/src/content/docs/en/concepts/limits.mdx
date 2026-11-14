@@ -1,0 +1,41 @@
+---
+title: Limits
+description: Machines per account, beta capacity and request limits. What each error means and what to do.
+---
+
+The values below are the beta's and can change.
+
+## Machines per account
+
+Each account can have up to **3 machines** at the same time. Past that, create fails with **429** and the message `The machine limit for this account is reached.`
+
+```python
+from e2b import Sandbox
+
+for item in Sandbox.list().next_items():
+    print(item.sandbox_id, item.state)
+```
+
+What to do: remove the ones you do not use (`kill()` or `rookbox kill`).
+
+## Beta capacity
+
+The beta has a ceiling on machines running at once, summed across all accounts. At the ceiling, creating a machine and resuming a suspended one fail with **503** and `The beta is full right now, try again later.`
+
+What to do: try again in a few minutes. If the machine was suspended, it stays suspended and its state is not lost.
+
+## Request limits
+
+Each kind of call has a limit per account and per IP address. When you go over, the answer is **429** with a `Retry-After` header, in seconds.
+
+| Call | Limit per account |
+| --- | --- |
+| Create a machine | 20 per hour |
+| Suspend and resume | 60 per 10 minutes |
+| Remove | 40 per 10 minutes |
+| List and get | 300 per minute |
+| Create an API key | 10 per hour |
+
+What to do: wait for the `Retry-After` time and try again. Do not create machines in a loop without reusing them: use one machine per task and remove it at the end.
+
+A wrong key also counts against your IP's limit. See [Errors](/en/reference/errors/).

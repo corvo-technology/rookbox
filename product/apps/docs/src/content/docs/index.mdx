@@ -1,0 +1,31 @@
+---
+title: Rookbox
+description: Máquinas Linux na nuvem para agentes. Cada uma é um computador seu, que liga em segundos e pode ser suspenso e retomado.
+template: splash
+hero:
+  tagline: Máquinas Linux na nuvem para agentes. Liga em cerca de 2 s, suspende com a memória guardada e volta em cerca de 1 s.
+  actions:
+    - text: Quickstart
+      link: /quickstart/
+      icon: right-arrow
+    - text: Instalar a CLI
+      link: /cli/
+      variant: minimal
+---
+
+import { Card, CardGrid } from "@astrojs/starlight/components";
+
+<CardGrid>
+  <Card title="Use o SDK da E2B" icon="rocket">
+    Duas variáveis de ambiente e o `Sandbox.create()` de sempre. [Quickstart](/quickstart/)
+  </Card>
+  <Card title="Use a CLI" icon="terminal">
+    `rookbox new`, `rookbox shell`, `rookbox pause`. [CLI](/cli/)
+  </Card>
+  <Card title="Rode no CI" icon="setting">
+    Uma máquina nova por job, removida no fim. [Guia de CI](/guides/ci/)
+  </Card>
+  <Card title="Agentes longos" icon="moon">
+    Suspenda enquanto espera e retome onde parou. [Guia](/guides/long-running/)
+  </Card>
+</CardGrid>

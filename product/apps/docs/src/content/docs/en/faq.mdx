@@ -1,0 +1,36 @@
+---
+title: FAQ
+description: Billing, support, compatibility and common questions.
+---
+
+## How much does it cost?
+
+Usage is measured (running machines, memory, disk), but billing is not enabled in the beta. You follow your usage on the **Usage** page of the [Dashboard](https://app.rookbox.run). Billing in Brazilian reais with Pix is planned, with no price or date set.
+
+## Is there support in Portuguese?
+
+Yes. Support is in Portuguese.
+
+## Do I need to change my E2B code?
+
+No. Set `E2B_API_KEY` and `E2B_API_URL` and your code stays the same. What differs and what does not exist is in [Compatibility](/en/reference/compat/).
+
+## Can I choose the machine size?
+
+Through the SDK, no: it is always 2 vCPU, 2 GiB RAM and 10 GiB disk.
+
+## My machine disappeared. Why?
+
+Its timeout ended. Without auto-suspend, the end of the timeout removes the machine. See [Lifecycle](/en/concepts/lifecycle/).
+
+## Does the machine have internet?
+
+Yes, open. See [Security](/en/security/).
+
+## Where is my data?
+
+On the machine's disk, which is yours until you remove it. Suspending keeps disk and memory. Removing deletes everything.
+
+## I got a 429. Now what?
+
+It can be the 3-machine limit or the request limit. The message says which. See [Errors](/en/reference/errors/).
