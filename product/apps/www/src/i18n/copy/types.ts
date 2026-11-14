@@ -19,8 +19,6 @@ export type Copy = {
     eyebrow: string;
     title: string;
     lead: string;
-    start: string;
-    quickstart: string;
     /** Three short facts shown under the buttons. */
     facts: [string, string, string];
   };
@@ -98,8 +96,28 @@ export type Copy = {
     eyebrow: string;
     title: string;
     lead: string;
-    start: string;
-    quickstart: string;
+    /** The small pricing line. */
+    priceNote: string;
+  };
+  /** The waitlist form, in the hero and again at the end of the page. */
+  waitlist: {
+    label: string;
+    placeholder: string;
+    submit: string;
+    sending: string;
+    /** The optional "what will you run" question, and its four answers. */
+    optionsLegend: string;
+    optionsOptional: string;
+    options: [string, string, string, string];
+    /** Honest framing: invitation only, small batches. */
+    fine: string;
+    okTitle: string;
+    /** `{email}` is replaced with the address they typed. */
+    okBody: string;
+    errorInvalid: string;
+    errorRate: string;
+    errorGeneric: string;
+    haveAccount: string;
   };
   footer: {
     languages: string;

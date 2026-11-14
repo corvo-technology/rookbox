@@ -10,6 +10,7 @@ import type { LimitClass, Throttle } from "./route-limits.js";
 import { usageHandlers } from "./usage/router.js";
 import type { UsageService } from "./usage/service.js";
 import { type UserAdmin, UserAdminError } from "./users.js";
+import { type Waitlist, WaitlistNotFoundError } from "./waitlist.js";
 
 export type RpcContext = {
   user: AuthUser;
@@ -30,6 +31,8 @@ export type RouterDeps = {
   reconcile(mode: { act: boolean; killOrphans: boolean }): Promise<ReconcileReport>;
   /** Account management for the operator panel. */
   userAdmin?: UserAdmin;
+  /** The beta waitlist. */
+  waitlist?: Waitlist;
   /** The operator panel's health view. */
   adminHealth?: AdminHealthReader;
   logger: Logger;
@@ -45,6 +48,7 @@ export function createRouter({
   users,
   reconcile,
   userAdmin,
+  waitlist,
   adminHealth,
   logger,
   usage,
@@ -224,6 +228,37 @@ export function createRouter({
           return adminHealth();
         }),
       ),
+      waitlist: {
+        list: os.admin.waitlist.list.handler(({ context }) =>
+          run(async () => {
+            requireAdmin(context);
+            if (!waitlist) {
+              throw new ORPCError("SERVICE_UNAVAILABLE", { status: 503, message: "Off." });
+            }
+            return waitlist.list();
+          }),
+        ),
+        invite: os.admin.waitlist.invite.handler(({ input, context }) =>
+          run(async () => {
+            requireAdmin(context);
+            if (!waitlist) {
+              throw new ORPCError("SERVICE_UNAVAILABLE", { status: 503, message: "Off." });
+            }
+            try {
+              const result = await waitlist.invite(input, (account) =>
+                userWork(() => needUserAdmin().create(account)),
+              );
+              logger.warn("admin invited from the waitlist", { admin: context.user.id });
+              return result;
+            } catch (error) {
+              if (error instanceof WaitlistNotFoundError) {
+                throw new ORPCError("NOT_FOUND", { status: 404, message: error.message });
+              }
+              throw error;
+            }
+          }),
+        ),
+      },
       users: {
         list: os.admin.users.list.handler(({ context }) =>
           run(async () => {

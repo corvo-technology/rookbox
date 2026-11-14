@@ -4,7 +4,7 @@ import type { Locale } from "../i18n/locales";
 import { DEFAULT_LOCALE, isLocale, localeHomePath } from "../i18n/locales";
 import { rich } from "../i18n/rich";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { DASHBOARD_URL, SDK_DOMAIN } from "../site";
+import { SDK_DOMAIN } from "../site";
 import { buildE2bSnippets, buildQuickstart, buildSessions } from "../snippets";
 import { E2bSnippet } from "./E2bSnippet";
 import Footer from "./Footer.astro";
@@ -12,10 +12,12 @@ import Header from "./Header.astro";
 import { MachinesMock } from "./MachinesMock";
 import { Quickstart } from "./Quickstart";
 import { SessionDemo } from "./SessionDemo";
+import WaitlistForm from "./WaitlistForm.astro";
 
 const locale: Locale = isLocale(Astro.currentLocale) ? Astro.currentLocale : DEFAULT_LOCALE;
 const copy = getCopy(locale);
-const { hero, visual, demo, desktop, features, lifecycle, usecases, e2b, quickstart, cta } = copy;
+const { hero, visual, demo, desktop, features, lifecycle, usecases, e2b, quickstart, cta, waitlist } =
+  copy;
 const sessions = buildSessions(SDK_DOMAIN, demo.session);
 const e2bSnippets = buildE2bSnippets(SDK_DOMAIN);
 const quickstartCode = buildQuickstart(SDK_DOMAIN);
@@ -52,9 +54,8 @@ const ICONS = [
           <p class="eyebrow hero__in" style="--i:0"><span class="live-dot" aria-hidden="true"></span>{hero.eyebrow}</p>
           <h1 id="hero-title" class="hd hero__in" style="--i:1">{hero.title}</h1>
           <p class="lead hero__in" style="--i:2">{hero.lead}</p>
-          <div class="ctas hero__in" style="--i:3">
-            <a class="btn btn--pri" href={DASHBOARD_URL}>{hero.start}</a>
-            <a class="btn" href="#start">{hero.quickstart}</a>
+          <div class="hero__in hero__form" id="waitlist" style="--i:3">
+            <WaitlistForm copy={waitlist} locale={locale} id="hero" />
           </div>
           <ul class="facts hero__in" style="--i:4">
             {hero.facts.map((fact) => <li>{fact}</li>)}
@@ -252,7 +253,7 @@ const ICONS = [
             <h2 id="e2b-title" class="sh">{e2b.title}</h2>
             <p class="lead">{e2b.lead}</p>
             <p class="fine env__note" set:html={rich(e2b.envLine)} />
-            <p class="fine env__note">{e2b.keyLine} <a class="env__link" href={DASHBOARD_URL}>{e2b.keyLink}</a></p>
+            <p class="fine env__note">{e2b.keyLine} <a class="env__link" href="#waitlist">{e2b.keyLink}</a></p>
           </div>
           <div data-reveal style="--d:100ms">
             <E2bSnippet
@@ -283,7 +284,7 @@ const ICONS = [
           />
         </div>
         <p class="fine demo-note">
-          {quickstart.keyLine} <a class="env__link" href={DASHBOARD_URL}>{quickstart.keyLink}</a>. {quickstart.note}
+          {quickstart.keyLine} <a class="env__link" href="#waitlist">{quickstart.keyLink}</a>. {quickstart.note}
         </p>
       </div>
     </section>
@@ -294,10 +295,10 @@ const ICONS = [
           <p class="cta__eyebrow">{cta.eyebrow}</p>
           <h2 id="cta-title" class="sh">{cta.title}</h2>
           <p>{cta.lead}</p>
-          <div class="cta__actions">
-            <a class="btn btn--accent" href={DASHBOARD_URL}>{cta.start}</a>
-            <a class="btn btn--ghost" href="#start">{cta.quickstart}</a>
+          <div class="cta__form">
+            <WaitlistForm copy={waitlist} locale={locale} id="cta" tone="dark" />
           </div>
+          <p class="cta__note">{cta.priceNote}</p>
         </div>
       </div>
     </section>

@@ -9,3 +9,8 @@ const DASHBOARD_BASE: string = import.meta.env.PUBLIC_DASHBOARD_URL ?? "https://
 export const DASHBOARD_URL = new URL(
   DASHBOARD_BASE.endsWith("/") ? DASHBOARD_BASE : `${DASHBOARD_BASE}/`,
 ).href;
+
+/** The API the waitlist form posts to. Set PUBLIC_API_URL when building for another deployment. */
+const API_BASE: string = import.meta.env.PUBLIC_API_URL ?? "https://api.rookbox.run";
+
+export const WAITLIST_URL = new URL("/waitlist", API_BASE).href;

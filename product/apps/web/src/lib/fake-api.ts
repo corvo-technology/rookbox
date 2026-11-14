@@ -295,6 +295,16 @@ export function createFakeApi(options: FakeApiOptions = {}): AppClient {
         await latency();
         throw errors.FORBIDDEN();
       }),
+      waitlist: {
+        list: os.admin.waitlist.list.handler(async ({ errors }) => {
+          await latency();
+          throw errors.FORBIDDEN();
+        }),
+        invite: os.admin.waitlist.invite.handler(async ({ errors }) => {
+          await latency();
+          throw errors.FORBIDDEN();
+        }),
+      },
       users: {
         list: os.admin.users.list.handler(async ({ errors }) => {
           await latency();
