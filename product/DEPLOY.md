@@ -7,6 +7,7 @@ Three pieces, three places:
 | API (`apps/api`) and its Postgres | Guará Cloud, built from `apps/api/Dockerfile` | `https://api.rookbox.run` |
 | Dashboard (`apps/web`) | The VPS, `apps/web/Dockerfile` (Caddy) | `https://app.rookbox.run` |
 | Landing (`apps/www`) | The VPS, `apps/www/Dockerfile` (Caddy) | `https://rookbox.run` |
+| Docs (`apps/docs`) | The VPS, `apps/docs/Dockerfile` (Caddy), see "Docs site" | `https://docs.rookbox.run` |
 | SPACE (the sandbox infrastructure) | A separate dedicated server | `https://api.box.rookbox.run`, sandboxes at `https://<port>-<id>.box.rookbox.run` |
 
 Every build context is the `product/` directory.
@@ -17,6 +18,7 @@ Every build context is the `product/` directory.
 | --- | --- |
 | `rookbox.run` (A/AAAA) | The VPS |
 | `app.rookbox.run` | The VPS |
+| `docs.rookbox.run` | The VPS (behind Cloudflare) |
 | `api.rookbox.run` | Guará Cloud (the CNAME or A record it gives for the service) |
 | `desk.rookbox.run` | The same Guará service as `api.` (a second hostname on it): the desktop's own origin |
 | `api.box.rookbox.run` | The SPACE server |
@@ -227,6 +229,34 @@ Example reverse proxy with Caddy on the VPS:
 rookbox.run     { reverse_proxy 127.0.0.1:8082 }
 app.rookbox.run { reverse_proxy 127.0.0.1:8081 }
 ```
+
+## Docs site
+
+The docs (`apps/docs`, Astro Starlight, pt-BR at `/` and English at `/en/`) are a static build served
+by Caddy, like the landing. They need **no secrets and no build arguments**.
+
+| Setting | Value |
+| --- | --- |
+| Service type | Application (Dockerfile), a Dokploy service on the VPS |
+| Build context | `product/` |
+| Dockerfile path | `apps/docs/Dockerfile` |
+| Container port | `80` (TLS is off inside the container) |
+| Domain | `docs.rookbox.run`, proxied by Cloudflare (an `A`/`AAAA` record to the VPS, like `rookbox.run`) |
+| Optional build argument | `PUBLIC_SITE_URL` (default `https://docs.rookbox.run`): canonical links and the sitemap |
+
+```bash
+cd product
+docker build -f apps/docs/Dockerfile -t rookbox-docs .
+docker run -d --restart unless-stopped --name rookbox-docs -p 127.0.0.1:8083:80 rookbox-docs
+```
+
+```caddyfile
+docs.rookbox.run { reverse_proxy 127.0.0.1:8083 }
+```
+
+Cloudflare in front: pages are served with `Cache-Control: public, max-age=300` and `/_astro/*` and
+`/fonts/*` with a one-year `immutable` header, so the default cache rules work. Nothing in the docs
+site talks to the API.
 
 ## Usage metering
 

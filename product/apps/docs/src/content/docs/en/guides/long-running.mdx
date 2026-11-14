@@ -1,0 +1,41 @@
+---
+title: Long-running agents
+description: Suspend the machine while the agent waits and resume from the same point.
+---
+
+An agent spends most of its time waiting: an approval, an email, a deadline. Suspend the machine in that gap. Memory and processes are kept, and resuming takes about 1 s.
+
+```python
+from e2b import Sandbox
+
+sandbox = Sandbox.create(timeout=2 * 60 * 60)
+sandbox.commands.run("python3 agent.py", background=True)
+sandbox_id = sandbox.sandbox_id  # keep the id
+
+# the agent asked for approval: suspend
+sandbox.beta_pause()
+
+# ... hours later, when the answer arrives
+sandbox = Sandbox.connect(sandbox_id)  # resumes where it stopped
+sandbox.set_timeout(60 * 60)           # renew the timeout
+```
+
+```ts
+import { Sandbox } from "e2b";
+
+let sandbox = await Sandbox.create({ timeoutMs: 2 * 60 * 60_000 });
+await sandbox.commands.run("python3 agent.py", { background: true });
+const id = sandbox.sandboxId; // keep the id
+
+await sandbox.betaPause();
+
+sandbox = await Sandbox.connect(id);
+await sandbox.setTimeout(60 * 60_000);
+```
+
+## Rules
+
+- Keep the `sandbox_id` outside the machine (database, file). It is what brings you back.
+- Suspended, the machine uses no CPU or memory on the host, but it still counts toward your machine limit. Remove what you will not use again.
+- After resuming, renew the timeout with `set_timeout`.
+- If resuming answers 503 (`The beta is full right now`), try again in a few minutes. The state stays saved.

@@ -1,0 +1,39 @@
+---
+title: Erros
+description: Os códigos de erro da API, o que cada um quer dizer e o que fazer.
+---
+
+A API responde no formato da E2B: `{ "code": 429, "message": "..." }`. O SDK transforma o código em uma exceção.
+
+Em Python a exceção termina em `Exception` (`RateLimitException`). Em TypeScript termina em `Error` (`RateLimitError`).
+
+| Código | Mensagem | Exceção | O que fazer |
+| --- | --- | --- | --- |
+| 400 | Template not available. Use one of: ... | Sandbox | Use um template da lista. Veja [Templates](/concepts/templates/). |
+| 401 | Invalid API key. | Authentication | Confira `E2B_API_KEY`. A chave pode ter sido revogada ou a conta desativada. |
+| 404 | Sandbox &lt;id&gt; not found. | NotFound | O id não existe, já foi removido ou é de outra conta. Liste com `Sandbox.list()`. |
+| 429 | The machine limit for this account is reached. | RateLimit | Você chegou a 3 máquinas. Remova alguma. |
+| 429 | Too many requests. Slow down. | RateLimit | Espere o `Retry-After` (em segundos) e tente de novo. |
+| 501 | Sandbox metrics are not available on this service. | Sandbox | Métricas não existem no Rookbox. |
+| 502 | The machine service failed. | Sandbox | Falha do nosso lado. Tente de novo; se repetir, avise o suporte. |
+| 503 | The beta is full right now, try again later. | Sandbox | O beta está cheio. Tente de novo em alguns minutos. |
+| 504 | The machine service took too long to answer. | Timeout | Tente de novo. A máquina pode ter sido criada: liste antes de criar outra. |
+
+Mais em [Limites](/concepts/limits/).
+
+## Retry com espera
+
+Para o limite de requisições. Se o 429 for o de 3 máquinas, esperar não resolve: remova uma.
+
+```python
+import time
+from e2b import Sandbox
+from e2b.exceptions import RateLimitException
+
+for attempt in range(5):
+    try:
+        sandbox = Sandbox.create()
+        break
+    except RateLimitException:
+        time.sleep(2 ** attempt)
+```

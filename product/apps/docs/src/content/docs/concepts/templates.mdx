@@ -1,0 +1,26 @@
+---
+title: Templates
+description: As imagens de máquina que o beta oferece e qual delas o SDK usa por padrão.
+---
+
+Um template é a imagem de onde a máquina nasce. O beta oferece:
+
+| Template | Para quê |
+| --- | --- |
+| `desktop` | Desktop Linux com Chromium que você abre numa aba, mais um terminal. |
+| `corvo-computer` | O desktop feito para agentes que usam a tela (computer use). |
+| `seed` | Somente terminal, com root e sem tela. É o que liga mais rápido. |
+
+O Painel mostra o que cada deploy oferece, na ordem em que aparecem.
+
+## Qual o SDK usa
+
+`Sandbox.create()` sem template, ou com o `base` do SDK, cria a **primeira** da lista do deploy. No beta, a primeira é a `desktop`.
+
+Para escolher outra, passe o nome do template. Um nome fora da lista dá erro 400 com a lista do que está disponível.
+
+```python
+sandbox = Sandbox.create("corvo-computer")
+```
+
+Você não cria templates próprios por enquanto. A API de templates da E2B não está disponível (veja [Compatibilidade](/reference/compat/)).

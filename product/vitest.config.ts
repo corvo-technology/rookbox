@@ -7,6 +7,7 @@ export default defineConfig({
       "packages/*/src/**/*.test.{ts,tsx}",
       "apps/web/src/**/*.test.{ts,tsx}",
       "apps/www/src/**/*.test.ts",
+      "apps/docs/src/**/*.test.ts",
       "apps/api/src/**/*.test.ts",
       "apps/reporter/src/**/*.test.ts",
       "apps/cli/src/**/*.test.ts",

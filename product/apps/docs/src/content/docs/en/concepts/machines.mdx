@@ -1,0 +1,30 @@
+---
+title: Machines
+description: What a Rookbox machine is, how long it takes to start and what it has.
+---
+
+A machine is your own Linux computer in the cloud. It runs in a microVM with its own kernel, not in a shared container.
+
+| | |
+| --- | --- |
+| Start | about 2 s |
+| Resume from suspended | about 1 s |
+| Size through the E2B SDK | 2 vCPU, 2 GiB RAM, 10 GiB disk |
+| Access | root |
+| Internet | open (see [Security](/en/security/)) |
+
+You create and control machines three ways:
+
+```python
+from e2b import Sandbox
+
+sandbox = Sandbox.create()  # E2B SDK
+```
+
+```sh
+rookbox new                 # CLI
+```
+
+Or from the [Dashboard](https://app.rookbox.run), under **Machines**.
+
+E2B calls a machine a sandbox. In Rookbox they are the same thing, and `sandbox_id` is the machine id.

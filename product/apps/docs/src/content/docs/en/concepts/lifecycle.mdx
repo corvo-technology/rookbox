@@ -1,0 +1,43 @@
+---
+title: Lifecycle
+description: Create, suspend, resume, fork and remove. How the timeout and auto-suspend work.
+---
+
+```text
+create -> running -> suspended -> running -> ... -> removed
+```
+
+| Action | What happens | E2B SDK | CLI |
+| --- | --- | --- | --- |
+| Create | Starts a new machine. | `Sandbox.create()` | `rookbox new` |
+| Suspend | Saves memory and state and releases resources. | `beta_pause()` | `rookbox pause` |
+| Resume | Comes back exactly where it stopped. | `Sandbox.connect(id)` | `rookbox resume` |
+| Remove | Deletes the machine and its disk. | `kill()` | `rookbox kill` |
+| Fork | Copies the disk, not memory. | Dashboard only | |
+
+In the E2B SDK, `pause` is Rookbox `suspend` and `resume` is `restore`. A suspended machine uses no CPU or memory.
+
+## Timeout
+
+Every machine created through the SDK has a timeout.
+
+```python
+sandbox = Sandbox.create(timeout=15 * 60)  # seconds
+sandbox.set_timeout(30 * 60)               # extend
+```
+
+```ts
+const sandbox = await Sandbox.create({ timeoutMs: 15 * 60_000 });
+await sandbox.setTimeout(30 * 60_000);
+```
+
+- Without `timeout`, the beta default applies: 30 minutes.
+- Minimum 60 s, maximum 24 h. Values outside that are adjusted.
+- When the timeout ends, the machine is **removed**. Auto-suspend is off unless you ask for it.
+- To ask for auto-suspend at the end of the timeout, use `Sandbox.beta_create(auto_pause=True)` in Python.
+
+If you do not need the state, let the timeout clean up. If you do, call `beta_pause()` before the timeout ends.
+
+## Fork
+
+The Dashboard has **Fork** on each machine. It creates a new machine from the original's disk. Memory does not come along: running processes do not continue. Fork is not available through the SDK.

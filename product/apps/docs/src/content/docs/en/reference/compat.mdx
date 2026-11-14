@@ -1,0 +1,36 @@
+---
+title: E2B compatibility
+description: What of the E2B SDK works on Rookbox and what does not.
+---
+
+Rookbox implements the E2B control plane. You use the SDK unmodified, with `E2B_API_KEY` and `E2B_API_URL`.
+
+## Works
+
+| Feature | Note |
+| --- | --- |
+| Create | `Sandbox.create()`. The SDK's `base` template becomes the first in the deployment's list. |
+| List | Only your machines, running and suspended. Paginated. |
+| Get and connect | `Sandbox.connect(id)`. Resumes a suspended machine. |
+| Suspend and resume | `beta_pause()` and `connect`. Memory is kept. |
+| Timeout | `set_timeout`, 24 h at most. |
+| Remove | `kill()`. |
+| Commands | `commands.run`, in the foreground or background. |
+| Files | `files.read`, `files.write` and the rest of the files API. |
+| Ports | `get_host(port)`, with the traffic token. See [Ports and URLs](/en/concepts/ports/). |
+| Metadata | Your key/value pairs. Keys starting with `rookbox.` are dropped. |
+
+## Does not work
+
+| Feature | What happens |
+| --- | --- |
+| Metrics | A 501 answer. |
+| Templates API (`Template.build` and friends) | Does not exist. Only Rookbox's templates. |
+| Volumes | Do not exist. |
+| Fork through the SDK | Does not exist. The Dashboard has Fork, which copies the disk. |
+| Choosing the size | Always 2 vCPU, 2 GiB RAM and 10 GiB disk. |
+| Timeouts over 24 h | The timeout is capped at 24 h. |
+
+## Tip
+
+Routes and features not on the list answer 404 or an error. If something in the SDK fails in a way you do not understand, see [Errors](/en/reference/errors/).

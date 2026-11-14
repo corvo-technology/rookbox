@@ -1,0 +1,41 @@
+---
+title: Limites
+description: Máquinas por conta, capacidade do beta e limite de requisições. O que significa cada erro e o que fazer.
+---
+
+Os valores abaixo são os do beta e podem mudar.
+
+## Máquinas por conta
+
+Cada conta pode ter até **3 máquinas** ao mesmo tempo. Ao passar disso, a criação falha com **429** e a mensagem `The machine limit for this account is reached.`
+
+```python
+from e2b import Sandbox
+
+for item in Sandbox.list().next_items():
+    print(item.sandbox_id, item.state)
+```
+
+O que fazer: remova as que você não usa (`kill()` ou `rookbox kill`).
+
+## Capacidade do beta
+
+O beta tem um teto de máquinas rodando ao mesmo tempo, somando todas as contas. No teto, criar e retomar uma máquina suspensa falham com **503** e `The beta is full right now, try again later.`
+
+O que fazer: tente de novo em alguns minutos. Se a máquina estava suspensa, ela continua suspensa e o estado dela não se perde.
+
+## Limite de requisições
+
+Cada tipo de chamada tem um limite por conta e por endereço IP. Ao estourar, a resposta é **429** com o header `Retry-After`, em segundos.
+
+| Chamada | Limite por conta |
+| --- | --- |
+| Criar máquina | 20 por hora |
+| Suspender e retomar | 60 em 10 minutos |
+| Remover | 40 em 10 minutos |
+| Listar e consultar | 300 por minuto |
+| Criar chave de API | 10 por hora |
+
+O que fazer: espere o tempo de `Retry-After` e tente de novo. Não crie máquinas em laço sem reaproveitar: use uma máquina por tarefa e remova no fim.
+
+Uma chave errada também conta contra o limite do seu IP. Veja [Erros](/reference/errors/).

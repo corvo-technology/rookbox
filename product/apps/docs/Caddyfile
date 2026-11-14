@@ -1,0 +1,29 @@
+{
+	# TLS is terminated in front of this container.
+	auto_https off
+	admin off
+}
+
+:80 {
+	root * /srv
+	encode zstd gzip
+
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		X-Frame-Options DENY
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+	}
+	# Hashed assets never change; the search index is rebuilt on each deploy.
+	@hashed path /_astro/* /fonts/*
+	header @hashed Cache-Control "public, max-age=31536000, immutable"
+	@pages not path /_astro/* /fonts/*
+	header @pages Cache-Control "public, max-age=300"
+
+	# Unknown paths get the 404 page; /en and /en/quickstart resolve to their index.html.
+	handle_errors {
+		rewrite * /404.html
+		file_server
+	}
+	file_server
+}
