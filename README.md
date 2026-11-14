@@ -2,29 +2,29 @@
 
 [![Product CI](https://github.com/corvo-technology/rookbox/actions/workflows/product-ci.yml/badge.svg)](https://github.com/corvo-technology/rookbox/actions/workflows/product-ci.yml)
 
-**English:** see [README.en.md](README.en.md).
+**English | [Português](README.pt-BR.md)**
 
-Rookbox entrega computadores Linux completos, sob demanda, para agentes de IA. Cada máquina é uma
-microVM Firecracker isolada: nasce em cerca de 2 segundos, pode ser suspensa e restaurada com a
-memória intacta, e fala o protocolo do SDK da E2B. Se o seu agente já usa o SDK, basta trocar duas
-variáveis de ambiente.
+Rookbox gives AI agents full Linux computers on demand. Each machine is an isolated Firecracker
+microVM: it starts in about 2 seconds, can be suspended and restored with its memory intact, and
+speaks the E2B SDK protocol. If your agent already uses the SDK, you only change two environment
+variables.
 
 - Site: <https://rookbox.run>
-- Documentação: <https://docs.rookbox.run>
-- Painel: <https://app.rookbox.run>
+- Docs: <https://docs.rookbox.run>
+- Dashboard: <https://app.rookbox.run>
 
-## O que você ganha
+## What you get
 
-- **Máquinas em ~2 s.** Criação rápida a partir de templates (`desktop`, `seed`, ...).
-- **Suspender e retomar.** A máquina ociosa é suspensa e volta de onde parou.
-- **Compatível com o SDK da E2B.** `Sandbox.create()`, comandos, arquivos e portas, sem reimplementar nada.
-- **Desktop.** Uma área de trabalho completa no navegador, para agentes que usam a interface gráfica.
-- **CLI.** `rookbox new`, `rookbox shell`, e o resto no terminal.
-- **Painel.** Máquinas, chaves de API e uso.
+- **Machines in ~2 s.** Fast creation from templates (`desktop`, `seed`, ...).
+- **Suspend and resume.** An idle machine suspends and comes back where it left off.
+- **E2B SDK compatible.** `Sandbox.create()`, commands, files and ports, nothing reimplemented.
+- **Desktop.** A full desktop in the browser for agents that drive a GUI.
+- **CLI.** `rookbox new`, `rookbox shell` and the rest from your terminal.
+- **Dashboard.** Machines, API keys and usage.
 
-## Comece em 60 segundos
+## 60-second quickstart
 
-Crie uma chave de API no painel e exporte duas variáveis:
+Create an API key in the dashboard and export two variables:
 
 ```sh
 export E2B_API_KEY=rbx_...
@@ -51,121 +51,120 @@ console.log((await sbx.commands.run("uname -a")).stdout);
 await sbx.kill();
 ```
 
-Ou pela linha de comando (macOS e Linux):
+Or from the command line (macOS and Linux):
 
 ```sh
 curl -fsSL https://rookbox.run/install | sh
-rookbox login        # pede a chave de API, valida e salva
-rookbox new          # cria uma máquina e imprime o id
-rookbox shell <id>   # terminal dentro dela
+rookbox login        # asks for the API key, checks it, saves it
+rookbox new          # creates a machine and prints its id
+rookbox shell <id>   # a terminal inside it
 ```
 
-## Arquitetura
+## Architecture
 
 ```mermaid
 flowchart LR
-  A["SDK E2B / CLI / painel"] --> B["API do produto<br/>product/apps/api"]
-  B --> C["Motor de sandbox<br/>(API compatível com E2B)"]
-  C --> D["microVMs Firecracker"]
-  R["Reporter de uso<br/>product/apps/reporter"] --> B
-  R -. lista máquinas .-> C
+  A["E2B SDK / CLI / dashboard"] --> B["Product API<br/>product/apps/api"]
+  B --> C["Sandbox engine<br/>(E2B-compatible API)"]
+  C --> D["Firecracker microVMs"]
+  R["Usage reporter<br/>product/apps/reporter"] --> B
+  R -. lists machines .-> C
   B --> P[("Postgres")]
 ```
 
-A API do produto cuida de contas, chaves, limites e uso, e repassa as operações de máquina ao
-motor de sandbox. O reporter roda ao lado do motor e envia eventos de uso à API.
+The product API handles accounts, keys, limits and usage, and forwards machine operations to the
+sandbox engine. The reporter runs next to the engine and ships usage events to the API.
 
-## Mapa do repositório
+## Repository map
 
-**Produto** (`product/`, workspace pnpm + Turborepo):
+**Product** (`product/`, a pnpm + Turborepo workspace):
 
-| Caminho | O que é |
+| Path | What it is |
 | --- | --- |
-| `product/apps/api` | API do produto: Hono, oRPC, Prisma + Postgres, better-auth. |
-| `product/apps/web` | Painel: Vite, React. Máquinas, chaves e uso. |
-| `product/apps/www` | Site (Astro) em pt-BR, inglês e espanhol, com lista de espera. |
-| `product/apps/docs` | Site de documentação (Astro Starlight), pt-BR e inglês. |
-| `product/apps/reporter` | Medição de uso, roda ao lado do motor. |
-| `product/apps/cli` | Linha de comando `rookbox`. |
-| `product/packages/contracts` | Contrato oRPC e regras do ciclo de vida das máquinas. |
-| `product/packages/ui-tokens`, `ui-web` | Tokens de design e componentes de interface. |
+| `product/apps/api` | Product API: Hono, oRPC, Prisma + Postgres, better-auth. |
+| `product/apps/web` | Dashboard: Vite, React. Machines, keys and usage. |
+| `product/apps/www` | Landing site (Astro) in Portuguese, English and Spanish, with a waitlist. |
+| `product/apps/docs` | Docs site (Astro Starlight), Portuguese and English. |
+| `product/apps/reporter` | Usage metering, runs next to the engine. |
+| `product/apps/cli` | The `rookbox` command line tool. |
+| `product/packages/contracts` | The oRPC contract and the machine lifecycle rules. |
+| `product/packages/ui-tokens`, `ui-web` | Design tokens and UI components. |
 
-**Motor de sandbox** (Rust, microVMs Firecracker, na raiz):
+**Sandbox engine** (Rust, Firecracker microVMs, at the repository root):
 
-| Caminho | O que é |
+| Path | What it is |
 | --- | --- |
-| `crates/` | Serviços e bibliotecas Rust do motor |
-| `proto/` | Definições gRPC |
-| `db/` | Esquemas e migrações |
-| `shim/` | Shim em Go |
-| `templates/` | Templates de máquina |
-| `docker/` | Imagens e contextos de build |
-| `infra/` | Implantação e infraestrutura |
-| `scripts/`, `ci/` | Scripts e ferramentas de build e teste |
-| `ui/` | Interface administrativa do motor |
-| `docs/` | Documentação do motor (comece por `docs/architecture.md`) |
-| `space_smoke/` | Testes de fumaça (Python) |
-| `fuzz/`, `supply-chain/`, `examples/` | Fuzzing, auditoria de dependências e exemplos |
+| `crates/` | The engine's Rust services and libraries |
+| `proto/` | gRPC definitions |
+| `db/` | Schemas and migrations |
+| `shim/` | Go shim |
+| `templates/` | Machine templates |
+| `docker/` | Images and build contexts |
+| `infra/` | Deployment and infrastructure |
+| `scripts/`, `ci/` | Build and test scripts and tooling |
+| `ui/` | The engine's admin interface |
+| `docs/` | Engine documentation (start with `docs/architecture.md`) |
+| `space_smoke/` | Smoke tests (Python) |
+| `fuzz/`, `supply-chain/`, `examples/` | Fuzzing, dependency audit and examples |
 
-## Desenvolvimento local
+## Local development
 
-Requer Node 22.12+ e pnpm 9 (`corepack enable`).
+Needs Node 22.12+ and pnpm 9 (`corepack enable`).
 
 ```sh
 cd product
 pnpm install
-pnpm dev                          # site e painel juntos
+pnpm dev                          # site and dashboard together
 pnpm --filter @rookbox/www dev    # http://127.0.0.1:4321
 pnpm --filter @rookbox/web dev    # http://127.0.0.1:5173
-pnpm --filter @rookbox/docs dev   # site de documentação
+pnpm --filter @rookbox/docs dev   # docs site
 ```
 
-**Modo demo:** sem `VITE_API_URL`, o painel roda sobre uma API falsa em memória, sem login e sem
-backend. Para usar a API real (precisa de Postgres e de um motor), copie
-`product/apps/api/.env.example` para `.env` e rode:
+**Demo mode:** without `VITE_API_URL` the dashboard runs on an in-memory fake API, with no login
+and no backend. To use the real API (needs Postgres and an engine), copy
+`product/apps/api/.env.example` to `.env` and run:
 
 ```sh
 pnpm --filter @rookbox/api dev
 VITE_API_URL=http://127.0.0.1:3000 pnpm --filter @rookbox/web dev
 ```
 
-Verificações (as mesmas do CI):
+Checks (the same as CI):
 
 ```sh
 cd product
-pnpm lint check test build    # pnpm format corrige o estilo
+pnpm lint check test build    # pnpm format fixes style
 ```
 
-Para compilar e testar o motor, leia `docs/development-overview.md`.
+To build and test the engine, read `docs/development-overview.md`.
 
 ## Deploy
 
-Cada serviço é uma imagem Docker de `product/` (`apps/<app>/Dockerfile`). Passo a passo,
-variáveis de ambiente e DNS em [`product/DEPLOY.md`](product/DEPLOY.md).
+Each service is a Docker image built from `product/` (`apps/<app>/Dockerfile`). Steps,
+environment variables and DNS are in [`product/DEPLOY.md`](product/DEPLOY.md).
 
-| Serviço | Onde roda |
+| Service | Where it runs |
 | --- | --- |
-| API e Postgres | Guará Cloud |
-| Painel, site e documentação | VPS (Caddy) |
-| Reporter | Ao lado do motor de sandbox |
+| API and Postgres | Guará Cloud |
+| Dashboard, landing and docs | A VPS (Caddy) |
+| Reporter | Next to the sandbox engine |
 
-## Convenções do repositório
+## Repository conventions
 
-- Pull requests a partir de `main`; veja [CONTRIBUTING.md](CONTRIBUTING.md).
-- O workflow `Product CI` roda lint, check, test e build de `product/` em cada PR.
-- Varredura de segredos com gitleaks (`pre-commit install`). Nunca commite `.env`.
+- Pull requests branch off `main`; see [CONTRIBUTING.md](CONTRIBUTING.md).
+- The `Product CI` workflow runs lint, check, test and build for `product/` on every PR.
+- Secret scanning with gitleaks (`pre-commit install`). Never commit `.env`.
 
 ## Beta
 
-A Rookbox está em beta fechado. Entre na lista de espera em <https://rookbox.run>; os convites
-saem por e-mail.
+Rookbox is in closed beta. Join the waitlist at <https://rookbox.run>; invites go out by email.
 
-## Segurança
+## Security
 
-Reporte vulnerabilidades em particular; veja [SECURITY.md](SECURITY.md).
+Report vulnerabilities privately; see [SECURITY.md](SECURITY.md).
 
-## Licença
+## License
 
-O código próprio da Rookbox é proprietário, todos os direitos reservados
-(TODO(owner): confirmar a licença). O arquivo [LICENSE](LICENSE) (Apache-2.0) na raiz é mantido
-porque o motor de sandbox e o histórico do Git contêm código sob essa licença.
+Rookbox's own code is proprietary, all rights reserved (TODO(owner): confirm the license). The
+Apache-2.0 [LICENSE](LICENSE) file at the root is kept because the sandbox engine and the Git
+history contain code under that license.
