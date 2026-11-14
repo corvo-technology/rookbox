@@ -78,8 +78,7 @@
 
     <div class="term">
       <div class="bar"><i></i><i></i><i></i><span>{{terminalLabel}}</span></div>
-      <div class="l">sbx = Sandbox.create(</div>
-      <div class="l">    template="seed")</div>
+      <div class="l">sbx = Sandbox.create()</div>
       <div class="l m"># {{ready}}</div>
       <div class="l">sbx.get_host(3000)</div>
       <div class="l o">3000-&lt;id&gt;.{{domain}}</div>

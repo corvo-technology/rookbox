@@ -1,20 +1,18 @@
 ---
 import type { Copy } from "../i18n/copy";
 import type { Locale } from "../i18n/locales";
-import { DASHBOARD_URL, WAITLIST_URL } from "../site";
+import { WAITLIST_URL } from "../site";
 
 type Props = {
   copy: Copy["waitlist"];
   locale: Locale;
   /** Makes the field ids unique when the form appears twice. */
   id: string;
-  /** `dark` for the dark call-to-action band. */
+  /** `dark` on the near-black hero. */
   tone?: "light" | "dark";
 };
 
 const { copy, locale, id, tone = "light" } = Astro.props;
-// Stable English values go to the API; only the labels change with the language.
-const VALUES = ["browser or computer use", "code execution", "long-running background agents", "parallel experiments"];
 ---
 
 <div class={`wl wl--${tone}`} data-waitlist-root>
@@ -25,7 +23,6 @@ const VALUES = ["browser or computer use", "code execution", "long-running backg
     data-waitlist={WAITLIST_URL}
     data-locale={locale}
     data-sending={copy.sending}
-    data-ok-body={copy.okBody}
     data-error-invalid={copy.errorInvalid}
     data-error-rate={copy.errorRate}
     data-error-generic={copy.errorGeneric}
@@ -49,36 +46,10 @@ const VALUES = ["browser or computer use", "code execution", "long-running backg
       />
       <button class="btn wl__submit" type="submit" data-submit>{copy.submit}</button>
     </div>
-    <fieldset class="wl__opts">
-      <legend class="wl__legend">
-        {copy.optionsLegend} <span class="wl__optional">{copy.optionsOptional}</span>
-      </legend>
-      <div class="wl__chips">
-        {
-          copy.options.map((label, i) => (
-            <label class="wl__chip">
-              <input type="checkbox" name="use" value={VALUES[i]} />
-              <span>{label}</span>
-            </label>
-          ))
-        }
-      </div>
-    </fieldset>
     <div class="wl__hp" aria-hidden="true">
       <label>Website <input type="text" name="website" tabindex="-1" autocomplete="off" /></label>
     </div>
     <p class="wl__error" id={`${id}-status`} role="alert" data-error hidden></p>
-    <p class="wl__fine">{copy.fine}</p>
   </form>
-  <div class="wl__done" data-done tabindex="-1" hidden>
-    <p class="wl__done-title">{copy.okTitle}</p>
-    <p class="wl__done-body" data-done-body></p>
-  </div>
-  {
-    tone === "light" && (
-      <a class="wl__login" href={DASHBOARD_URL}>
-        {copy.haveAccount}
-      </a>
-    )
-  }
+  <p class="wl__done" data-done tabindex="-1" hidden>{copy.ok}</p>
 </div>

@@ -21,6 +21,8 @@ export interface WaitlistStore {
     note: string | null;
     locale: WaitlistLocale;
   }): Promise<"created" | "exists">;
+  /** Sets the note only if the entry has none yet. A later note never overwrites an earlier one. */
+  setNoteOnce(email: string, note: string): Promise<void>;
   find(email: string): Promise<WaitlistRecord | null>;
   list(): Promise<WaitlistRecord[]>;
   markInvited(email: string, at: Date): Promise<void>;
@@ -44,6 +46,9 @@ export function createPrismaWaitlistStore(db: Db): WaitlistStore {
       // The unique index decides a race between two joins of the same address.
       const result = await db.waitlistEntry.createMany({ data: [entry], skipDuplicates: true });
       return result.count === 1 ? "created" : "exists";
+    },
+    async setNoteOnce(email, note) {
+      await db.waitlistEntry.updateMany({ where: { email, note: null }, data: { note } });
     },
     async find(email) {
       const row = await db.waitlistEntry.findUnique({ where: { email } });
@@ -86,15 +91,20 @@ export function createWaitlist(deps: WaitlistDeps) {
 
   return {
     /**
-     * Records the entry and sends the confirmation. Joining twice is a no-op, and sends nothing
-     * the second time. A failed email never fails the signup.
+     * Records the entry and sends the confirmation. Joining twice sends nothing the second time and
+     * only fills in a note that is still empty. A failed email never fails the signup.
      */
     async join(input: { email: string; note?: string; locale?: WaitlistLocale }) {
       const address = normalize(input.email);
       const locale = input.locale ?? "en";
       const note = input.note?.trim() ? input.note.trim() : null;
       const outcome = await store.insert({ email: address, note, locale });
-      if (outcome === "exists") return { created: false as const };
+      if (outcome === "exists") {
+        // The landing asks what they will run after the signup, as a second post for the same
+        // address. It fills an empty note once and changes nothing else.
+        if (note) await store.setNoteOnce(address, note);
+        return { created: false as const };
+      }
       logger.info("waitlist joined", { locale });
       // Awaited so the answer reflects a settled send, but `send` never throws.
       await email.send(waitlistJoinedEmail({ to: address, locale, siteUrl: deps.siteUrl }));

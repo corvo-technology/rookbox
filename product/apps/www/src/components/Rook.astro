@@ -1,0 +1,79 @@
+---
+import type { Copy } from "../i18n/copy";
+
+type Props = { copy: Copy["visual"] };
+const { copy } = Astro.props;
+
+/**
+ * The Gate glyph from Logo.astro on a 16 x 20 pixel grid. `#` is a wall pixel, `o` is the doorway
+ * (dark until the page says "ready"). It is fully lit in the markup, so without JavaScript it is a
+ * finished, static picture; the script dims it, builds it from the foundation up and then lights
+ * it further as an address is typed (see scripts/page.ts).
+ */
+const GRID = [
+  "####..####..####",
+  "####..####..####",
+  "####..####..####",
+  "################",
+  "################",
+  "................",
+  "################",
+  "################",
+  "################",
+  "################",
+  "######oooo######",
+  "#####oooooo#####",
+  "#####oooooo#####",
+  "#####oooooo#####",
+  "#####oooooo#####",
+  "#####oooooo#####",
+  "#####oooooo#####",
+  "#####oooooo#####",
+  "#####oooooo#####",
+  "#####oooooo#####",
+];
+const ROWS = GRID.length;
+const COLS = GRID[0]!.length;
+
+type Cell = { x: number; y: number; door: boolean; order: number };
+const cells: Cell[] = [];
+GRID.forEach((row, y) => {
+  [...row].forEach((ch, x) => {
+    if (ch === ".") return;
+    // Build order: foundation first, each row from the middle outwards.
+    const order = (ROWS - 1 - y) * COLS + Math.abs(x - (COLS - 1) / 2) * 2;
+    cells.push({ x, y, door: ch === "o", order });
+  });
+});
+const ranked = cells.filter((cell) => !cell.door).sort((a, b) => a.order - b.order);
+const rank = new Map(ranked.map((cell, i) => [cell, i]));
+---
+
+<figure class="rook" data-rook data-booting={copy.booting} data-waiting={copy.waiting} data-ready={copy.ready}>
+  <script is:inline>
+    document.currentScript.parentElement.setAttribute("data-js", "");
+  </script>
+  <svg
+    class="rook__svg"
+    viewBox={`0 0 ${COLS} ${ROWS}`}
+    role="img"
+    aria-label={copy.label}
+    shape-rendering="crispEdges"
+  >
+    {
+      cells.map((cell) => (
+        <rect
+          class={cell.door ? "px px--door" : "px"}
+          x={cell.x + 0.06}
+          y={cell.y + 0.06}
+          width="0.88"
+          height="0.88"
+          data-o={cell.door ? undefined : rank.get(cell)}
+        />
+      ))
+    }
+  </svg>
+  <figcaption class="rook__state mono" aria-live="polite">
+    <span class="rook__dot" aria-hidden="true"></span><span data-rook-state>{copy.waiting}</span>
+  </figcaption>
+</figure>

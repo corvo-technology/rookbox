@@ -1,46 +1,43 @@
 import type { Copy } from "./types";
 
+// TODO(content): the quickstart (install, env vars, first machine, first command, open a port) was
+// removed from the landing and is meant to live in the docs. Decide the docs URL, then link it from
+// the header. The old component is in git history (apps/www/src/components/Quickstart.tsx).
+
 export const pt: Copy = {
   meta: {
     title: "Rookbox: um computador para cada agente",
     description:
-      "Máquinas Linux sob demanda para agentes de IA. Cada uma é uma microVM Firecracker com kernel próprio, inicia em cerca de 2 segundos e funciona com o seu código do SDK da E2B.",
+      "Máquinas Linux sob demanda para agentes de IA, prontas em cerca de 2 segundos. Use o SDK da E2B que você já conhece.",
     skipToContent: "Pular para o conteúdo",
     ogAlt: "Rookbox: um computador para cada agente",
   },
   nav: {
     primary: "Principal",
     home: "Início do Rookbox",
-    menu: "Menu",
-    product: "Produto",
-    desktop: "Desktop",
-    lifecycle: "Ciclo de vida",
-    e2b: "Compatível com E2B",
-    quickstart: "Primeiros passos",
-    dashboard: "Abrir o painel",
+    languages: "Idiomas",
+    demo: "Demo",
+    e2b: "E2B",
+    pix: "Pix",
+    join: "Entrar na lista",
+    signIn: "Entrar",
   },
   hero: {
-    title: "Dê a cada agente o próprio computador.",
-    lead: "O Rookbox dá aos seus agentes máquinas Linux sob demanda. Cada uma é uma microVM Firecracker com kernel próprio e funciona com o SDK da E2B que você talvez já use.",
-    facts: ["Kernel próprio", "Inicia em cerca de 2 s", "Retoma em cerca de 1 s"],
+    title: "Um computador para cada agente.",
+    lead: "Máquinas Linux sob demanda, prontas em cerca de 2 segundos. Use o SDK da E2B que você já conhece.",
   },
   visual: {
-    label: "Sessão de exemplo: o SDK da E2B apontado para o Rookbox",
-    caption: "O SDK da E2B apontado para o Rookbox. A saída está simplificada.",
+    label: "Um castelo em pixels que se acende conforme você digita o e-mail",
+    booting: "iniciando",
+    waiting: "aguardando seu e-mail",
+    ready: "pronto",
   },
   demo: {
-    title: "Criar, executar, expor, suspender, retomar.",
-    lead: "Poucas chamadas cobrem a maior parte do dia de um agente. Escolha a linguagem e veja uma sessão.",
+    title: "Crie, execute, suspenda, retome.",
     languageLabel: "Linguagem",
     terminalLabel: "Sessão de exemplo",
-    steps: [
-      { label: "Criar", note: "Uma microVM com kernel próprio, pronta em cerca de 2 s" },
-      { label: "Executar", note: "Rode um comando lá dentro" },
-      { label: "Expor uma porta", note: "Uma URL pública para a porta" },
-      { label: "Suspender", note: "Mantém a memória, libera o processamento" },
-      { label: "Retomar", note: "De volta de onde parou em cerca de 1 s" },
-    ],
-    note: "Uma ilustração do SDK da E2B apontado para o Rookbox. A saída está simplificada.",
+    steps: ["Criar", "Executar", "Expor uma porta", "Suspender", "Retomar"],
+    facts: ["Kernel próprio", "~2 s para iniciar", "~1 s para retomar"],
     session: {
       ready: "pronta em cerca de 2 s",
       pause: "pause da E2B = suspender",
@@ -48,176 +45,33 @@ export const pt: Copy = {
       resumed: "retomada em cerca de 1 s",
     },
   },
-  desktop: {
-    title: "Quando o agente precisa ver uma tela, ele tem uma.",
-    lead: "Cada máquina pode rodar um desktop Linux completo com Chromium. Acompanhe ao vivo no navegador por VNC ou deixe o agente controlá-lo.",
-    points: [
-      "Chromium instalado e pronto",
-      "Visível no seu navegador por VNC",
-      "A mesma máquina do terminal e dos arquivos",
-    ],
-  },
-  features: {
-    title: "Uma máquina de verdade, não um contêiner compartilhado.",
-    lead: [
-      {
-        stat: "~2 s",
-        statLabel: "para iniciar",
-        title: "Kernel e raiz próprios",
-        body: "Cada máquina é uma microVM Firecracker. Seu agente pode instalar pacotes, rodar serviços e quebrar coisas sem afetar as vizinhas.",
-      },
-      {
-        stat: "~1 s",
-        statLabel: "para retomar",
-        title: "Suspender mantém a memória",
-        body: "Deixe a máquina em espera enquanto o agente aguarda. Ao retomar, a memória e os processos em execução voltam em cerca de um segundo.",
-      },
-    ],
-    items: [
-      {
-        title: "Fork de um ambiente pronto",
-        body: "Copie o disco para uma nova máquina e teste outra abordagem em paralelo. O fork copia o disco, não a memória.",
-      },
-      {
-        title: "Uma URL pública por porta",
-        body: "Exponha uma porta e acesse em `<porta>-<id-da-sandbox>.box.rookbox.run`. Visualize um servidor de desenvolvimento ou compartilhe um link.",
-      },
-      {
-        title: "Comandos e arquivos",
-        body: "Execute comandos, acompanhe a saída, leia e grave arquivos. São as mesmas chamadas que o seu código E2B já faz.",
-      },
-      {
-        title: "Tamanho por máquina",
-        body: "Escolha as vCPUs e a memória de cada máquina pelo SDK, para que uma tarefa pequena não precise de uma máquina grande.",
-      },
-    ],
-  },
-  lifecycle: {
-    title: "Quatro movimentos, todos medidos em segundos.",
-    lead: "Os tempos são típicos, não garantidos.",
-    cards: [
-      {
-        state: "Em execução",
-        value: "~2 s",
-        title: "Iniciar",
-        body: "Uma nova microVM a partir de um template: kernel e disco raiz próprios.",
-      },
-      {
-        state: "Suspensa",
-        value: "Memória mantida",
-        title: "Suspender",
-        body: "Grava a memória e o estado e libera o worker.",
-      },
-      {
-        state: "De volta em execução",
-        value: "~1 s",
-        title: "Retomar",
-        body: "Continue exatamente de onde o agente parou, com os processos.",
-      },
-      {
-        state: "Uma nova máquina",
-        value: "Só o disco",
-        title: "Fork",
-        body: "Copia o disco para uma máquina irmã. A memória não é copiada.",
-      },
-    ],
-  },
-  usecases: {
-    title: "Feito para trabalhos que pedem um computador de verdade.",
-    items: [
-      {
-        title: "Navegação e uso do computador",
-        body: "Dê ao agente um desktop com Chromium para abrir páginas, preencher formulários e usar apps feitos para pessoas.",
-      },
-      {
-        title: "Execução de código",
-        body: "Rode o código escrito pelo modelo em uma máquina descartável, com kernel e arquivos próprios.",
-      },
-      {
-        title: "Agentes de longa duração em segundo plano",
-        body: "Deixe um agente trabalhar por horas, suspenda-o enquanto ele espera e retome em cerca de um segundo.",
-      },
-      {
-        title: "Experimentos em paralelo",
-        body: "Faça o fork de um disco preparado em várias máquinas e teste abordagens diferentes lado a lado.",
-      },
-    ],
-  },
   e2b: {
-    eyebrow: "Compatível com E2B",
-    title: "Já usa a E2B? Mude uma linha.",
-    lead: "O Rookbox fala o protocolo da E2B. Se você já usa o SDK da E2B, aponte-o para o Rookbox e o seu código continua funcionando.",
+    title: "Já usa a E2B? Troque duas variáveis.",
     languageLabel: "Linguagem",
     before: "Antes",
     after: "Com o Rookbox",
-    envLine: "Prefere variáveis de ambiente? Defina `E2B_DOMAIN` e `E2B_API_KEY`.",
-    keyLine: "Chave de API:",
-    keyLink: "entre na lista de espera",
+    code: "O seu código continua igual",
   },
-  quickstart: {
-    eyebrow: "Primeiros passos",
-    title: "Do zero a uma máquina rodando em cinco passos.",
-    lead: "Você precisa do SDK da E2B para Python ou TypeScript e de uma chave de API.",
-    languageLabel: "Linguagem",
-    steps: [
-      { title: "Instale o SDK", body: "O Rookbox usa o SDK da E2B. Instale-o na sua linguagem." },
-      {
-        title: "Defina o domínio e a chave",
-        body: "Aponte o SDK para o Rookbox e informe a sua chave de API.",
-      },
-      { title: "Crie uma máquina", body: "Uma nova máquina inicia em cerca de 2 segundos." },
-      {
-        title: "Execute um comando",
-        body: "O comando roda dentro da máquina e devolve a saída.",
-      },
-      {
-        title: "Abra uma porta",
-        body: "Inicie um servidor, peça a URL pública dele e abra no navegador.",
-      },
-    ],
-    keyLine: "Ainda sem chave?",
-    keyLink: "Entre na lista de espera",
-    note: "Nomes e saídas são ilustrativos.",
+  brazil: {
+    // TODO(content): confirm before launch: the legal entity that bills in BRL and issues the nota
+    // fiscal, and whether Pix is the only BRL method at launch.
+    // TODO(content): the IOF wording ("sem cartão internacional" is all we claim). Confirm with an
+    // accountant before ever stating that IOF does not apply.
+    // TODO(content): the Portuguese support channel and hours, before promising it publicly.
+    title: "Pague em reais. Com Pix.",
+    lead: "Cobrança por segundo, em reais, sem cartão internacional. Suporte em português.",
+    badge: "Pix",
   },
-  cta: {
-    eyebrow: "Acesso antecipado",
-    title: "Peça uma vaga no próximo lote.",
-    lead: "O Rookbox está só por convite por enquanto. Liberamos o acesso em lotes pequenos para que as máquinas continuem rápidas. Deixe seu email e escrevemos quando o seu convite estiver pronto.",
-    priceNote: "Cobrança por segundo. Os preços ainda não foram publicados.",
-  },
+  cta: { title: "Entre na lista." },
   waitlist: {
-    label: "Endereço de email",
+    label: "Endereço de e-mail",
     placeholder: "voce@empresa.com",
     submit: "Entrar na lista",
     sending: "Enviando",
-    optionsLegend: "O que você vai rodar?",
-    optionsOptional: "Opcional",
-    options: [
-      "Navegador ou uso do computador",
-      "Execução de código",
-      "Agentes de longa duração em segundo plano",
-      "Experimentos em paralelo",
-    ],
-    fine: "Só por convite, em lotes pequenos. Usamos seu email apenas para enviar o convite.",
-    okTitle: "Você está na lista.",
-    okBody:
-      "Enviamos uma confirmação para {email}. Quando abrir uma vaga, você recebe um email de convite com o seu acesso.",
-    errorInvalid: "Isso não parece um endereço de email. Confira e tente de novo.",
+    ok: "Você está na lista. Avisamos por e-mail.",
+    errorInvalid: "Isso não parece um e-mail. Confira e tente de novo.",
     errorRate: "Tentativas demais desta conexão. Tente de novo em alguns minutos.",
-    errorGeneric: "Não conseguimos falar com o servidor. Seu email não foi salvo. Tente de novo.",
-    haveAccount: "Já tenho conta",
+    errorGeneric: "Não conseguimos falar com o servidor. Seu e-mail não foi salvo. Tente de novo.",
   },
-  footer: {
-    languages: "Idiomas",
-    nav: "Site",
-    tagline: "Máquinas para agentes de IA.",
-    product: "Produto",
-    howItWorks: "Como funciona",
-    desktop: "Desktop",
-    lifecycle: "Ciclo de vida",
-    dashboard: "Painel",
-    developers: "Desenvolvedores",
-    quickstart: "Primeiros passos",
-    e2b: "Compatível com E2B",
-  },
+  footer: { tagline: "Máquinas para agentes de IA." },
 };

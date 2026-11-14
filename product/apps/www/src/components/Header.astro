@@ -1,57 +1,47 @@
 ---
 import type { Copy } from "../i18n/copy";
+import type { Locale } from "../i18n/locales";
+import { LOCALE_HREFLANG, LOCALES, localeHomePath } from "../i18n/locales";
 import { DASHBOARD_URL } from "../site";
 import Logo from "./Logo.astro";
 
 type Props = {
   copy: Copy["nav"];
-  homeHref: string;
+  locale: Locale;
 };
 
-const { copy, homeHref } = Astro.props;
+const { copy, locale } = Astro.props;
 
 const NAV_LINKS = [
-  { href: "#how", label: copy.product },
-  { href: "#desktop", label: copy.desktop },
-  { href: "#lifecycle", label: copy.lifecycle },
+  { href: "#demo", label: copy.demo },
   { href: "#e2b", label: copy.e2b },
-  { href: "#start", label: copy.quickstart },
+  { href: "#pix", label: copy.pix },
 ];
 ---
 
 <header class="nav" data-nav>
   <div class="wrap nav__row">
-    <Logo href={homeHref} label={copy.home} />
+    <Logo href={localeHomePath(locale)} label={copy.home} />
     <nav class="nav__links" aria-label={copy.primary}>
       {NAV_LINKS.map((link) => <a href={link.href}>{link.label}</a>)}
     </nav>
     <div class="nav__actions">
-      <a class="btn btn--pri" href={DASHBOARD_URL}>{copy.dashboard}</a>
-      <details class="site-menu" data-site-menu>
-        <summary class="site-menu__toggle" aria-label={copy.menu}>
-          <svg class="mi mi--open" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7h14M3 13h14"></path></svg>
-          <svg class="mi mi--close" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15"></path></svg>
-        </summary>
-        <nav class="site-menu__panel" aria-label={copy.primary}>
-          {NAV_LINKS.map((link) => <a href={link.href}>{link.label}</a>)}
-          <a class="site-menu__cta" href={DASHBOARD_URL}>{copy.dashboard}</a>
-        </nav>
-      </details>
+      <nav class="langs" aria-label={copy.languages} data-langs>
+        {
+          LOCALES.map((item) => (
+            <a
+              href={localeHomePath(item)}
+              hreflang={LOCALE_HREFLANG[item]}
+              lang={item}
+              aria-current={item === locale ? "page" : undefined}
+            >
+              {item.toUpperCase()}
+            </a>
+          ))
+        }
+      </nav>
+      <a class="nav__signin" href={DASHBOARD_URL}>{copy.signIn}</a>
+      <a class="btn btn--accent nav__join" href="#waitlist" data-join>{copy.join}</a>
     </div>
   </div>
 </header>
-
-<script>
-  const menu = document.querySelector<HTMLDetailsElement>("[data-site-menu]");
-  if (menu) {
-    menu.addEventListener("click", (event) => {
-      if ((event.target as HTMLElement).closest("a")) menu.open = false;
-    });
-    document.addEventListener("click", (event) => {
-      if (menu.open && !menu.contains(event.target as Node)) menu.open = false;
-    });
-    document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") menu.open = false;
-    });
-  }
-</script>

@@ -1,46 +1,42 @@
 import type { Copy } from "./types";
 
+// TODO(content): the quickstart was removed from the landing and is meant to live in the docs.
+// Decide the docs URL, then link it from the header. The old component is in git history.
+
 export const en: Copy = {
   meta: {
     title: "Rookbox: a computer for every agent",
     description:
-      "On-demand Linux machines for AI agents. Each one is a Firecracker microVM with its own kernel, boots in about 2 seconds and works with your existing E2B SDK code.",
+      "On-demand Linux machines for AI agents, ready in about 2 seconds. Use the E2B SDK you already know.",
     skipToContent: "Skip to content",
     ogAlt: "Rookbox: a computer for every agent",
   },
   nav: {
     primary: "Main",
     home: "Rookbox home",
-    menu: "Menu",
-    product: "Product",
-    desktop: "Desktop",
-    lifecycle: "Lifecycle",
-    e2b: "E2B compatible",
-    quickstart: "Quickstart",
-    dashboard: "Open the dashboard",
+    languages: "Languages",
+    demo: "Demo",
+    e2b: "E2B",
+    pix: "Pix",
+    join: "Join the waitlist",
+    signIn: "Sign in",
   },
   hero: {
-    title: "Give every agent its own computer.",
-    lead: "Rookbox gives your agents on-demand Linux machines. Each one is a Firecracker microVM with its own kernel, and it works with the E2B SDK you may already use.",
-    facts: ["Its own kernel", "Boots in about 2 s", "Resumes in about 1 s"],
+    title: "A computer for every agent.",
+    lead: "On-demand Linux machines, ready in about 2 seconds. Use the E2B SDK you already know.",
   },
   visual: {
-    label: "Sample session: the E2B SDK pointed at Rookbox",
-    caption: "The E2B SDK pointed at Rookbox. Output is simplified.",
+    label: "A pixel castle that lights up as you type your email",
+    booting: "booting",
+    waiting: "waiting for your email",
+    ready: "ready",
   },
   demo: {
-    title: "Create, run, expose, suspend, resume.",
-    lead: "A few calls cover most of an agent's day. Pick your language and watch a session.",
+    title: "Create, run, suspend, resume.",
     languageLabel: "Language",
     terminalLabel: "Sample session",
-    steps: [
-      { label: "Create", note: "A microVM with its own kernel, ready in about 2 s" },
-      { label: "Run", note: "Run a command inside" },
-      { label: "Expose a port", note: "A public URL for a port" },
-      { label: "Suspend", note: "Keep memory, release compute" },
-      { label: "Resume", note: "Back where it left off in about 1 s" },
-    ],
-    note: "An illustration of the E2B SDK pointed at Rookbox. Output is simplified.",
+    steps: ["Create", "Run", "Expose a port", "Suspend", "Resume"],
+    facts: ["Its own kernel", "~2 s to start", "~1 s to resume"],
     session: {
       ready: "ready in about 2 s",
       pause: "E2B pause = suspend",
@@ -48,176 +44,30 @@ export const en: Copy = {
       resumed: "resumed in about 1 s",
     },
   },
-  desktop: {
-    title: "When an agent needs to see a screen, it has one.",
-    lead: "Every machine can run a full Linux desktop with Chromium. Watch it live in your browser over VNC, or let the agent drive it.",
-    points: [
-      "Chromium installed and ready",
-      "Viewable in your browser over VNC",
-      "The same machine as your terminal and files",
-    ],
-  },
-  features: {
-    title: "A real machine, not a shared container.",
-    lead: [
-      {
-        stat: "~2 s",
-        statLabel: "to boot",
-        title: "Its own kernel and root",
-        body: "Every machine is a Firecracker microVM. Your agent can install packages, run services and break things without touching a neighbour.",
-      },
-      {
-        stat: "~1 s",
-        statLabel: "to resume",
-        title: "Suspend keeps memory",
-        body: "Park a machine while its agent waits. Resuming brings back memory and running processes in about a second.",
-      },
-    ],
-    items: [
-      {
-        title: "Fork a working setup",
-        body: "Copy the disk into a new machine and try a second approach in parallel. Fork copies the disk, not memory.",
-      },
-      {
-        title: "A public URL per port",
-        body: "Expose a port and reach it at `<port>-<sandbox-id>.box.rookbox.run`. Preview a dev server or share a link.",
-      },
-      {
-        title: "Commands and files",
-        body: "Run commands, stream their output, read and write files. These are the same calls your E2B code already makes.",
-      },
-      {
-        title: "Sized per machine",
-        body: "Choose the vCPU and memory of each machine through the SDK, so a small task does not need a big machine.",
-      },
-    ],
-  },
-  lifecycle: {
-    title: "Four moves, all measured in seconds.",
-    lead: "Timings are typical, not guarantees.",
-    cards: [
-      {
-        state: "Running",
-        value: "~2 s",
-        title: "Boot",
-        body: "A new microVM from a template: own kernel, own root disk.",
-      },
-      {
-        state: "Suspended",
-        value: "Memory kept",
-        title: "Suspend",
-        body: "Persist memory and state and release the worker.",
-      },
-      {
-        state: "Running again",
-        value: "~1 s",
-        title: "Resume",
-        body: "Pick up exactly where the agent left off, processes and all.",
-      },
-      {
-        state: "A new machine",
-        value: "Disk only",
-        title: "Fork",
-        body: "Copy the disk into a sibling machine. Memory is not copied.",
-      },
-    ],
-  },
-  usecases: {
-    title: "Made for work that needs a real computer.",
-    items: [
-      {
-        title: "Browsing and computer use",
-        body: "Give an agent a desktop with Chromium so it can open pages, fill forms and use apps built for people.",
-      },
-      {
-        title: "Code execution",
-        body: "Run code the model wrote in a machine you can throw away, with its own kernel and files.",
-      },
-      {
-        title: "Long-running background agents",
-        body: "Let an agent work for hours, suspend it while it waits and resume it in about a second.",
-      },
-      {
-        title: "Parallel experiments",
-        body: "Fork a prepared disk into several machines and try different approaches side by side.",
-      },
-    ],
-  },
   e2b: {
-    eyebrow: "E2B compatible",
-    title: "Already using E2B? Change one line.",
-    lead: "Rookbox speaks the E2B protocol. If you already use the E2B SDK, point it at Rookbox and your code keeps working.",
+    title: "Already on E2B? Change two env vars.",
     languageLabel: "Language",
     before: "Before",
     after: "With Rookbox",
-    envLine: "Prefer environment variables? Set `E2B_DOMAIN` and `E2B_API_KEY` instead.",
-    keyLine: "API key:",
-    keyLink: "join the waitlist",
+    code: "Your code stays the same",
   },
-  quickstart: {
-    eyebrow: "Get started",
-    title: "From zero to a running machine in five steps.",
-    lead: "You need the E2B SDK for Python or TypeScript and an API key.",
-    languageLabel: "Language",
-    steps: [
-      { title: "Install the SDK", body: "Rookbox uses the E2B SDK. Install it for your language." },
-      {
-        title: "Set the domain and your key",
-        body: "Point the SDK at Rookbox and give it your API key.",
-      },
-      { title: "Create a machine", body: "A new machine boots in about 2 seconds." },
-      {
-        title: "Run a command",
-        body: "The command runs inside the machine and returns its output.",
-      },
-      {
-        title: "Open a port",
-        body: "Start a server, then ask for its public URL and open it in your browser.",
-      },
-    ],
-    keyLine: "No key yet?",
-    keyLink: "Join the waitlist",
-    note: "Names and output are illustrative.",
+  brazil: {
+    // TODO(content): see pt.ts. Legal entity and nota fiscal for BRL billing, the IOF wording
+    // (confirm with an accountant before claiming it), and the Portuguese support channel and hours.
+    title: "Pay in reais. With Pix.",
+    lead: "Per-second billing, in reais, no international card. Support in Portuguese.",
+    badge: "Pix",
   },
-  cta: {
-    eyebrow: "Early access",
-    title: "Ask for a spot in the next batch.",
-    lead: "Rookbox is invitation only for now. We let people in small batches so the machines stay fast. Leave your email and we write to you when your invitation is ready.",
-    priceNote: "Billed per second. Prices have not been published yet.",
-  },
+  cta: { title: "Join the waitlist." },
   waitlist: {
     label: "Email address",
     placeholder: "you@company.com",
     submit: "Join the waitlist",
     sending: "Sending",
-    optionsLegend: "What will you run on it?",
-    optionsOptional: "Optional",
-    options: [
-      "Browser or computer use",
-      "Code execution",
-      "Long-running background agents",
-      "Parallel experiments",
-    ],
-    fine: "Invitation only, in small batches. We only use your email to send your invitation.",
-    okTitle: "You are on the list.",
-    okBody:
-      "We sent a confirmation to {email}. When a spot opens you get an invitation email with your access.",
+    ok: "You are on the list. We will email you.",
     errorInvalid: "That does not look like an email address. Check it and try again.",
     errorRate: "Too many attempts from this connection. Try again in a few minutes.",
     errorGeneric: "We could not reach the server. Your email was not saved. Try again.",
-    haveAccount: "I have an account",
   },
-  footer: {
-    languages: "Languages",
-    nav: "Site",
-    tagline: "Machines for AI agents.",
-    product: "Product",
-    howItWorks: "How it works",
-    desktop: "Desktop",
-    lifecycle: "Lifecycle",
-    dashboard: "Dashboard",
-    developers: "Developers",
-    quickstart: "Quickstart",
-    e2b: "E2B compatible",
-  },
+  footer: { tagline: "Machines for AI agents." },
 };

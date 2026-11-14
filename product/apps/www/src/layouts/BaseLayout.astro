@@ -1,8 +1,8 @@
 ---
 import "../styles/global.css";
-import "../styles/landing.css";
 import type { Locale } from "../i18n/locales";
 import {
+  DEFAULT_LOCALE,
   LOCALES,
   LOCALE_HREFLANG,
   LOCALE_HTML_LANG,
@@ -19,6 +19,21 @@ type Props = {
   imageAlt: string;
 };
 
+const LANG_REDIRECT = `/* Send Portuguese browsers to /pt/ once. A language picked in the footer wins; no loop is possible because /pt/ never redirects. */
+(function () {
+  try {
+    if (location.pathname !== "/") return;
+    var chosen = null;
+    try { chosen = localStorage.getItem("rb-lang"); } catch (e) {}
+    var target = null;
+    if (chosen === "pt" || chosen === "es") target = "/" + chosen + "/";
+    else if (!chosen) {
+      var l = (navigator.languages && navigator.languages[0]) || navigator.language || "";
+      if (/^pt(-|$)/i.test(l)) target = "/pt/";
+    }
+    if (target) location.replace(target + location.search + location.hash);
+  } catch (e) {}
+})();`;
 const { title, description, locale, skipLabel, imageAlt } = Astro.props;
 const site = Astro.site ?? new URL("https://rookbox.run");
 const canonical = new URL(Astro.url.pathname, site).toString();
@@ -32,7 +47,7 @@ const image = new URL(`/og/${locale}.png`, site).toString();
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <meta name="color-scheme" content="light" />
-    <meta name="theme-color" content="#ffffff" />
+    <meta name="theme-color" content="#0a0a0a" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
@@ -69,6 +84,11 @@ const image = new URL(`/og/${locale}.png`, site).toString();
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="preload" href="/fonts/instrument-sans-latin.woff2" as="font" type="font/woff2" crossorigin />
     <title>{title}</title>
+    {
+      locale === DEFAULT_LOCALE && (
+        <script is:inline set:html={LANG_REDIRECT} />
+      )
+    }
   </head>
   <body>
     <a class="skip-link" href="#main">{skipLabel}</a>

@@ -1,7 +1,7 @@
 /**
- * The page's small behaviours: a hairline under the nav once the page scrolls, and sections that
- * rise in as they enter the screen. Without JavaScript, or with reduced motion, everything is
- * simply visible.
+ * The page's small behaviours: a hairline under the nav once the page scrolls, sections that rise
+ * in as they enter the screen, the pixel castle that reacts to the signup form, and the waitlist
+ * forms. Without JavaScript, or with reduced motion, everything is simply visible.
  */
 const nav = document.querySelector<HTMLElement>("[data-nav]");
 const onScroll = () => nav?.toggleAttribute("data-scrolled", window.scrollY > 8);
@@ -38,6 +38,97 @@ if (!reduce && "IntersectionObserver" in window) {
   for (const el of targets) el.classList.add("is-in");
 }
 
+/** Remember a language picked in the header, so the home page stops guessing from the browser. */
+for (const link of document.querySelectorAll<HTMLAnchorElement>("[data-langs] a[hreflang]")) {
+  link.addEventListener("click", () => {
+    try {
+      localStorage.setItem("rb-lang", link.hreflang.slice(0, 2).toLowerCase());
+    } catch {}
+  });
+}
+
+/** The header button goes to the hero form and puts the cursor in it. */
+for (const join of document.querySelectorAll<HTMLAnchorElement>("[data-join]")) {
+  join.addEventListener("click", (event) => {
+    const input = document.querySelector<HTMLInputElement>("#hero-email");
+    if (!input) return;
+    event.preventDefault();
+    window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+    input.focus({ preventScroll: true });
+  });
+}
+
+/**
+ * The pixel castle. Marked up fully lit; with JavaScript it starts dark, builds itself from the
+ * foundation up to about 40%, then lights more pixels as an address is typed. A valid address lights
+ * every wall pixel; a successful signup also lights the doorway and says "ready".
+ */
+const rook = document.querySelector<HTMLElement>("[data-rook]");
+const rookState = rook?.querySelector<HTMLElement>("[data-rook-state]");
+const pixels = rook
+  ? [...rook.querySelectorAll<SVGRectElement>(".px:not(.px--door)")].sort(
+      (a, b) => Number(a.dataset.o) - Number(b.dataset.o),
+    )
+  : [];
+const total = pixels.length;
+const base = Math.round(total * 0.4);
+let shown = 0;
+let target = 0;
+let ticker: number | undefined;
+
+const paint = () => {
+  pixels.forEach((pixel, i) => {
+    pixel.classList.toggle("on", i < shown);
+  });
+};
+const tick = () => {
+  shown += shown < target ? 1 : -1;
+  paint();
+  if (shown === target) {
+    window.clearInterval(ticker);
+    ticker = undefined;
+  }
+};
+const moveTo = (next: number) => {
+  target = Math.max(0, Math.min(total, next));
+  window.clearInterval(ticker);
+  ticker = undefined;
+  if (reduce) {
+    shown = target;
+    paint();
+  } else if (shown !== target) {
+    ticker = window.setInterval(tick, 14);
+  }
+};
+const setRookText = (key: "booting" | "waiting" | "ready") => {
+  if (rook && rookState) rookState.textContent = rook.dataset[key] ?? "";
+};
+
+if (rook && total) {
+  setRookText("booting");
+  window.setTimeout(
+    () => {
+      moveTo(base);
+      window.setTimeout(() => setRookText("waiting"), reduce ? 0 : base * 14 + 200);
+    },
+    reduce ? 0 : 450,
+  );
+}
+
+const showRook = (state: "idle" | "typed" | "done", address: string) => {
+  if (!rook || !total) return;
+  if (state === "done") {
+    rook.classList.add("is-ready");
+    moveTo(total);
+    setRookText("ready");
+    return;
+  }
+  rook.classList.remove("is-ready");
+  setRookText("waiting");
+  const progress = Math.min(1, address.length / 22);
+  moveTo(state === "typed" ? total : base + Math.round((total - base) * progress * 0.9));
+};
+
 /**
  * The waitlist forms. They post JSON to the API and show success or a plain error in place; the
  * address is only ever sent to the API the form's `data-waitlist` names.
@@ -51,12 +142,20 @@ for (const form of document.querySelectorAll<HTMLFormElement>("form[data-waitlis
   if (!root || !error || !submit || !done || !email) continue;
   const label = submit.textContent ?? "";
   const data = form.dataset;
+  const mirrors = !form.closest(".cta");
 
   const fail = (message: string) => {
     error.textContent = message;
     error.hidden = false;
     email.setAttribute("aria-invalid", "true");
   };
+
+  if (mirrors) {
+    email.addEventListener("input", () => {
+      const value = email.value.trim();
+      showRook(value && email.checkValidity() ? "typed" : "idle", value);
+    });
+  }
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -68,9 +167,6 @@ for (const form of document.querySelectorAll<HTMLFormElement>("form[data-waitlis
       email.focus();
       return;
     }
-    const uses = [...form.querySelectorAll<HTMLInputElement>('input[name="use"]:checked')].map(
-      (input) => input.value,
-    );
     const website = (form.elements.namedItem("website") as HTMLInputElement | null)?.value ?? "";
     submit.disabled = true;
     submit.setAttribute("aria-busy", "true");
@@ -79,20 +175,13 @@ for (const form of document.querySelectorAll<HTMLFormElement>("form[data-waitlis
       const response = await fetch(data.waitlist ?? "", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          email: address,
-          note: uses.length ? uses.join(", ") : undefined,
-          locale: data.locale,
-          website,
-        }),
+        body: JSON.stringify({ email: address, locale: data.locale, website }),
       });
       if (response.ok) {
-        const body = done.querySelector<HTMLElement>("[data-done-body]");
-        if (body) body.textContent = (data.okBody ?? "").replace("{email}", address);
         form.hidden = true;
-        root.querySelector<HTMLElement>(".wl__login")?.setAttribute("hidden", "");
         done.hidden = false;
         done.focus();
+        showRook("done", address);
         return;
       }
       fail(
@@ -111,3 +200,5 @@ for (const form of document.querySelectorAll<HTMLFormElement>("form[data-waitlis
     }
   });
 }
+
+export {};
