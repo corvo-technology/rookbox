@@ -7,6 +7,7 @@ import { createDb } from "./db.js";
 import { createDesktopProxy } from "./desktop.js";
 import { createDesktopTokens, deriveSecret } from "./desktop-token.js";
 import { createE2bFront } from "./e2b/front.js";
+import { createEmailSender } from "./email.js";
 import { adminEmails, desktopOrigin, loadEnv, routeLimits } from "./env.js";
 import { createLogger } from "./logger.js";
 import { createMachineService } from "./machines/service.js";
@@ -20,6 +21,7 @@ import { createIngestHandler } from "./usage/ingest.js";
 import { createPrismaUsageStore } from "./usage/prisma-store.js";
 import { createUsageService } from "./usage/service.js";
 import { createAuthCredentials, createPrismaUserStore, createUserAdmin } from "./users.js";
+import { createPrismaWaitlistStore, createWaitlist } from "./waitlist.js";
 
 const bootLogger = createLogger("info", { service: "rookbox-api" });
 
@@ -169,6 +171,17 @@ try {
       credentials: createAuthCredentials(createAuth(db, env, logger, { allowSignUp: true })),
       suspendMachines: (userId) => machines.suspendAll(userId),
       logger,
+    }),
+    waitlist: createWaitlist({
+      store: createPrismaWaitlistStore(db),
+      email: createEmailSender({ apiKey: env.RESEND_API_KEY, from: env.EMAIL_FROM, logger }),
+      logger,
+      signInUrl: env.APP_ORIGIN,
+    }),
+    wwwOrigin: env.WWW_ORIGIN ? new URL(env.WWW_ORIGIN).origin : undefined,
+    waitlistLimiter: createRateLimiter({
+      max: env.WAITLIST_MAX_PER_IP,
+      windowMs: env.WAITLIST_WINDOW_S * 1_000,
     }),
     maxRunningTotal: env.MAX_RUNNING_MACHINES_TOTAL,
     space,

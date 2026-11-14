@@ -182,3 +182,22 @@ model UsageReporter {
 
   @@map("usage_reporter")
 }
+
+/// Someone who asked for a beta invitation on the landing page. No FK to the user: an invited
+/// entry stays as the record of who was invited and when.
+model WaitlistEntry {
+  id        Int       @id @default(autoincrement())
+  /// Lower-case and unique, so joining twice is a no-op.
+  email     String    @unique
+  /// What they plan to run, in their words or one of the landing page's options. Optional.
+  note      String?
+  /// `en`, `pt` or `es`: the language of the emails they get.
+  locale    String    @default("en")
+  /// `waiting` or `invited`.
+  status    String    @default("waiting")
+  createdAt DateTime  @default(now())
+  invitedAt DateTime?
+
+  @@index([status, createdAt])
+  @@map("waitlist_entry")
+}

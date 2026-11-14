@@ -154,6 +154,15 @@ const EnvObject = z.object({
   INGEST_SECRET: z.string().min(32, "Use at least 32 characters (openssl rand -hex 32)").optional(),
   /** Emails that may see everyone's usage. Defaults to the owner, the first allowed email. */
   ADMIN_EMAILS: z.string().transform(csv).pipe(z.array(z.email())).optional(),
+  /** Resend API key for transactional email. Unset: emails are logged, not sent. */
+  RESEND_API_KEY: optionalText(z.string().min(1)),
+  /** The From header, e.g. `Rookbox <hello@rookbox.run>`. Its domain must be verified in Resend. */
+  EMAIL_FROM: optionalText(z.string().min(3)),
+  /** The landing page's origin. Setting it turns on the public `POST /waitlist`, for that origin only. */
+  WWW_ORIGIN: optionalText(z.url()),
+  /** Waitlist joins allowed per address within the window. */
+  WAITLIST_MAX_PER_IP: z.coerce.number().int().min(1).max(1_000).default(10),
+  WAITLIST_WINDOW_S: z.coerce.number().int().min(10).max(86_400).default(3_600),
 });
 
 export const EnvSchema = EnvObject.superRefine((env, ctx) => {

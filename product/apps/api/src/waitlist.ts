@@ -1,0 +1,145 @@
+import type { WaitlistEntry, WaitlistLocale } from "@rookbox/contracts";
+import type { Db } from "./db.js";
+import type { EmailSender } from "./email.js";
+import { waitlistInvitedEmail, waitlistJoinedEmail } from "./email-templates.js";
+import type { Logger } from "./logger.js";
+
+export type WaitlistRecord = {
+  email: string;
+  note: string | null;
+  locale: WaitlistLocale;
+  status: "waiting" | "invited";
+  createdAt: Date;
+  invitedAt: Date | null;
+};
+
+/** Where entries live. The Prisma version is below; tests use a map. */
+export interface WaitlistStore {
+  /** Adds the entry unless the email is already there. Says which happened. */
+  insert(entry: {
+    email: string;
+    note: string | null;
+    locale: WaitlistLocale;
+  }): Promise<"created" | "exists">;
+  find(email: string): Promise<WaitlistRecord | null>;
+  list(): Promise<WaitlistRecord[]>;
+  markInvited(email: string, at: Date): Promise<void>;
+}
+
+export function createPrismaWaitlistStore(db: Db): WaitlistStore {
+  const record = (row: {
+    email: string;
+    note: string | null;
+    locale: string;
+    status: string;
+    createdAt: Date;
+    invitedAt: Date | null;
+  }): WaitlistRecord => ({
+    ...row,
+    locale: row.locale === "pt" || row.locale === "es" ? row.locale : "en",
+    status: row.status === "invited" ? "invited" : "waiting",
+  });
+  return {
+    async insert(entry) {
+      // The unique index decides a race between two joins of the same address.
+      const result = await db.waitlistEntry.createMany({ data: [entry], skipDuplicates: true });
+      return result.count === 1 ? "created" : "exists";
+    },
+    async find(email) {
+      const row = await db.waitlistEntry.findUnique({ where: { email } });
+      return row ? record(row) : null;
+    },
+    async list() {
+      return (await db.waitlistEntry.findMany({ orderBy: { createdAt: "asc" } })).map(record);
+    },
+    async markInvited(email, at) {
+      await db.waitlistEntry.update({
+        where: { email },
+        data: { status: "invited", invitedAt: at },
+      });
+    },
+  };
+}
+
+export class WaitlistNotFoundError extends Error {
+  constructor() {
+    super("No such waitlist entry.");
+  }
+}
+
+export type WaitlistDeps = {
+  store: WaitlistStore;
+  email: EmailSender;
+  logger: Logger;
+  /** Where the invitation email sends people: the dashboard. */
+  signInUrl: string;
+  now?: () => Date;
+};
+
+const normalize = (email: string) => email.trim().toLowerCase();
+
+export function createWaitlist(deps: WaitlistDeps) {
+  const { store, email, logger } = deps;
+  const now = deps.now ?? (() => new Date());
+
+  return {
+    /**
+     * Records the entry and sends the confirmation. Joining twice is a no-op, and sends nothing
+     * the second time. A failed email never fails the signup.
+     */
+    async join(input: { email: string; note?: string; locale?: WaitlistLocale }) {
+      const address = normalize(input.email);
+      const locale = input.locale ?? "en";
+      const note = input.note?.trim() ? input.note.trim() : null;
+      const outcome = await store.insert({ email: address, note, locale });
+      if (outcome === "exists") return { created: false as const };
+      logger.info("waitlist joined", { locale });
+      // Awaited so the answer reflects a settled send, but `send` never throws.
+      await email.send(waitlistJoinedEmail(address, locale));
+      return { created: true as const };
+    },
+
+    async list(): Promise<WaitlistEntry[]> {
+      return (await store.list()).map((entry) => ({
+        email: entry.email,
+        note: entry.note,
+        locale: entry.locale,
+        status: entry.status,
+        createdAt: entry.createdAt.toISOString(),
+        invitedAt: entry.invitedAt?.toISOString() ?? null,
+      }));
+    },
+
+    /**
+     * Creates the account through `createAccount` (the operator's create-account logic), marks the
+     * entry invited and emails the sign-in link with the temporary password. The password is also
+     * returned, so the operator can pass it on if the email does not arrive.
+     */
+    async invite(
+      input: { email: string },
+      createAccount: (account: {
+        email: string;
+        name: string;
+      }) => Promise<{ email: string; password: string }>,
+    ) {
+      const address = normalize(input.email);
+      const entry = await store.find(address);
+      if (!entry) throw new WaitlistNotFoundError();
+      const name = address.split("@")[0] || address;
+      const account = await createAccount({ email: address, name });
+      await store.markInvited(address, now());
+      const emailed = await email.send(
+        waitlistInvitedEmail({
+          to: address,
+          locale: entry.locale,
+          signInUrl: deps.signInUrl,
+          password: account.password,
+        }),
+      );
+      logger.info("waitlist invited", { emailed });
+      return { email: address, password: account.password, emailed };
+    },
+  };
+}
+
+export type Waitlist = ReturnType<typeof createWaitlist>;

@@ -19,7 +19,8 @@ COPY apps/www apps/www
 ARG PUBLIC_SITE_URL=https://rookbox.run
 ARG PUBLIC_DASHBOARD_URL=https://app.rookbox.run/
 ARG PUBLIC_SDK_DOMAIN=box.rookbox.run
-ENV PUBLIC_SITE_URL=$PUBLIC_SITE_URL PUBLIC_DASHBOARD_URL=$PUBLIC_DASHBOARD_URL PUBLIC_SDK_DOMAIN=$PUBLIC_SDK_DOMAIN
+ARG PUBLIC_API_URL=https://api.rookbox.run
+ENV PUBLIC_SITE_URL=$PUBLIC_SITE_URL PUBLIC_DASHBOARD_URL=$PUBLIC_DASHBOARD_URL PUBLIC_SDK_DOMAIN=$PUBLIC_SDK_DOMAIN PUBLIC_API_URL=$PUBLIC_API_URL
 # robots.txt names the sitemap by absolute URL.
 RUN sed -i "s|https://rookbox.run|${PUBLIC_SITE_URL}|" apps/www/public/robots.txt
 RUN pnpm --filter @rookbox/www build
