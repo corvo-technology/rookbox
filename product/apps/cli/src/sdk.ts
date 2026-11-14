@@ -57,7 +57,9 @@ export function machineName(metadata: Record<string, string> | undefined): strin
 }
 
 export function sdkApi(auth: Auth): Api {
-  const conn = { apiKey: auth.apiKey, apiUrl: auth.apiUrl };
+  // The SDK retries on its own (3 times, POST included). The CLI owns retries instead, so a create
+  // is never replayed and a safe call is retried exactly once per policy.
+  const conn = { apiKey: auth.apiKey, apiUrl: auth.apiUrl, retries: 0 };
 
   /** E2B_API_URL is what the SDK reads on its own; set it too so nothing falls back to e2b.dev. */
   process.env.E2B_API_URL = auth.apiUrl;

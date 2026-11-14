@@ -11,7 +11,7 @@ import {
   resolveAuth,
   writeConfig,
 } from "./config.js";
-import { CliError, EXIT, mapError } from "./errors.js";
+import { CliError, EXIT, isTransient, mapError } from "./errors.js";
 import { colorEnabled, formatDuration, makeStyle, parseDuration, table } from "./format.js";
 import { COMMANDS, commandHelp, mainHelp } from "./help.js";
 import { detectLang, type MessageKey, translator } from "./i18n.js";
@@ -30,7 +30,13 @@ export type Deps = {
   makeApi(auth: Auth): Api;
   openUrl(url: string): Promise<boolean>;
   fetch: typeof fetch;
+  /** Waits between retries; tests pass a fast one. */
+  sleep?: (ms: number) => Promise<void>;
 };
+
+/** Pause before each retry of a safe call: 0.5 s, 1 s, 2 s, plus up to 25% jitter. */
+const RETRY_BASE_MS = 500;
+const RETRY_ATTEMPTS = 3;
 
 const TIMEOUT_LIMITS_MS = { min: 60_000, max: 86_400_000 } as const;
 
@@ -45,6 +51,9 @@ export function shellQuote(args: string[]): string {
 /** Returns the process exit code. Never throws. */
 export async function runCli(argv: string[], deps: Deps): Promise<number> {
   const { env } = deps;
+  const taken = takeDebugFlag(argv);
+  argv = taken.argv;
+  const debug = taken.debug || env.ROOKBOX_DEBUG === "1" || env.ROOKBOX_DEBUG === "true";
   const lang = detectLang(env);
   const t = translator(lang);
   const outTty = Boolean(deps.stdout.isTTY);
@@ -77,6 +86,24 @@ export async function runCli(argv: string[], deps: Deps): Promise<number> {
 
   let apiForErrors: Api | null = null;
   let apiUrl = DEFAULT_API_URL;
+  const sleep = deps.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
+  const stderrTty = Boolean((deps.stderr as { isTTY?: boolean }).isTTY);
+
+  /**
+   * Runs a safe (idempotent) call, retrying 502/503/504 and connection errors up to three times
+   * with exponential backoff. Never wrap a create or a command that runs inside a machine.
+   */
+  async function retrying<T>(fn: (attempt: number) => Promise<T>): Promise<T> {
+    for (let attempt = 0; ; attempt++) {
+      try {
+        return await fn(attempt);
+      } catch (error) {
+        if (attempt >= RETRY_ATTEMPTS || !isTransient(error)) throw error;
+        if (stderrTty) deps.stderr.write(`${style.dim(t("retry.waiting"))}\n`);
+        await sleep(RETRY_BASE_MS * 2 ** attempt * (1 + Math.random() * 0.25));
+      }
+    }
+  }
 
   try {
     return await dispatch(name, rest);
@@ -84,11 +111,16 @@ export async function runCli(argv: string[], deps: Deps): Promise<number> {
     const mapped = await mapError(error, {
       t,
       apiUrl,
+      maybeCreated: name === "new",
       countMachines: apiForErrors
         ? async () => (await (apiForErrors as Api).list()).length
         : undefined,
     });
-    return fail(mapped.message, mapped.exitCode);
+    const code = fail(mapped.message, mapped.exitCode);
+    if (debug && mapped.detail) {
+      deps.stderr.write(`${style.dim(t("err.debug", { detail: mapped.detail }))}\n`);
+    }
+    return code;
   }
 
   function parse<T extends Record<string, { type: "boolean" | "string"; short?: string }>>(
@@ -147,7 +179,7 @@ export async function runCli(argv: string[], deps: Deps): Promise<number> {
         apiUrl = resolveAuth(env, path).apiUrl;
         const api = deps.makeApi({ apiKey: key, apiUrl });
         apiForErrors = api;
-        const machines = await api.list();
+        const machines = await retrying(() => api.list());
         writeConfig(path, { apiKey: key, ...(apiUrl !== DEFAULT_API_URL ? { apiUrl } : {}) });
         out(style.green(t("login.ok", { n: machines.length })));
         out(style.dim(t("login.saved", { path })));
@@ -164,7 +196,7 @@ export async function runCli(argv: string[], deps: Deps): Promise<number> {
         const resolved = resolveAuth(env, path);
         if (!resolved.apiKey) return fail(t("whoami.none"), EXIT.auth);
         const { api } = auth();
-        const machines = await api.list();
+        const machines = await retrying(() => api.list());
         out(t("whoami.key", { key: maskKey(resolved.apiKey) }));
         out(
           t("whoami.source", {
@@ -205,7 +237,7 @@ export async function runCli(argv: string[], deps: Deps): Promise<number> {
       case "ls": {
         const { values } = parse(args, { json: { type: "boolean" } }, 0);
         const { api } = auth();
-        const machines = await api.list();
+        const machines = await retrying(() => api.list());
         if (values.json) {
           out(
             JSON.stringify(
@@ -277,8 +309,7 @@ export async function runCli(argv: string[], deps: Deps): Promise<number> {
         const { positionals } = parse(args, {});
         const id = machineId(positionals);
         const { api } = auth();
-        if (command === "pause") await api.pause(id);
-        else await api.resume(id);
+        await retrying(() => (command === "pause" ? api.pause(id) : api.resume(id)));
         out(t(command === "pause" ? "pause.ok" : "resume.ok", { id }));
         return EXIT.ok;
       }
@@ -294,7 +325,16 @@ export async function runCli(argv: string[], deps: Deps): Promise<number> {
             return EXIT.failure;
           }
         }
-        await api.kill(id);
+        await retrying(async (attempt) => {
+          try {
+            await api.kill(id);
+          } catch (error) {
+            // A retry that finds the machine gone means the first try landed and only the answer was lost.
+            const status = (error as { statusCode?: unknown }).statusCode;
+            const gone = status === 404 || (error as Error).name?.endsWith("NotFoundError");
+            if (!(attempt > 0 && gone)) throw error;
+          }
+        });
         out(t("kill.ok", { id }));
         return EXIT.ok;
       }
@@ -310,7 +350,7 @@ export async function runCli(argv: string[], deps: Deps): Promise<number> {
         }
         const { api } = auth();
         try {
-          out(`https://${await api.host(id, port)}`);
+          out(`https://${await retrying(() => api.host(id, port))}`);
         } catch (error) {
           if (error instanceof MachinePausedError)
             return fail(t("url.paused", { id }), EXIT.failure);
@@ -345,6 +385,22 @@ export async function runCli(argv: string[], deps: Deps): Promise<number> {
         return fail(t("err.unknownCommand", { name: command }), EXIT.usage);
     }
   }
+}
+
+/** Pulls `--debug` out of the arguments it can belong to, never out of a machine's command line. */
+function takeDebugFlag(argv: string[]): { argv: string[]; debug: boolean } {
+  const end = argv.indexOf("--");
+  const head = end === -1 ? argv : argv.slice(0, end);
+  const tail = end === -1 ? [] : argv.slice(end);
+  // `run <id> cmd...` has no `--` guarantee: only a flag before the id counts there.
+  const limit = head[0] === "run" ? 2 : head.length;
+  const kept: string[] = [];
+  let debug = false;
+  head.forEach((arg, index) => {
+    if (arg === "--debug" && index < limit) debug = true;
+    else kept.push(arg);
+  });
+  return { argv: [...kept, ...tail], debug };
 }
 
 /** The newest `cli-vX.Y.Z` release that is neither a draft nor a prerelease, or null. */
