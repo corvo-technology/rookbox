@@ -421,3 +421,46 @@ describe("exec", () => {
     expect((error as MachineError).code).toBe("CONFLICT");
   });
 });
+
+describe("ensureDesktop", () => {
+  async function desktop() {
+    const ctx = newMachineService();
+    const machine = await ctx.service.create("alice", {
+      name: "d",
+      template: "desktop",
+      size: small,
+    });
+    return { ...ctx, machine };
+  }
+
+  it("runs the guarded start script once through exec", async () => {
+    const { space, service, machine } = await desktop();
+    await service.ensureDesktop("alice", machine.id);
+    const calls = space.calls.filter((c) => c.op === "exec");
+    expect(calls).toHaveLength(1);
+    const script = String(calls[0]?.args[2]);
+    expect(script).toContain("pgrep -x Xvfb");
+    expect(script).toContain("-localhost");
+    expect(script).toContain("export DISPLAY=:0");
+  });
+
+  it("reports a stack that did not come up as a host error, without the output", async () => {
+    const { space, service, machine } = await desktop();
+    space.execResult = { stdout: "", stderr: "secret detail", exitCode: 1, truncated: false };
+    const error = await failure(service.ensureDesktop("alice", machine.id));
+    expect(error).toBeInstanceOf(MachineError);
+    expect((error as MachineError).code).toBe("HOST_ERROR");
+    expect((error as MachineError).message).not.toContain("secret");
+  });
+
+  it("refuses another user's machine and a machine without a desktop", async () => {
+    const { service, machine } = await desktop();
+    expect(await failure(service.ensureDesktop("bob", machine.id))).toMatchObject({
+      code: "NOT_FOUND",
+    });
+    const plain = await service.create("alice", { name: "p", template: "seed", size: small });
+    expect(await failure(service.ensureDesktop("alice", plain.id))).toMatchObject({
+      code: "NOT_FOUND",
+    });
+  });
+});

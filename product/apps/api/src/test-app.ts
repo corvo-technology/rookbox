@@ -42,6 +42,7 @@ export function setupApp(
     tokens,
     e2bDomain: "box.example.test",
     origin: `https://${DESK}`,
+    appOrigin: APP,
     host: DESK,
     linkTtlS: 120,
     sessionTtlS: 14_400,

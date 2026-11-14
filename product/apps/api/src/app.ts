@@ -135,6 +135,13 @@ export function createApp(deps: AppDeps) {
     }),
   );
 
+  // Nothing here is meant to be framed. The desktop routes (served by this app only when there is
+  // no desktop host, in development) carry their own `frame-ancestors` and are left alone.
+  main.use("*", async (c, next) => {
+    await next();
+    if (!c.res.headers.has("content-security-policy")) c.header("x-frame-options", "DENY");
+  });
+
   const startedAt = (deps.now ?? Date.now)();
 
   main.get("/health", async (c) => {

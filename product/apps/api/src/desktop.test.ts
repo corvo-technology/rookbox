@@ -258,3 +258,29 @@ describe("hosts", () => {
     expect(lines.join("\n")).not.toContain("secretpayload");
   });
 });
+
+describe("desktop framing and start", () => {
+  it("lets only the dashboard frame the page and the redirect", async () => {
+    const { app, link, machine } = await withDesktop();
+    const { response, cookie } = await openLink(app, link.url);
+    const policy = "frame-ancestors https://app.example.test";
+    expect(response.headers.get("content-security-policy")).toBe(policy);
+    expect(response.headers.get("x-frame-options")).toBeNull();
+    const page = await app.request(`${DESK_URL}/m/${machine.id}/vnc.html`, { headers: { cookie } });
+    expect(page.headers.get("content-security-policy")).toBe(policy);
+    expect(page.headers.get("x-frame-options")).toBeNull();
+  });
+
+  it("keeps DENY on the API's own routes", async () => {
+    const { app } = await withDesktop();
+    const health = await app.request("https://api.example.test/health");
+    expect(health.headers.get("x-frame-options")).toBe("DENY");
+  });
+
+  it("starts the stack before it issues a link", async () => {
+    const { space, link } = await withDesktop();
+    expect(link.url).toContain("/open/");
+    const call = space.calls.find((c) => c.op === "exec");
+    expect(String(call?.args[2])).toContain("novnc_proxy");
+  });
+});

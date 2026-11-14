@@ -275,6 +275,21 @@ holds the login cookie. The same API service answers on a second host, `desk.roo
   cached for 60 s).
 - The host must be distinct from the API's and the dashboard's (the API refuses to start otherwise).
   The edge must pass the original `Host` header through.
+- **Shown in a dialog.** "Open desktop" loads the desktop in an `<iframe>` on the machine page.
+  The desktop pages and the `/open` redirect answer with
+  `Content-Security-Policy: frame-ancestors <APP_ORIGIN>`, so only the dashboard can frame them
+  (`APP_ORIGIN` must be exactly the dashboard's origin, for example `https://app.rookbox.run`).
+  Every other route, including the API's, keeps `X-Frame-Options: DENY`. `app.` and `desk.` are the
+  same site, so the `SameSite=Strict` cookie is sent inside the frame; a `DESKTOP_HOST` on another
+  registrable domain would break that, so keep both under `rookbox.run`.
+- **Dashboard headers.** The dashboard's own Caddyfile sets no `Content-Security-Policy`, so
+  nothing blocks the frame. If you add one at the edge (Dokploy, a CDN, a proxy), it needs
+  `frame-src https://desk.rookbox.run` (your `DESKTOP_HOST`). Its `X-Frame-Options: DENY` only
+  stops the dashboard being framed and does not affect this.
+- **Stack start.** Opening a desktop first runs one idempotent script on the machine (through exec)
+  that starts Xvfb, xfce, x11vnc (bound to localhost) and noVNC unless they already run, then waits
+  up to 20 s for port 6080. A machine that is up costs one local request. Failures answer
+  `HOST_ERROR` ("The desktop did not start").
 - Rotating `DESKTOP_LINK_SECRET`: set the new value and move the old one to
   `DESKTOP_LINK_SECRET_PREVIOUS`; links and sessions signed with the old one keep working. Remove
   the previous value after `DESKTOP_SESSION_TTL_S`. Without `DESKTOP_LINK_SECRET` (development) a
