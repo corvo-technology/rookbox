@@ -12,10 +12,12 @@ export interface EmailSender {
 }
 
 export type EmailSenderOptions = {
-  /** Resend API key. Without it nothing is sent: messages are only logged. */
+  /** Provider API key. Without it nothing is sent: messages are only logged. */
   apiKey?: string;
-  /** The From header, e.g. `Rookbox <hello@rookbox.run>`. The domain must be verified in Resend. */
+  /** The From header, e.g. `Rookbox <hello@rookbox.run>`. The domain must be verified with the provider. */
   from?: string;
+  /** A Resend-compatible send endpoint; Resend's own when unset. */
+  endpoint?: string;
   logger: Logger;
   fetch?: typeof fetch;
   /** Waits between attempts after a 429 or 5xx. */
@@ -32,6 +34,7 @@ export type EmailSenderOptions = {
 export function createEmailSender(options: EmailSenderOptions): EmailSender {
   const { apiKey, from, logger } = options;
   const request = options.fetch ?? fetch;
+  const endpoint = options.endpoint?.trim() || RESEND_ENDPOINT;
   const delays = options.retryDelaysMs ?? [250, 1_000];
   const timeoutMs = options.timeoutMs ?? 10_000;
   const enabled = Boolean(apiKey?.trim() && from?.trim());
@@ -40,7 +43,7 @@ export function createEmailSender(options: EmailSenderOptions): EmailSender {
     enabled,
     async send(message) {
       if (!enabled) {
-        logger.info("email not sent: RESEND_API_KEY or EMAIL_FROM is not set", {
+        logger.info("email not sent: EMAIL_PROVIDER, EMAIL_API_KEY or EMAIL_FROM is not set", {
           subject: message.subject,
         });
         return false;
@@ -57,7 +60,7 @@ export function createEmailSender(options: EmailSenderOptions): EmailSender {
       for (let attempt = 0; ; attempt++) {
         let retry = true;
         try {
-          const response = await request(RESEND_ENDPOINT, {
+          const response = await request(endpoint, {
             method: "POST",
             redirect: "error",
             headers: {

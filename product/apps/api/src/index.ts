@@ -174,7 +174,12 @@ try {
     }),
     waitlist: createWaitlist({
       store: createPrismaWaitlistStore(db),
-      email: createEmailSender({ apiKey: env.RESEND_API_KEY, from: env.EMAIL_FROM, logger }),
+      email: createEmailSender({
+        apiKey: env.EMAIL_PROVIDER === "resend" ? env.EMAIL_API_KEY : undefined,
+        from: env.EMAIL_FROM,
+        endpoint: env.EMAIL_API_URL,
+        logger,
+      }),
       logger,
       signInUrl: env.APP_ORIGIN,
     }),
