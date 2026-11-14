@@ -21,7 +21,7 @@ describe("api keys", () => {
     const { key, secret } = await service.create("alice", "ci");
     expect(await service.authenticate(secret)).toBe("alice");
     expect(store.rows.get(key.id)!.lastUsedAt).not.toBeNull();
-    expect(await service.authenticate("rbx_" + "0".repeat(40))).toBeNull();
+    expect(await service.authenticate(`rbx_${"0".repeat(40)}`)).toBeNull();
     expect(await service.authenticate("not-a-key")).toBeNull();
     expect(await service.revoke("alice", key.id)).toBe(true);
     expect(await service.authenticate(secret)).toBeNull();

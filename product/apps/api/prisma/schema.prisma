@@ -14,6 +14,8 @@ model User {
   email         String
   emailVerified Boolean   @default(false)
   image         String?
+  /// Set by `user:disable`: the account cannot sign in and its sessions and keys stop working.
+  disabledAt    DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   sessions      Session[]

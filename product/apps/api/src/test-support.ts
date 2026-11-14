@@ -142,6 +142,7 @@ export function fakeSpace() {
 export function newMachineService(
   overrides: {
     maxMachinesPerUser?: number;
+    maxRunningTotal?: number;
     templates?: MachineTemplate[];
     allowInternet?: boolean;
   } = {},
@@ -156,6 +157,7 @@ export function newMachineService(
     templates: overrides.templates ?? ["desktop", "corvo-computer", "seed"],
     defaultIdleTimeoutS: 900,
     maxMachinesPerUser: overrides.maxMachinesPerUser ?? 10,
+    maxRunningTotal: overrides.maxRunningTotal ?? 0,
     allowInternet: overrides.allowInternet ?? true,
     random: () => 0.5,
   });

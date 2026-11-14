@@ -13,6 +13,11 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
+#. placeholder {0}: Math.max(1, Math.round(config.data.defaultIdleTimeoutS / 60))
+#: src/pages/MachinePage.tsx
+msgid "{0, plural, one {Idle machines are suspended after # minute and keep their state.} other {Idle machines are suspended after # minutes and keep their state.}}"
+msgstr "{0, plural, one {Las máquinas inactivas se suspenden después de # minuto y conservan su estado.} other {Las máquinas inactivas se suspenden después de # minutos y conservan su estado.}}"
+
 #. placeholder {0}: formatIdle(data.idleTimeoutS, i18n.locale)
 #: src/pages/MachinePage.tsx
 msgid "{0} idle"
@@ -835,6 +840,10 @@ msgstr "Esa máquina ya no existe."
 msgid "That template isn't available."
 msgstr "Esa plantilla no está disponible."
 
+#: src/components/ErrorNote.tsx
+msgid "The beta is full right now."
+msgstr "La beta está llena en este momento."
+
 #: src/components/DesktopDialog.tsx
 msgid "The desktop did not open."
 msgstr "El escritorio no se abrió."
@@ -860,10 +869,6 @@ msgid "The machine service had a problem."
 msgstr "El servicio de máquinas tuvo un problema."
 
 #: src/components/ErrorNote.tsx
-msgid "The machine service is busy right now."
-msgstr "El servicio de máquinas está ocupado ahora mismo."
-
-#: src/components/ErrorNote.tsx
 msgid "The machine service took too long to answer."
 msgstr "El servicio de máquinas tardó demasiado en responder."
 
@@ -872,8 +877,8 @@ msgid "The machine's state doesn't allow that right now."
 msgstr "El estado de la máquina no lo permite ahora mismo."
 
 #: src/components/ErrorNote.tsx
-msgid "There's no room for another machine at the moment. Try again in a minute."
-msgstr "No hay espacio para otra máquina en este momento. Inténtalo de nuevo en un minuto."
+msgid "There's no room for another machine at the moment. Try again later."
+msgstr "No hay espacio para otra máquina en este momento. Inténtalo de nuevo más tarde."
 
 #: src/pages/ApiKeysPage.tsx
 msgid "These keys do not work with the E2B SDK yet. Support for it is coming soon. We store only a hash of each key, so a key is shown once."
