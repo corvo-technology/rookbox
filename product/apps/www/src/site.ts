@@ -17,3 +17,14 @@ export const WAITLIST_URL = new URL("/waitlist", API_BASE).href;
 
 /** What customers set `E2B_API_URL` to. */
 export const E2B_API_URL: string = API_BASE.replace(/\/$/, "");
+
+/** Public docs. Portuguese lives at the root, every other language under /en/. */
+export const DOCS_URL = "https://docs.rookbox.run/";
+
+export function docsUrl(locale: string, page = ""): string {
+  const base = locale === "pt" ? DOCS_URL : `${DOCS_URL}en/`;
+  return page ? `${base}${page}/` : base;
+}
+
+/** The CLI installer, for people who already have access. */
+export const CLI_INSTALL = "curl -fsSL https://rookbox.run/install | sh";

@@ -217,7 +217,7 @@ docker run -d --restart unless-stopped --name rookbox-www -p 127.0.0.1:8082:80 r
 | --- | --- | --- |
 | `VITE_API_URL` | web | API origin. Unset builds the dashboard on the in-memory fake, with no sign-in. |
 | `VITE_E2B_DOMAIN` | web | Domain shown in the SDK snippets. |
-| `VITE_DOCS_URL` | web | Optional link for "Docs". |
+| `VITE_DOCS_URL` | web | Base of the Docs links. Defaults to https://docs.rookbox.run. |
 | `PUBLIC_SITE_URL` | www | The landing's own URL (sitemap, canonical links, robots.txt). |
 | `PUBLIC_DASHBOARD_URL` | www | Where "Get started" and "Dashboard" go. |
 | `PUBLIC_SDK_DOMAIN` | www | Domain shown in the SDK snippets. |

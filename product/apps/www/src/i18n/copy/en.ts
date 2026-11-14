@@ -18,6 +18,7 @@ export const en: Copy = {
     demo: "Demo",
     e2b: "E2B",
     pix: "Pix",
+    docs: "Docs",
     join: "Join the waitlist",
     signIn: "Sign in",
   },
@@ -50,6 +51,11 @@ export const en: Copy = {
     before: "Before",
     after: "With Rookbox",
     code: "Your code stays the same",
+    cli: {
+      title: "Prefer the terminal?",
+      lead: "Already have access? Install the CLI.",
+      docs: "Read the docs",
+    },
   },
   brazil: {
     // TODO(content): see pt.ts. Legal entity and nota fiscal for BRL billing, the IOF wording
@@ -70,5 +76,5 @@ export const en: Copy = {
     errorRate: "Too many attempts from this connection. Try again in a few minutes.",
     errorGeneric: "We could not reach the server. Your email was not saved. Try again.",
   },
-  footer: { tagline: "Machines for AI agents." },
+  footer: { tagline: "Machines for AI agents.", docs: "Docs" },
 };

@@ -11,6 +11,7 @@ export type Copy = {
     demo: string;
     e2b: string;
     pix: string;
+    docs: string;
     join: string;
     signIn: string;
   };
@@ -34,6 +35,8 @@ export type Copy = {
     before: string;
     after: string;
     code: string;
+    /** A quiet second block for people who already have access. */
+    cli: { title: string; lead: string; docs: string };
   };
   brazil: { title: string; lead: string; badge: string };
   cta: { title: string };
@@ -50,5 +53,5 @@ export type Copy = {
     errorRate: string;
     errorGeneric: string;
   };
-  footer: { tagline: string };
+  footer: { tagline: string; docs: string };
 };
