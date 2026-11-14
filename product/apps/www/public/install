@@ -1,0 +1,140 @@
+#!/bin/sh
+# Rookbox CLI installer.
+#
+#   curl -fsSL https://rookbox.run/install | sh
+#
+# Downloads the rookbox binary for this machine from the latest GitHub release, checks it against
+# the release's SHA256SUMS, and puts it in ~/.local/bin. It needs no sudo and runs nothing it
+# downloads: the binary is only copied into place.
+#
+# Variables:
+#   ROOKBOX_VERSION      install this version (0.1.0) instead of the latest
+#   ROOKBOX_INSTALL_DIR  where to put the binary (default: $HOME/.local/bin)
+#
+# Source and release procedure: https://github.com/corvo-technology/rookbox (product/apps/cli).
+
+set -eu
+
+REPO="corvo-technology/rookbox"
+# Overridable so the installer can be tested against a local server. Not needed otherwise.
+RELEASES_API="${ROOKBOX_RELEASES_API:-https://api.github.com/repos/$REPO/releases?per_page=30}"
+DOWNLOAD_BASE="${ROOKBOX_DOWNLOAD_BASE:-https://github.com/$REPO/releases/download}"
+
+usage() {
+  cat <<'EOF'
+Rookbox CLI installer
+
+Usage:
+  curl -fsSL https://rookbox.run/install | sh
+  curl -fsSL https://rookbox.run/install | sh -s -- --help
+
+Variables:
+  ROOKBOX_VERSION      install this version (e.g. 0.1.0) instead of the latest
+  ROOKBOX_INSTALL_DIR  install directory (default: $HOME/.local/bin)
+
+Supports macOS and Linux on x86_64 and arm64. The download is checked against the
+release's SHA256SUMS before anything is installed.
+EOF
+}
+
+say() { printf '%s\n' "$*"; }
+fail() {
+  printf 'rookbox install: %s\n' "$*" >&2
+  exit 1
+}
+
+case "${1:-}" in
+  -h | --help)
+    usage
+    exit 0
+    ;;
+  "") ;;
+  *)
+    usage >&2
+    exit 2
+    ;;
+esac
+
+command -v curl >/dev/null 2>&1 || fail "curl is required."
+
+# --- platform ---
+case "$(uname -s)" in
+  Darwin) os=darwin ;;
+  Linux) os=linux ;;
+  *) fail "unsupported system: $(uname -s). The Rookbox CLI supports macOS and Linux." ;;
+esac
+case "$(uname -m)" in
+  x86_64 | amd64) cpu=x64 ;;
+  arm64 | aarch64) cpu=arm64 ;;
+  *) fail "unsupported architecture: $(uname -m). The Rookbox CLI supports x86_64 and arm64." ;;
+esac
+asset="rookbox-$os-$cpu"
+
+# --- version ---
+if [ -n "${ROOKBOX_VERSION:-}" ]; then
+  version="${ROOKBOX_VERSION#cli-}"
+  version="${version#v}"
+else
+  say "Looking for the latest release..."
+  listing="$(curl -fsSL "$RELEASES_API")" || fail "could not read the release list from $RELEASES_API"
+  version="$(printf '%s' "$listing" |
+    grep -o '"tag_name": *"cli-v[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"' |
+    head -n 1 |
+    sed 's/.*cli-v\([0-9.]*\)".*/\1/')" || version=""
+  [ -n "$version" ] || fail "no CLI release found yet. Ask for access at https://rookbox.run."
+fi
+case "$version" in
+  *[!0-9.]* | "" | .* | *.) fail "not a version number: $version" ;;
+esac
+tag="cli-v$version"
+
+# --- download ---
+tmp="$(mktemp -d 2>/dev/null || mktemp -d -t rookbox)"
+trap 'rm -rf "$tmp"' EXIT INT TERM HUP
+
+say "Downloading rookbox $version for $os/$cpu..."
+curl -fsSL -o "$tmp/$asset" "$DOWNLOAD_BASE/$tag/$asset" ||
+  fail "could not download $asset for $tag. Check the version and your connection."
+curl -fsSL -o "$tmp/SHA256SUMS" "$DOWNLOAD_BASE/$tag/SHA256SUMS" ||
+  fail "could not download SHA256SUMS for $tag."
+
+# --- verify ---
+expected="$(awk -v name="$asset" '$2 == name || $2 == "*" name { print $1; exit }' "$tmp/SHA256SUMS")"
+[ -n "$expected" ] || fail "SHA256SUMS has no entry for $asset."
+if command -v sha256sum >/dev/null 2>&1; then
+  actual="$(sha256sum "$tmp/$asset" | awk '{ print $1 }')"
+elif command -v shasum >/dev/null 2>&1; then
+  actual="$(shasum -a 256 "$tmp/$asset" | awk '{ print $1 }')"
+else
+  fail "need sha256sum or shasum to verify the download."
+fi
+if [ "$actual" != "$expected" ]; then
+  fail "checksum mismatch for $asset (expected $expected, got $actual). Nothing was installed."
+fi
+say "Checksum OK."
+
+# --- install ---
+dir="${ROOKBOX_INSTALL_DIR:-$HOME/.local/bin}"
+mkdir -p "$dir" || fail "could not create $dir"
+chmod 755 "$tmp/$asset"
+# Copy next to the target, then rename: a running rookbox is replaced atomically.
+cp "$tmp/$asset" "$dir/.rookbox.$$" || fail "could not write to $dir"
+mv -f "$dir/.rookbox.$$" "$dir/rookbox" || fail "could not install to $dir/rookbox"
+say "Installed rookbox $version to $dir/rookbox"
+
+# --- next steps ---
+case ":$PATH:" in
+  *":$dir:"*) ;;
+  *)
+    say ""
+    say "$dir is not in your PATH. Add it:"
+    case "$(basename "${SHELL:-sh}")" in
+      zsh) say "  echo 'export PATH=\"$dir:\$PATH\"' >> ~/.zshrc && source ~/.zshrc" ;;
+      bash) say "  echo 'export PATH=\"$dir:\$PATH\"' >> ~/.bashrc && source ~/.bashrc" ;;
+      fish) say "  fish_add_path $dir" ;;
+      *) say "  export PATH=\"$dir:\$PATH\"" ;;
+    esac
+    ;;
+esac
+say ""
+say "Next: rookbox login"

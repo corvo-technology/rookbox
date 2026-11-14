@@ -44,3 +44,8 @@ jobs:
       - run: pnpm check
       - run: pnpm test
       - run: pnpm build
+      - name: Smoke the CLI bundle
+        run: |
+          expected="$(node -p "require('./apps/cli/package.json').version")"
+          test "$(node apps/cli/dist/rookbox.mjs version)" = "$expected"
+          node apps/cli/dist/rookbox.mjs --help > /dev/null
