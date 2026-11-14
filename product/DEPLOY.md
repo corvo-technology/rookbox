@@ -356,6 +356,35 @@ own metadata keys starting with `rookbox.` or `space.` are dropped.
 Not offered: templates, volumes, fork through the SDK, metrics. Customers cannot choose a size.
 If ECW refuses the service key the customer sees a generic 502 and the log says why.
 
+## Command line tool (`rookbox`)
+
+`apps/cli` is a command line tool built on the unmodified E2B SDK and the API above (README:
+`apps/cli/README.md`). Customers install it with:
+
+```sh
+curl -fsSL https://rookbox.run/install | sh
+```
+
+The landing serves the installer from `apps/www/public/install`. It resolves the newest `cli-v*`
+GitHub release, downloads the binary for the machine's OS and architecture with `SHA256SUMS`,
+aborts on a checksum mismatch and copies the binary to `~/.local/bin`. Nothing on the servers
+changes for the CLI: it uses the same API and `E2B_API_URL`.
+
+**Release procedure.**
+
+1. Set `version` in `apps/cli/package.json` to `X.Y.Z`, merge to `main` through a pull request.
+2. Tag that commit and push the tag: `git tag cli-vX.Y.Z && git push origin cli-vX.Y.Z`.
+3. The `CLI release` workflow (`.github/workflows/cli-release.yml`) fails unless the tag matches
+   `package.json`, builds the four binaries (`darwin-arm64`, `darwin-x64`, `linux-x64`,
+   `linux-arm64`) on native runners with `bun build --compile`, runs `--help` and `version` on each,
+   and creates the GitHub Release with the binaries and `SHA256SUMS`.
+4. Check it from a clean shell: `curl -fsSL https://rookbox.run/install | sh && rookbox version`.
+
+Binaries are not code-signed: a macOS download through the installer carries no quarantine flag, but
+one downloaded by hand from the release page may need `xattr -d com.apple.quarantine`. A bad
+release is withdrawn by deleting the release (the installer then falls back to the previous
+`cli-v*`); versions are never reused.
+
 ## Known gaps
 
 - **Usage is measured, billing is not.** Once the reporter runs, the Usage page shows machine
