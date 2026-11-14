@@ -28,6 +28,11 @@ msgstr "{0} idle"
 msgid "{0} is ready."
 msgstr "{0} is ready."
 
+#. placeholder {0}: result.email
+#: src/pages/admin/AdminWaitlistPage.tsx
+msgid "{0} was invited."
+msgstr "{0} was invited."
+
 #: src/components/CreateMachineDialog.tsx
 msgid "{elapsed} s"
 msgstr "{elapsed} s"
@@ -115,12 +120,17 @@ msgstr "A private Linux machine that starts in seconds."
 msgid "Account"
 msgstr "Account"
 
+#: src/pages/admin/AdminWaitlistPage.tsx
+msgid "Account created"
+msgstr "Account created"
+
 #: src/pages/admin/AdminHealthPage.tsx
 msgid "Accounts and machines can't be read until it is back."
 msgstr "Accounts and machines can't be read until it is back."
 
 #: src/pages/admin/AdminMachinesPage.tsx
 #: src/pages/admin/AdminUsersPage.tsx
+#: src/pages/admin/AdminWaitlistPage.tsx
 #: src/pages/ApiKeysPage.tsx
 #: src/pages/MachinesPage.tsx
 msgid "Actions"
@@ -297,6 +307,7 @@ msgid "Copy key"
 msgstr "Copy key"
 
 #: src/pages/admin/AdminUsersPage.tsx
+#: src/pages/admin/AdminWaitlistPage.tsx
 msgid "Copy password"
 msgstr "Copy password"
 
@@ -462,6 +473,7 @@ msgid "e.g. ci-runner"
 msgstr "e.g. ci-runner"
 
 #: src/pages/admin/AdminUsersPage.tsx
+#: src/pages/admin/AdminWaitlistPage.tsx
 #: src/pages/LoginPage.tsx
 msgid "Email"
 msgstr "Email"
@@ -563,6 +575,7 @@ msgid "Hide password"
 msgstr "Hide password"
 
 #: src/pages/admin/AdminUsersPage.tsx
+#: src/pages/admin/AdminWaitlistPage.tsx
 #: src/pages/ApiKeysPage.tsx
 msgid "I have saved it"
 msgstr "I have saved it"
@@ -579,6 +592,18 @@ msgstr "in this period"
 msgid "Integrations"
 msgstr "Integrations"
 
+#: src/pages/admin/AdminWaitlistPage.tsx
+msgid "Invite"
+msgstr "Invite"
+
+#: src/pages/admin/AdminWaitlistPage.tsx
+msgid "Invite {email}"
+msgstr "Invite {email}"
+
+#: src/pages/admin/AdminWaitlistPage.tsx
+msgid "Invited"
+msgstr "Invited"
+
 #: src/pages/MachinesPage.tsx
 msgid "It appears here when it's ready."
 msgstr "It appears here when it's ready."
@@ -590,6 +615,10 @@ msgstr "It may have been deleted. The list will refresh."
 #: src/components/MachineActions.tsx
 msgid "Its disk and saved memory are deleted. This can't be undone."
 msgstr "Its disk and saved memory are deleted. This can't be undone."
+
+#: src/pages/admin/AdminWaitlistPage.tsx
+msgid "Joined"
+msgstr "Joined"
 
 #: src/components/CreateMachineDialog.tsx
 msgid "Keep working, tell me when it's ready"
@@ -650,6 +679,7 @@ msgstr "Linux with root access and no screen. The fastest to start."
 #: src/pages/admin/AdminMachinesPage.tsx
 #: src/pages/admin/AdminUsagePage.tsx
 #: src/pages/admin/AdminUsersPage.tsx
+#: src/pages/admin/AdminWaitlistPage.tsx
 #: src/pages/MachinesPage.tsx
 #: src/pages/UsagePage.tsx
 msgid "Loading"
@@ -798,6 +828,10 @@ msgstr "No usage in this period"
 msgid "No user has used machines in this period."
 msgstr "No user has used machines in this period."
 
+#: src/pages/admin/AdminWaitlistPage.tsx
+msgid "Nobody is waiting yet"
+msgstr "Nobody is waiting yet"
+
 #: src/pages/admin/AdminHealthPage.tsx
 msgid "Not answering"
 msgstr "Not answering"
@@ -850,6 +884,10 @@ msgstr "Page not found"
 #: src/pages/LoginPage.tsx
 msgid "Password"
 msgstr "Password"
+
+#: src/pages/admin/AdminWaitlistPage.tsx
+msgid "People who ask for access on the landing page show up here."
+msgstr "People who ask for access on the landing page show up here."
 
 #: src/pages/admin/AdminUsagePage.tsx
 #: src/pages/UsagePage.tsx
@@ -1095,6 +1133,7 @@ msgstr "State filter"
 
 #: src/pages/admin/AdminMachinesPage.tsx
 #: src/pages/admin/AdminUsersPage.tsx
+#: src/pages/admin/AdminWaitlistPage.tsx
 #: src/pages/MachinesPage.tsx
 msgid "Status"
 msgstr "Status"
@@ -1227,6 +1266,16 @@ msgstr "The desktop image built for AI agents that use a screen."
 msgid "The first start of a template can take about 15 seconds."
 msgstr "The first start of a template can take about 15 seconds."
 
+#. placeholder {0}: result.email
+#: src/pages/admin/AdminWaitlistPage.tsx
+msgid "The invitation email could not be sent to {0}. Send them the password yourself."
+msgstr "The invitation email could not be sent to {0}. Send them the password yourself."
+
+#. placeholder {0}: result.email
+#: src/pages/admin/AdminWaitlistPage.tsx
+msgid "The invitation email was sent to {0}."
+msgstr "The invitation email was sent to {0}."
+
 #: src/components/ErrorNote.tsx
 msgid "The list may be out of date. Refresh it and try again."
 msgstr "The list may be out of date. Refresh it and try again."
@@ -1316,6 +1365,10 @@ msgstr "This month"
 #: src/pages/admin/AdminHealthPage.tsx
 msgid "This page refreshes by itself every 15 seconds."
 msgstr "This page refreshes by itself every 15 seconds."
+
+#: src/pages/admin/AdminWaitlistPage.tsx
+msgid "This temporary password is shown only once."
+msgstr "This temporary password is shown only once."
 
 #: src/pages/MachinePage.tsx
 msgid "Timed out"
@@ -1450,9 +1503,22 @@ msgstr "Wait about {minutes} minutes, then try again."
 msgid "Wait for it to finish what it's doing, then try again."
 msgstr "Wait for it to finish what it's doing, then try again."
 
+#: src/pages/admin/AdminWaitlistPage.tsx
+msgid "Waiting"
+msgstr "Waiting"
+
+#: src/components/AppShell.tsx
+#: src/pages/admin/AdminWaitlistPage.tsx
+msgid "Waitlist"
+msgstr "Waitlist"
+
 #: src/components/AppShell.tsx
 msgid "Webhooks"
 msgstr "Webhooks"
+
+#: src/pages/admin/AdminWaitlistPage.tsx
+msgid "What they will run"
+msgstr "What they will run"
 
 #: src/components/AppShell.tsx
 msgid "Workspace"

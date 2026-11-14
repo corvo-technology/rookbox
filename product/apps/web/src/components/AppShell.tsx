@@ -8,6 +8,7 @@ import {
   HardDrive,
   KeyRound,
   Layers,
+  ListChecks,
   Lock,
   Menu,
   Moon,
@@ -42,6 +43,7 @@ function useNav(): { heading?: string; items: NavItem[] }[] {
           items: [
             { icon: Activity, label: t`Health`, to: "/admin", end: true },
             { icon: UserCog, label: t`Users`, to: "/admin/users" },
+            { icon: ListChecks, label: t`Waitlist`, to: "/admin/waitlist" },
             { icon: HardDrive, label: t`All machines`, to: "/admin/machines" },
             { icon: ChartColumn, label: t`Usage by user`, to: "/admin/usage" },
           ],

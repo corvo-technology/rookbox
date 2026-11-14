@@ -6,3 +6,4 @@ export * from "./errors.js";
 export * from "./machines.js";
 export * from "./rpc.js";
 export * from "./usage.js";
+export * from "./waitlist.js";

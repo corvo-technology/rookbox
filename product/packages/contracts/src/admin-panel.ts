@@ -3,6 +3,7 @@ import * as z from "zod";
 import { SuspendUserMachinesResult } from "./admin.js";
 import { API_ERRORS } from "./errors.js";
 import { MachineId, MachineSize, MachineStatus, MachineTemplate } from "./machines.js";
+import { waitlistContract } from "./waitlist.js";
 
 const ADMIN_ERRORS = { FORBIDDEN: API_ERRORS.FORBIDDEN, NOT_FOUND: API_ERRORS.NOT_FOUND } as const;
 
@@ -129,6 +130,7 @@ export const adminPanelContract = {
       .input(EnableUserInput)
       .output(z.object({ email: z.string() })),
   },
+  waitlist: waitlistContract,
   machines: {
     list: oc.errors(ADMIN_ERRORS).output(z.array(AdminMachineSchema)),
     suspend: oc.errors(API_ERRORS).input(MachineIdInput).output(ok),
