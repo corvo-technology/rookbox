@@ -8,7 +8,7 @@ Three pieces, three places:
 | Dashboard (`apps/web`) | The VPS, `apps/web/Dockerfile` (Caddy) | `https://app.rookbox.run` |
 | Landing (`apps/www`) | The VPS, `apps/www/Dockerfile` (Caddy) | `https://rookbox.run` |
 | Docs (`apps/docs`) | The VPS, `apps/docs/Dockerfile` (Caddy), see "Docs site" | `https://docs.rookbox.run` |
-| SPACE (the sandbox infrastructure) | A separate dedicated server | `https://api.box.rookbox.run`, sandboxes at `https://<port>-<id>.box.rookbox.run` |
+| Sandbox engine (the sandbox infrastructure) | A separate dedicated server | `https://api.box.rookbox.run`, sandboxes at `https://<port>-<id>.box.rookbox.run` |
 
 Every build context is the `product/` directory.
 
@@ -21,11 +21,11 @@ Every build context is the `product/` directory.
 | `docs.rookbox.run` | The VPS (behind Cloudflare) |
 | `api.rookbox.run` | Guará Cloud (the CNAME or A record it gives for the service) |
 | `desk.rookbox.run` | The same Guará service as `api.` (a second hostname on it): the desktop's own origin |
-| `api.box.rookbox.run` | The SPACE server |
-| `*.box.rookbox.run` (wildcard) | The SPACE server |
+| `api.box.rookbox.run` | The sandbox engine server |
+| `*.box.rookbox.run` (wildcard) | The sandbox engine server |
 
 Sandbox ports are served at `<port>-<id>.box.rookbox.run`, so the wildcard needs a wildcard TLS
-certificate on the SPACE side (a DNS-01 challenge). The dashboard and API do not need it.
+certificate on the sandbox engine side (a DNS-01 challenge). The dashboard and API do not need it.
 
 `app.` and `api.` are the same site (`rookbox.run`), so the dashboard can call the API with
 `SameSite=Lax` cookies and `credentials: "include"`. The session cookie is **host-only**: it is
@@ -65,7 +65,7 @@ path `apps/api/Dockerfile`, port `3000`). Guará injects `DATABASE_URL`; set the
 | `ROOKBOX_ALLOWED_EMAILS` | The owner's email first, then every beta tester's (comma-separated). Only these emails can have an account or sign in. Sign-up over HTTP is always closed; accounts come from `user:create` ("Beta accounts" below). |
 | `ROOKBOX_SEED_OWNER_PASSWORD` | 12+ characters. Creates the owner account at the first start. Remove it afterwards. |
 | `SPACE_ECW_API_URL` | `https://api.box.rookbox.run` |
-| `SPACE_ECW_API_KEY` | The SPACE service key (an ECW key of one SPACE organization). Server side only. |
+| `SPACE_ECW_API_KEY` | The sandbox engine service key (an ECW key of one engine organization). Server side only. |
 | `E2B_DOMAIN` | `box.rookbox.run` |
 | `SPACE_TEMPLATES` | Optional, default `desktop,corvo-computer,seed`. Templates people may create machines from, in the order the dashboard offers them. |
 | `SPACE_TIMEOUT_MS` | Optional, default `60000` (5000 to 300000). How long to wait on a call that waits on a VM: create, suspend, restore, fork. |
@@ -101,7 +101,7 @@ docker run --rm -p 3000:3000 --env-file apps/api/.env rookbox-api
 Run these in order after the first deploy and after any change to the variables above.
 
 1. `curl https://api.rookbox.run/health` returns `{"ok":true,"db":"ok",...}` with status 200. The log shows the migrations ran and, the first time, `owner account created`.
-2. `curl https://api.rookbox.run/health/space` returns `"ok":true` with `"reachable":true` and `"auth":"ok"`. A 503 with `"auth":"missing"` or `"rejected"` means the key is not set or is wrong, `"unknown"` that SPACE answered oddly; `"reachable":false` means the URL, DNS or network is wrong.
+2. `curl https://api.rookbox.run/health/space` returns `"ok":true` with `"reachable":true` and `"auth":"ok"`. A 503 with `"auth":"missing"` or `"rejected"` means the key is not set or is wrong, `"unknown"` that the sandbox engine answered oddly; `"reachable":false` means the URL, DNS or network is wrong.
 3. Open `https://app.rookbox.run`, sign in as the owner, and switch the language (English, Portuguese, Spanish) from the menu.
 4. Create a machine from each template you offer. It should reach `running`.
 5. Open its terminal and run a command; open the desktop on a `desktop` machine.
@@ -180,12 +180,12 @@ the public `POST https://api.rookbox.run/waitlist` (the landing's `PUBLIC_API_UR
   once in the dashboard, in case the email does not arrive. The migration adds the
   `waitlist_entry` table and runs at start.
 
-### SPACE service key
+### Sandbox engine service key
 
-`SPACE_ECW_API_KEY` is an ECW API key for one SPACE organization (see `docs/ecw.md`, "Create an
-API key", and `scripts/seed-api-key.sh`). The API tags every sandbox it creates with
+`SPACE_ECW_API_KEY` is an ECW (E2B-compatible) API key for one organization of the sandbox engine
+(see `docs/ecw.md`, "Create an API key", and `scripts/seed-api-key.sh`). The API tags every sandbox it creates with
 `rookbox.owner=<user id>` and only touches sandboxes of the signed-in user. All Rookbox users
-share that one SPACE organization.
+share that one engine organization.
 
 ## 2. Dashboard and landing on the VPS
 
@@ -328,13 +328,13 @@ use rather than its provisioned size; verify against a machine you know.
 
 ## How machine access works
 
-- **Machines** are SPACE sandboxes created through its E2B-compatible API (ECW). ECW `pause` is
-  SPACE `suspend`, and ECW `resume` is SPACE `restore`. Every create sends the idle timeout with
+- **Machines** are sandboxes of the sandbox engine, created through its E2B-compatible API (ECW).
+  ECW `pause` is the engine's `suspend`, and ECW `resume` is its `restore`. Every create sends the idle timeout with
   auto-pause on, so an idle machine suspends itself.
 - **Desktop.** A sandbox's public ports require the header `e2b-traffic-access-token`. A browser
   link or WebSocket cannot send it, and ECW rejects `allowPublicTraffic`. So "Open desktop" asks the API for a signed link, which lands on
   `https://desk.rookbox.run/m/<id>/vnc.html`, where the API forwards HTTP and the noVNC WebSocket
-  to `https://6080-<id>.box.rookbox.run` with the token added. The token comes from SPACE's connect
+  to `https://6080-<id>.box.rookbox.run` with the token added. The token comes from the engine's connect
   call and is cached for a minute. It never reaches the browser.
   The desktop is served from its own origin, `https://desk.rookbox.run` (see "Desktop origin").
 - **Exec.** `machines.exec` runs `/bin/bash -l -c <command>` through the sandbox's process service
@@ -421,7 +421,7 @@ release is withdrawn by deleting the release (the installer then falls back to t
   hours and sizes. There are no prices, credits or invoices yet.
 - **Snapshots, secrets, webhooks and members** do not exist yet; the dashboard hides them (see
   `SHOW_COMING_SOON` in `apps/web/src/components/AppShell.tsx`).
-- The SPACE side (`api.box.rookbox.run`) was not reachable while this was written, so the SPACE
+- The sandbox engine (`api.box.rookbox.run`) was not reachable while this was written, so its
   client was built from the ECW source and docs and tested against mocks. Run one real create,
   suspend, restore, exec and desktop pass after the first deploy.
 

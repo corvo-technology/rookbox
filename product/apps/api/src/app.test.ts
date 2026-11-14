@@ -179,7 +179,7 @@ describe("/health/space", () => {
     });
   });
 
-  it("is ok when SPACE accepts the key", async () => {
+  it("is ok when the sandbox engine accepts the key", async () => {
     const { app } = setup();
     const response = await app.request("/health/space");
     expect(response.status).toBe(200);

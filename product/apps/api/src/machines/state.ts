@@ -7,9 +7,9 @@ export const OP_TTL_MS = 5 * 60_000;
 export type MachineOp = "suspending" | "restoring" | "deleting";
 
 /**
- * The dashboard's status for a machine. SPACE reports only running, paused or failed (or no
+ * The dashboard's status for a machine. The sandbox engine reports only running, paused or failed (or no
  * sandbox at all); the in-flight operation the API recorded fills in the transitions, and is
- * dropped as soon as SPACE shows the state the operation was heading for. ECW "paused" is SPACE
+ * dropped as soon as the sandbox engine shows the state the operation was heading for. ECW "paused" is the sandbox engine
  * `suspended`.
  *
  * Returns null when the machine no longer exists.

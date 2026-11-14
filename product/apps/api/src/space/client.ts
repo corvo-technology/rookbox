@@ -1,6 +1,6 @@
 import type { ExecResult } from "@rookbox/contracts";
 
-/** What SPACE reports through its E2B-compatible API. */
+/** What the sandbox engine reports through its E2B-compatible API. */
 export type SpaceState = "running" | "paused" | "failed";
 
 export type SandboxInfo = {
@@ -16,11 +16,11 @@ export type SandboxInfo = {
 
 export type SpaceSize = { vcpu: number; memoryMib: number; diskMib: number };
 
-/** What `/health/space` learns about SPACE with one cheap, authenticated read. */
+/** What `/health/space` learns about the sandbox engine with one cheap, authenticated read. */
 export type SpaceProbe = {
   /** A service key is set on this API. */
   keyConfigured: boolean;
-  /** SPACE answered at all (any HTTP status). */
+  /** The sandbox engine answered at all (any HTTP status). */
   reachable: boolean;
   /** HTTP status class only (`2xx`, `4xx`, `5xx`), never a body. */
   statusClass: "2xx" | "3xx" | "4xx" | "5xx" | null;
@@ -29,7 +29,7 @@ export type SpaceProbe = {
   ms: number;
 };
 
-/** The slice of SPACE the product API uses. The real client calls ECW; tests pass a fake. */
+/** The slice of the sandbox engine the product API uses. The real client calls ECW; tests pass a fake. */
 export interface SpaceClient {
   create(input: {
     templateId: string;
@@ -41,18 +41,18 @@ export interface SpaceClient {
   }): Promise<{ id: string }>;
   /** Sandboxes whose metadata contains every given pair. */
   list(metadata: Record<string, string>): Promise<SandboxInfo[]>;
-  /** Null when SPACE has no such sandbox. */
+  /** Null when the sandbox engine has no such sandbox. */
   get(id: string): Promise<SandboxInfo | null>;
-  /** ECW pause: SPACE suspends the VM and releases the worker. */
+  /** ECW pause: the sandbox engine suspends the VM and releases the worker. */
   suspend(id: string): Promise<void>;
-  /** ECW resume: SPACE restores the persisted VM. */
+  /** ECW resume: the sandbox engine restores the persisted VM. */
   restore(id: string, timeoutS: number): Promise<void>;
   /** Copies the disk into a new sandbox; returns the new id. */
   fork(id: string, timeoutS: number): Promise<{ id: string }>;
-  /** `queued` means SPACE accepted the delete but has not finished it. */
+  /** `queued` means the sandbox engine accepted the delete but has not finished it. */
   kill(id: string): Promise<"deleted" | "queued" | "missing">;
   /**
-   * The token the sandbox's public ports require in `e2b-traffic-access-token`. SPACE returns it
+   * The token the sandbox's public ports require in `e2b-traffic-access-token`. The sandbox engine returns it
    * from connect, which also sets the idle timeout, so call it for a running sandbox only.
    */
   trafficToken(id: string, timeoutS: number): Promise<string>;
@@ -62,12 +62,12 @@ export interface SpaceClient {
     command: string,
     timeoutMs: number,
   ): Promise<ExecResult>;
-  /** Never throws: reports whether SPACE is reachable and accepts the key. */
+  /** Never throws: reports whether the sandbox engine is reachable and accepts the key. */
   probe(): Promise<SpaceProbe>;
 }
 
 /**
- * Why a SPACE call failed, in terms the product can act on. The raw upstream message stays in
+ * Why a sandbox engine call failed, in terms the product can act on. The raw upstream message stays in
  * `message` for logs; it is never sent to a client.
  */
 export type SpaceErrorCode =
@@ -82,7 +82,7 @@ export type SpaceErrorCode =
   | "UNREACHABLE"
   | "UPSTREAM";
 
-/** Classifies an HTTP status SPACE answered with. */
+/** Classifies an HTTP status the sandbox engine answered with. */
 export function classifyStatus(status: number, message = ""): SpaceErrorCode {
   if (status === 401 || status === 403) return "AUTH";
   if (status === 404) return "NOT_FOUND";
@@ -99,11 +99,11 @@ export function classifyStatus(status: number, message = ""): SpaceErrorCode {
 export class SpaceError extends Error {
   readonly code: SpaceErrorCode;
   constructor(
-    /** HTTP status from SPACE, or 0 when no answer arrived. */
+    /** HTTP status from the sandbox engine, or 0 when no answer arrived. */
     readonly status: number,
     message: string,
     code?: SpaceErrorCode,
-    /** `Retry-After` from SPACE, in milliseconds. */
+    /** `Retry-After` from the sandbox engine, in milliseconds. */
     readonly retryAfterMs?: number,
   ) {
     super(message);
@@ -117,7 +117,7 @@ export function sandboxHost(port: number | string, sandboxId: string, domain: st
   return `${port}-${sandboxId}.${domain}`;
 }
 
-/** SPACE's reserved metadata key for sizing a sandbox at create. */
+/** The engine's reserved metadata key for sizing a sandbox at create. */
 export function resourcesMetadata(size: SpaceSize): string {
   return JSON.stringify({ vcpu: size.vcpu, memory_mib: size.memoryMib, disk_mib: size.diskMib });
 }
@@ -229,7 +229,9 @@ export function createEcwClient(options: EcwClientOptions): SpaceClient {
       const timedOut = error instanceof Error && error.name === "TimeoutError";
       throw new SpaceError(
         0,
-        timedOut ? "SPACE did not answer in time" : "SPACE could not be reached",
+        timedOut
+          ? "The sandbox engine did not answer in time"
+          : "The sandbox engine could not be reached",
         timedOut ? "TIMEOUT" : "UNREACHABLE",
       );
     }
@@ -245,7 +247,7 @@ export function createEcwClient(options: EcwClientOptions): SpaceClient {
       const message =
         json && typeof json === "object" && "message" in json
           ? String((json as Json).message).slice(0, 300)
-          : `SPACE answered ${response.status}`;
+          : `The sandbox engine answered ${response.status}`;
       throw new SpaceError(
         response.status,
         message,
@@ -299,7 +301,8 @@ export function createEcwClient(options: EcwClientOptions): SpaceClient {
         throw error;
       }
       const id = (json as Json | null)?.sandboxID;
-      if (typeof id !== "string" || !id) throw new SpaceError(502, "SPACE returned no sandbox id");
+      if (typeof id !== "string" || !id)
+        throw new SpaceError(502, "The sandbox engine returned no sandbox id");
       return { id };
     },
 
@@ -348,7 +351,7 @@ export function createEcwClient(options: EcwClientOptions): SpaceClient {
       const first = Array.isArray(json) ? (json[0] as Json | undefined) : undefined;
       if (!first || first.sandboxID === undefined) {
         const error = first?.error as Json | undefined;
-        throw new SpaceError(502, String(error?.message ?? "SPACE returned no fork"));
+        throw new SpaceError(502, String(error?.message ?? "The sandbox engine returned no fork"));
       }
       return { id: String(first.sandboxID) };
     },
@@ -371,7 +374,7 @@ export function createEcwClient(options: EcwClientOptions): SpaceClient {
       );
       const token = (json as Json | null)?.trafficAccessToken;
       if (typeof token !== "string" || !token) {
-        throw new SpaceError(502, "SPACE did not return a traffic access token");
+        throw new SpaceError(502, "The sandbox engine did not return a traffic access token");
       }
       return token;
     },

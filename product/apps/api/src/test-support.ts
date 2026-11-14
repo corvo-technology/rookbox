@@ -47,7 +47,7 @@ export function memoryMachineStore(): MachineStore & { rows: Map<string, Machine
 
 export type FakeSandbox = SandboxInfo & { trafficToken: string };
 
-/** An in-memory SPACE that records what the API asked of it. */
+/** An in-memory sandbox engine that records what the API asked of it. */
 export function fakeSpace() {
   const sandboxes = new Map<string, FakeSandbox>();
   const calls: { op: string; args: unknown[] }[] = [];
@@ -107,7 +107,7 @@ export function fakeSpace() {
       record("fork", id, timeoutS);
       const source = require(id);
       const child = `sbx${next++}`;
-      // Like SPACE, the fork starts without the source's lifecycle state.
+      // Like the sandbox engine, the fork starts without the source's lifecycle state.
       sandboxes.set(child, { ...source, id: child, state: "running", metadata: {} });
       return { id: child };
     },

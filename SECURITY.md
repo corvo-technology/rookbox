@@ -1,31 +1,13 @@
-# Security
+# Security policy
 
-This policy describes how to report security vulnerabilities in Rookbox, a
-deployment built on SPACE, and which versions receive security fixes. Please
-use the private reporting channel below for security-sensitive findings.
+Please report security problems privately. Do not open a public issue or pull request.
 
-**Do not report security vulnerabilities through public GitHub issues,
-pull requests, or discussions.**
+Use GitHub's private vulnerability reporting: open the **Security** tab of this repository and
+choose **Report a vulnerability**. This covers the Rookbox product (`product/`) and the sandbox
+engine at the repository root.
 
-## Reporting a Potential Security Vulnerability
+Include what you found, how to reproduce it, and the impact you expect. Please keep credentials,
+customer data and raw logs out of the report; a synthetic reproduction is enough.
 
-Please report security issues privately:
-
-- Web: [Report a vulnerability](https://github.com/corvo-technology/rookbox/security/advisories/new)
-- Please include the following information:
-  - Affected version, branch, or commit
-  - Type of vulnerability and affected component
-  - Instructions to reproduce the vulnerability
-  - Proof-of-concept or exploit code, if available
-  - Potential impact, including how an attacker could exploit the vulnerability
-
-Use synthetic data where possible and remove credentials, customer data,
-and other sensitive information from reproductions and logs.
-
-A vulnerability that also affects upstream SPACE, independent of changes made
-in this repository, should also be reported to the SPACE maintainers through
-their [private reporting channel](https://github.com/perplexityai/SPACE/security/advisories/new).
-
-## Supported Versions
-
-Only the latest commit on the default branch receives security fixes.
+The owner will acknowledge the report, work on a fix and coordinate disclosure with you. Please
+give us a reasonable time to fix the problem before you disclose it.

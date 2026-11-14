@@ -20,7 +20,7 @@ export const AVAILABLE_TEMPLATES: readonly MachineTemplate[] = [...TEMPLATES];
 export const DESKTOP_TEMPLATES: readonly MachineTemplate[] = ["desktop", "corvo-computer"];
 
 /**
- * Lifecycle, in SPACE vocabulary: `suspend` keeps the machine's memory and releases the worker,
+ * Lifecycle, in the sandbox engine vocabulary: `suspend` keeps the machine's memory and releases the worker,
  * `restore` brings it back where it left off.
  */
 export const MACHINE_STATUSES = [

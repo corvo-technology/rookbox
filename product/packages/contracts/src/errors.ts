@@ -17,15 +17,15 @@ export const API_ERRORS = {
     data: z.object({ limit: z.number().int() }),
   },
   NAME_TAKEN: { status: 409, message: "A machine with that name already exists." },
-  /** The template is not offered by this deployment, or SPACE has no such template. */
+  /** The template is not offered by this deployment, or the sandbox engine has no such template. */
   TEMPLATE_UNAVAILABLE: { status: 400, message: "That template is not available." },
-  /** SPACE refused the service key. An operator has to fix it; retrying will not help. */
+  /** The sandbox engine refused the service key. An operator has to fix it; retrying will not help. */
   HOST_AUTH: { status: 502, message: "The machine service rejected Rookbox's credentials." },
   HOST_UNREACHABLE: { status: 503, message: "The machine service can't be reached." },
   HOST_TIMEOUT: { status: 504, message: "The machine service took too long to answer." },
-  /** SPACE has no room right now (503, or 429 without a quota). */
+  /** The sandbox engine has no room right now (503, or 429 without a quota). */
   HOST_CAPACITY: { status: 503, message: "The machine service is at capacity." },
-  /** SPACE's own quota or limit was reached. */
+  /** The engine's own quota or limit was reached. */
   HOST_QUOTA: { status: 429, message: "The machine service's limit was reached." },
   /** Too many requests of one kind from this account or address; `retryAfterS` says when to retry. */
   RATE_LIMITED: {
@@ -35,7 +35,7 @@ export const API_ERRORS = {
   },
   /** The caller is signed in but may not do this (admin procedures). */
   FORBIDDEN: { status: 403, message: "Not allowed." },
-  /** Any other SPACE failure. */
+  /** Any other sandbox engine failure. */
   HOST_ERROR: { status: 502, message: "The machine service failed." },
 } as const;
 

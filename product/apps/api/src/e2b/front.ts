@@ -15,7 +15,7 @@ import { metadataQuery, resourcesMetadata } from "../space/client.js";
  * The E2B-compatible control plane.
  *
  * The unmodified E2B SDKs call it with `E2B_API_KEY=<a Rookbox key>`. It authenticates the key,
- * works out who owns it, and forwards the call to the SPACE ECW upstream with the shared service
+ * works out who owns it, and forwards the call to the sandbox engine ECW upstream with the shared service
  * key, tagging every sandbox with its owner. A sandbox that is not the caller's is a 404.
  * ECW's answers (envd and traffic tokens, domain) pass through, so the SDK reaches the machine
  * directly at `<port>-<id>.<E2B_DOMAIN>`.

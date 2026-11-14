@@ -1,103 +1,171 @@
-# SPACE
+# Rookbox
 
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Product CI](https://github.com/corvo-technology/rookbox/actions/workflows/product-ci.yml/badge.svg)](https://github.com/corvo-technology/rookbox/actions/workflows/product-ci.yml)
 
-[Guide](https://space.docs.perplexity.ai/guide/index.html) · [API Reference](https://space.docs.perplexity.ai/api/index.html)
+**English:** see [README.en.md](README.en.md).
 
-SPACE (Sandboxed Platform for Agentic Code Execution) is a sandbox platform for running code in isolated Firecracker microVMs. Applications use its HTTP API to create Linux environments, execute commands, collect output, and manage sandbox lifecycles.
+Rookbox entrega computadores Linux completos, sob demanda, para agentes de IA. Cada máquina é uma
+microVM Firecracker isolada: nasce em cerca de 2 segundos, pode ser suspensa e restaurada com a
+memória intacta, e fala o protocolo do SDK da E2B. Se o seu agente já usa o SDK, basta trocar duas
+variáveis de ambiente.
 
-Use SPACE when your application needs a separate execution environment for an agent, a user workspace, or a code-running job. Your application decides what to run and what results to keep; SPACE manages the sandbox, its processes, and the connection carrying command output.
+- Site: <https://rookbox.run>
+- Documentação: <https://docs.rookbox.run>
+- Painel: <https://app.rookbox.run>
 
-## How it works
+## O que você ganha
 
-A **template** supplies the starting environment. A **sandbox** is an instance of that environment with its own VM and writable filesystem; multiple commands can run in the same sandbox.
+- **Máquinas em ~2 s.** Criação rápida a partir de templates (`desktop`, `seed`, ...).
+- **Suspender e retomar.** A máquina ociosa é suspensa e volta de onde parou.
+- **Compatível com o SDK da E2B.** `Sandbox.create()`, comandos, arquivos e portas, sem reimplementar nada.
+- **Desktop.** Uma área de trabalho completa no navegador, para agentes que usam a interface gráfica.
+- **CLI.** `rookbox new`, `rookbox shell`, e o resto no terminal.
+- **Painel.** Máquinas, chaves de API e uso.
 
-```text
-Your application
-    |
-    +-- Create sandbox from template --> Wait for readiness
-    |
-    +-- Create command session --------> Attach to start the process
-    |                                    Read output and exit result
-    |
-    +-- Keep, pause, or suspend --------> Wake when needed
-    |
-    +-- Delete sandbox
+## Comece em 60 segundos
+
+Crie uma chave de API no painel e exporte duas variáveis:
+
+```sh
+export E2B_API_KEY=rbx_...
+export E2B_API_URL=https://api.rookbox.run
 ```
 
-Sandbox lifecycle changes are asynchronous: the API returns an operation ID that you poll for completion. Command output uses a separate data-plane connection and a session-scoped attachment token.
+Python (`pip install e2b`):
 
-## Get started
+```python
+from e2b import Sandbox
 
-Follow [Installation and configuration](docs/installation.md) to deploy SPACE in a local Kind cluster and authenticate. Then follow [Your first sandbox](docs/first-sandbox.md) to run a command and collect its output. The setup guide covers Kubernetes; the [architecture guide](docs/architecture.md#request-and-execution-flow) also explains how SPACE can run without it.
-
-## Documentation
-
-Read the hosted [Guide](https://space.docs.perplexity.ai/guide/index.html) and [API Reference](https://space.docs.perplexity.ai/api/index.html) online. Both update automatically after changes merge. The links below point to source documentation in this checkout.
-
-| Guide | What you will learn |
-|---|---|
-| [Versioning and compatibility](docs/versioning.md) | Release progression, supported guests, service stability, and upgrade/rollback requirements. |
-| [Architecture](docs/architecture.md) | How templates, sandboxes, processes, sessions, and operations relate; what pause and suspend preserve; how the services fit together. |
-| [Installation and configuration](docs/installation.md) | Host prerequisites, local Kind deployment, configuration defaults, authentication, verification, and teardown. |
-| [Operator CLI](crates/l50_app/admin/cli/README.md) | API access, port forwarding, `space-admin-cli login`, nodes, warm pools, and system-template builds. |
-| [Your first sandbox](docs/first-sandbox.md) | A complete API workflow, command customization, output handling, inspection, and deletion. |
-| [E2B Compatibility Wrapper](docs/ecw.md) | Configure ECW, create a compatibility API key, use the tested E2B Python SDK, and understand supported behavior and limitations. |
-| [API reference](docs/api/index.md) | Endpoints, request and response fields, and examples. |
-| [Troubleshooting](docs/troubleshooting.md) | Local setup, authentication, lifecycle operations, command streams, and safe retries. |
-| [Operator egress profiles](docs/egress-profiles.md) | Configure named policy additions for federated native and ECW creates. |
-| [Observability](docs/observability.md) | Telemetry build features, the Rust/Go selector contract, and unchanged image defaults. |
-| [Warm pools](docs/warm-pools.md) | Keep booted sandboxes ready on Kubernetes so creates skip a cold boot. |
-| [Base snapshots](docs/base-snapshots.md) | Restore sandboxes from a snapshot on a single node, optionally with a node warm pool. |
-
-### Build documentation locally
-
-To browse the guide and API together locally, install [mdBook 0.4.52](https://github.com/rust-lang/mdBook/releases/tag/v0.4.52) and the [API build prerequisites](docs/api/index.md#browse-locally). From a clean checkout, run:
-
-```bash
-bash scripts/build-docs.sh
-python3 -m http.server 8000 --bind 127.0.0.1 --directory target/docs/site
+sbx = Sandbox.create()
+print(sbx.commands.run("uname -a").stdout)
+sbx.kill()
 ```
 
-Open <http://127.0.0.1:8000>. The build also requires Git and Python 3.11+. The standalone commands remain `bash scripts/build-guide-docs.sh` and `bash scripts/build-api-docs.sh`; they also support local uncommitted edits.
+TypeScript (`npm install e2b`):
 
-The API serves its generated reference at `/openapi-m1.json`, with request fields, response schemas, and errors. `/openapi.json` adds the incubating operations that are not hidden. Some incubating operations, including snapshots, checkpoint, and rollback, are hidden: unless the deployment enables them for your organization, they answer as if they did not exist. Neither document lists them for any caller; `/openapi-full.json` documents every operation and requires API credentials.
+```ts
+import { Sandbox } from "e2b";
 
-## SPACE API
-
-The SPACE API manages sandbox lifecycles, runs and controls processes, and streams their output. Fields marked `incubating` in the schema are outside the supported contract.
-
-SPACE is implemented in Rust, but applications interact with it over HTTP and server-sent events. You do not need to embed a Rust library to use it; the first-sandbox walkthrough runs a standard-library-only Python example. Installation and cluster diagnostics use Bash.
-
-## Development
-
-See [DEPENDENCIES.md](DEPENDENCIES.md) when adding or updating third-party code.
-
-After [local installation](docs/installation.md), the Tilt watcher that `up.sh` started keeps running: it rebuilds affected images and rolls their workloads as files change. Rerun `up.sh` to wait for the stack to settle again; do not start a second `tilt up`. The [Kind runbook](infra/space/kind/README.md) covers this development loop, local topology, and template builds.
-
-Use focused unit tests for component logic and the [Kind smoke suites](infra/space/kind/README.md#smoke-test) for runtime behavior. For setup-specific diagnostics, see [host-path troubleshooting](infra/space/kind/README.md#host-paths-and-running-as-a-user-other-than-dev) and [template-build debugging](infra/space/kind/README.md#debugging-a-template-build).
-
-## Repository layout
-
-```text
-crates/<layer>/         Rust crates by layer: l10_foundation, l20_domain, l30_storage,
-                        l40_api, l50_app, test_support, tools (crates/<layer>/AGENTS.md)
-crates/libs/            Crates that predate the layer directories, until they move
-docs/                   Architecture, setup, API walkthrough, and troubleshooting
-examples/               Runnable API examples without an SDK dependency
-proto/                  gRPC protobuf definitions
-templates/firecracker/  Seed builder and template recipes
-scripts/                Utility scripts and smoke suites (scripts/tests/)
-docker/                 Service Dockerfiles and Rust artifact build
-ci/                     CI checks and artifact build scripts
-infra/space/kind/        Local Kind configuration, bootstrap, and development runbook
-infra/space/aws/reference/  Reference EKS deployment, applied on a schedule
+const sbx = await Sandbox.create();
+console.log((await sbx.commands.run("uname -a")).stdout);
+await sbx.kill();
 ```
 
-## License
+Ou pela linha de comando (macOS e Linux):
 
-SPACE is licensed under the [Apache License, Version 2.0](LICENSE).
+```sh
+curl -fsSL https://rookbox.run/install | sh
+rookbox login        # pede a chave de API, valida e salva
+rookbox new          # cria uma máquina e imprime o id
+rookbox shell <id>   # terminal dentro dela
+```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) to propose changes or contribute.
+## Arquitetura
 
-For native API contract, concurrency, recovery, and quarantine coverage, see [Native API hardening](docs/native-api-hardening.md).
+```mermaid
+flowchart LR
+  A["SDK E2B / CLI / painel"] --> B["API do produto<br/>product/apps/api"]
+  B --> C["Motor de sandbox<br/>(API compatível com E2B)"]
+  C --> D["microVMs Firecracker"]
+  R["Reporter de uso<br/>product/apps/reporter"] --> B
+  R -. lista máquinas .-> C
+  B --> P[("Postgres")]
+```
+
+A API do produto cuida de contas, chaves, limites e uso, e repassa as operações de máquina ao
+motor de sandbox. O reporter roda ao lado do motor e envia eventos de uso à API.
+
+## Mapa do repositório
+
+**Produto** (`product/`, workspace pnpm + Turborepo):
+
+| Caminho | O que é |
+| --- | --- |
+| `product/apps/api` | API do produto: Hono, oRPC, Prisma + Postgres, better-auth. |
+| `product/apps/web` | Painel: Vite, React. Máquinas, chaves e uso. |
+| `product/apps/www` | Site (Astro) em pt-BR, inglês e espanhol, com lista de espera. |
+| `product/apps/docs` | Site de documentação (Astro Starlight), pt-BR e inglês. |
+| `product/apps/reporter` | Medição de uso, roda ao lado do motor. |
+| `product/apps/cli` | Linha de comando `rookbox`. |
+| `product/packages/contracts` | Contrato oRPC e regras do ciclo de vida das máquinas. |
+| `product/packages/ui-tokens`, `ui-web` | Tokens de design e componentes de interface. |
+
+**Motor de sandbox** (Rust, microVMs Firecracker, na raiz):
+
+| Caminho | O que é |
+| --- | --- |
+| `crates/` | Serviços e bibliotecas Rust do motor |
+| `proto/` | Definições gRPC |
+| `db/` | Esquemas e migrações |
+| `shim/` | Shim em Go |
+| `templates/` | Templates de máquina |
+| `docker/` | Imagens e contextos de build |
+| `infra/` | Implantação e infraestrutura |
+| `scripts/`, `ci/` | Scripts e ferramentas de build e teste |
+| `ui/` | Interface administrativa do motor |
+| `docs/` | Documentação do motor (comece por `docs/architecture.md`) |
+| `space_smoke/` | Testes de fumaça (Python) |
+| `fuzz/`, `supply-chain/`, `examples/` | Fuzzing, auditoria de dependências e exemplos |
+
+## Desenvolvimento local
+
+Requer Node 22.12+ e pnpm 9 (`corepack enable`).
+
+```sh
+cd product
+pnpm install
+pnpm dev                          # site e painel juntos
+pnpm --filter @rookbox/www dev    # http://127.0.0.1:4321
+pnpm --filter @rookbox/web dev    # http://127.0.0.1:5173
+pnpm --filter @rookbox/docs dev   # site de documentação
+```
+
+**Modo demo:** sem `VITE_API_URL`, o painel roda sobre uma API falsa em memória, sem login e sem
+backend. Para usar a API real (precisa de Postgres e de um motor), copie
+`product/apps/api/.env.example` para `.env` e rode:
+
+```sh
+pnpm --filter @rookbox/api dev
+VITE_API_URL=http://127.0.0.1:3000 pnpm --filter @rookbox/web dev
+```
+
+Verificações (as mesmas do CI):
+
+```sh
+cd product
+pnpm lint check test build    # pnpm format corrige o estilo
+```
+
+Para compilar e testar o motor, leia `docs/development-overview.md`.
+
+## Deploy
+
+Cada serviço é uma imagem Docker de `product/` (`apps/<app>/Dockerfile`). Passo a passo,
+variáveis de ambiente e DNS em [`product/DEPLOY.md`](product/DEPLOY.md).
+
+| Serviço | Onde roda |
+| --- | --- |
+| API e Postgres | Guará Cloud |
+| Painel, site e documentação | VPS (Caddy) |
+| Reporter | Ao lado do motor de sandbox |
+
+## Convenções do repositório
+
+- Pull requests a partir de `main`; veja [CONTRIBUTING.md](CONTRIBUTING.md).
+- O workflow `Product CI` roda lint, check, test e build de `product/` em cada PR.
+- Varredura de segredos com gitleaks (`pre-commit install`). Nunca commite `.env`.
+
+## Beta
+
+A Rookbox está em beta fechado. Entre na lista de espera em <https://rookbox.run>; os convites
+saem por e-mail.
+
+## Segurança
+
+Reporte vulnerabilidades em particular; veja [SECURITY.md](SECURITY.md).
+
+## Licença
+
+O código próprio da Rookbox é proprietário, todos os direitos reservados
+(TODO(owner): confirmar a licença). O arquivo [LICENSE](LICENSE) (Apache-2.0) na raiz é mantido
+porque o motor de sandbox e o histórico do Git contêm código sob essa licença.
