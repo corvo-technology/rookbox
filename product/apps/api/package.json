@@ -14,7 +14,12 @@
     "db:migrate": "node --enable-source-maps dist/cli/migrate.js",
     "owner:seed": "node --enable-source-maps dist/cli/seed-owner.js",
     "reconcile": "node --enable-source-maps dist/cli/reconcile.js",
-    "usage:report": "node --enable-source-maps dist/cli/usage.js"
+    "usage:report": "node --enable-source-maps dist/cli/usage.js",
+    "user:create": "node --enable-source-maps dist/cli/user.js create",
+    "user:set-password": "node --enable-source-maps dist/cli/user.js set-password",
+    "user:disable": "node --enable-source-maps dist/cli/user.js disable",
+    "user:enable": "node --enable-source-maps dist/cli/user.js enable",
+    "user:list": "node --enable-source-maps dist/cli/user.js list"
   },
   "dependencies": {
     "@hono/node-server": "2.1.5",

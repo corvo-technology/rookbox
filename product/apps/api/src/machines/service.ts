@@ -74,6 +74,9 @@ function keyedLock() {
   };
 }
 
+/** What a person sees when the whole deployment has no room (the host's capacity code, kinder words). */
+export const BETA_FULL_MESSAGE = "The beta is full right now, try again later.";
+
 export type MachineServiceOptions = {
   store: MachineStore;
   space: SpaceClient;
@@ -84,6 +87,8 @@ export type MachineServiceOptions = {
   /** Idle seconds before a machine suspends, when the request does not choose. */
   defaultIdleTimeoutS: number;
   maxMachinesPerUser: number;
+  /** Most machines running at once across all owners. 0 or unset: no cap. */
+  maxRunningTotal?: number;
   /** Send `allowInternetAccess` at create. The host's default is no internet. Default true. */
   allowInternet?: boolean;
   now?: () => Date;
@@ -97,6 +102,7 @@ function randomSuffix(random: () => number): string {
 export function createMachineService(options: MachineServiceOptions) {
   const { store, space, logger, e2bDomain } = options;
   const lock = keyedLock();
+  const CAPACITY_LOCK = "*capacity";
   const now = options.now ?? (() => new Date());
   const random = options.random ?? Math.random;
 
@@ -206,6 +212,20 @@ export function createMachineService(options: MachineServiceOptions) {
     return (await listMachines(ownerId)).length;
   }
 
+  /**
+   * Refuses when the deployment already runs its cap of machines (all owners). Call it inside the
+   * capacity lock, so two starts at once cannot both see room. One listing request when a cap is set.
+   */
+  async function ensureRoom(): Promise<void> {
+    const cap = options.maxRunningTotal ?? 0;
+    if (cap <= 0) return;
+    const running = (await space.list({})).filter((info) => info.state === "running").length;
+    if (running >= cap) {
+      logger.warn("beta full", { running, cap });
+      throw new MachineError("HOST_CAPACITY", BETA_FULL_MESSAGE);
+    }
+  }
+
   async function suspendMachine(ownerId: string, id: string): Promise<Machine> {
     const current = await view(ownerId, id);
     if (!canPerform(current.status, "suspend")) {
@@ -251,12 +271,15 @@ export function createMachineService(options: MachineServiceOptions) {
         const idleTimeoutS = input.idleTimeoutS ?? options.defaultIdleTimeoutS;
         let created: { id: string };
         try {
-          created = await space.create({
-            templateId: input.template,
-            metadata: { [OWNER_TAG]: ownerId, "rookbox.name": name },
-            timeoutS: idleTimeoutS,
-            size: input.size,
-            allowInternet: options.allowInternet ?? true,
+          created = await lock(CAPACITY_LOCK, async () => {
+            await ensureRoom();
+            return space.create({
+              templateId: input.template,
+              metadata: { [OWNER_TAG]: ownerId, "rookbox.name": name },
+              timeoutS: idleTimeoutS,
+              size: input.size,
+              allowInternet: options.allowInternet ?? true,
+            });
           });
         } catch (error) {
           logger.warn("space create failed", { owner: ownerId, template: input.template, error });
@@ -295,7 +318,10 @@ export function createMachineService(options: MachineServiceOptions) {
         throw new MachineError("CONFLICT", `A ${current.status} machine cannot be restored.`);
       }
       try {
-        await withOp(id, "restoring", () => space.restore(id, current.idleTimeoutS));
+        await lock(CAPACITY_LOCK, async () => {
+          await ensureRoom();
+          await withOp(id, "restoring", () => space.restore(id, current.idleTimeoutS));
+        });
       } catch (error) {
         wrap(error);
       }
@@ -318,7 +344,10 @@ export function createMachineService(options: MachineServiceOptions) {
         if (rows.some((row) => row.name === name)) throw new MachineError("NAME_TAKEN");
         let child: { id: string };
         try {
-          child = await space.fork(input.id, source.idleTimeoutS);
+          child = await lock(CAPACITY_LOCK, async () => {
+            await ensureRoom();
+            return space.fork(input.id, source.idleTimeoutS);
+          });
         } catch (error) {
           logger.warn("space fork failed", { owner: ownerId, machine: input.id, error });
           throw toMachineError(error);

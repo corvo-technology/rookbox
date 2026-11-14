@@ -39,12 +39,21 @@ describe("sizes", () => {
     expect(presetOf({ ...SIZE_PRESETS.medium, diskMib: 30_720 })).toBeNull();
   });
 
-  it("refuses a disk above 128 GiB", () => {
-    const parsed = CreateMachineInput.safeParse({
-      template: "seed",
-      size: { vcpu: 2, memoryMib: 2048, diskMib: 131_073 },
-    });
-    expect(parsed.success).toBe(false);
+  it("refuses a size above the small-server ceiling", () => {
+    const base = { vcpu: 2, memoryMib: 2048, diskMib: 10_240 };
+    for (const size of [
+      { ...base, vcpu: 5 },
+      { ...base, memoryMib: 8_193 },
+      { ...base, diskMib: 40_961 },
+    ]) {
+      expect(CreateMachineInput.safeParse({ template: "seed", size }).success).toBe(false);
+    }
+  });
+
+  it("offers no preset above the ceiling", () => {
+    for (const preset of Object.values(SIZE_PRESETS)) {
+      expect(CreateMachineInput.safeParse({ template: "seed", size: preset }).success).toBe(true);
+    }
   });
 });
 

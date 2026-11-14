@@ -28,7 +28,10 @@ function setup() {
     apiKeys: createApiKeyService(memoryApiKeyStore()),
     desktop: {
       http: async () => new Response(""),
-      issueLink: async () => ({ url: "https://desk.example.test/x", expiresAt: "2026-01-01T00:00:00Z" }),
+      issueLink: async () => ({
+        url: "https://desk.example.test/x",
+        expiresAt: "2026-01-01T00:00:00Z",
+      }),
       open: async () => new Response(""),
     },
     usage: usage.service,

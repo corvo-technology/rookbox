@@ -13,6 +13,11 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
+#. placeholder {0}: Math.max(1, Math.round(config.data.defaultIdleTimeoutS / 60))
+#: src/pages/MachinePage.tsx
+msgid "{0, plural, one {Idle machines are suspended after # minute and keep their state.} other {Idle machines are suspended after # minutes and keep their state.}}"
+msgstr "{0, plural, one {Máquinas ociosas são suspensas após # minuto e mantêm o estado.} other {Máquinas ociosas são suspensas após # minutos e mantêm o estado.}}"
+
 #. placeholder {0}: formatIdle(data.idleTimeoutS, i18n.locale)
 #: src/pages/MachinePage.tsx
 msgid "{0} idle"
@@ -835,6 +840,10 @@ msgstr "Essa máquina não existe mais."
 msgid "That template isn't available."
 msgstr "Esse template não está disponível."
 
+#: src/components/ErrorNote.tsx
+msgid "The beta is full right now."
+msgstr "O beta está lotado agora."
+
 #: src/components/DesktopDialog.tsx
 msgid "The desktop did not open."
 msgstr "O desktop não abriu."
@@ -860,10 +869,6 @@ msgid "The machine service had a problem."
 msgstr "O serviço de máquinas teve um problema."
 
 #: src/components/ErrorNote.tsx
-msgid "The machine service is busy right now."
-msgstr "O serviço de máquinas está ocupado agora."
-
-#: src/components/ErrorNote.tsx
 msgid "The machine service took too long to answer."
 msgstr "O serviço de máquinas demorou demais para responder."
 
@@ -872,8 +877,8 @@ msgid "The machine's state doesn't allow that right now."
 msgstr "O estado da máquina não permite isso agora."
 
 #: src/components/ErrorNote.tsx
-msgid "There's no room for another machine at the moment. Try again in a minute."
-msgstr "Não há espaço para outra máquina no momento. Tente novamente em um minuto."
+msgid "There's no room for another machine at the moment. Try again later."
+msgstr "Não há espaço para outra máquina no momento. Tente novamente mais tarde."
 
 #: src/pages/ApiKeysPage.tsx
 msgid "These keys do not work with the E2B SDK yet. Support for it is coming soon. We store only a hash of each key, so a key is shown once."

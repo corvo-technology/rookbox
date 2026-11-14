@@ -2,7 +2,7 @@ import { fileURLToPath } from "node:url";
 import { serve } from "@hono/node-server";
 import { createApiKeyService, createPrismaApiKeyStore } from "./api-keys.js";
 import { createApp } from "./app.js";
-import { createAuth, createIdentity, seedOwner } from "./auth.js";
+import { createAuth, createIdentity, createIsActive, seedOwner } from "./auth.js";
 import { createDb } from "./db.js";
 import { createDesktopProxy } from "./desktop.js";
 import { createDesktopTokens, deriveSecret } from "./desktop-token.js";
@@ -81,6 +81,7 @@ try {
     templates: env.SPACE_TEMPLATES,
     defaultIdleTimeoutS: env.MACHINE_IDLE_TIMEOUT_S,
     maxMachinesPerUser: env.MAX_MACHINES_PER_USER,
+    maxRunningTotal: env.MAX_RUNNING_MACHINES_TOTAL,
     allowInternet: env.MACHINE_ALLOW_INTERNET,
   });
   const desktop = createDesktopProxy({
@@ -95,6 +96,7 @@ try {
     host: env.DESKTOP_HOST ?? null,
     linkTtlS: env.DESKTOP_LINK_TTL_S,
     sessionTtlS: env.DESKTOP_SESSION_TTL_S,
+    isActive: createIsActive(db),
     logger,
   });
 

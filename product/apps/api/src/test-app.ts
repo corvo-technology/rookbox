@@ -21,19 +21,26 @@ export const DESK_SECRET = "d".repeat(32);
  */
 export function setupApp(
   extra: Partial<Parameters<typeof createApp>[0]> = {},
-  options: { maxMachinesPerUser?: number } = {},
+  options: { maxMachinesPerUser?: number; maxRunningTotal?: number } = {},
 ) {
   const { service, space, store } = newMachineService({
     maxMachinesPerUser: options.maxMachinesPerUser ?? 2,
+    maxRunningTotal: options.maxRunningTotal,
   });
+  /** Users the kill switch is on: the fake identity and the desktop proxy both refuse them. */
+  const disabled = new Set<string>();
   const keys = memoryApiKeyStore();
   const apiKeys = createApiKeyService(keys);
   const identity: Identity = async (headers) => {
     const cookie = headers.get("cookie")?.match(/session=([a-z]+)/)?.[1];
-    if (cookie) return { id: cookie, email: `${cookie}@example.test` } satisfies AuthUser;
+    if (cookie) {
+      return disabled.has(cookie)
+        ? null
+        : ({ id: cookie, email: `${cookie}@example.test` } satisfies AuthUser);
+    }
     const bearer = headers.get("authorization")?.match(/^Bearer (rbx_\w+)$/)?.[1];
     const userId = bearer ? await apiKeys.authenticate(bearer) : null;
-    return userId ? { id: userId, email: `${userId}@example.test` } : null;
+    return userId && !disabled.has(userId) ? { id: userId, email: `${userId}@example.test` } : null;
   };
   const upstream: string[] = [];
   const tokens = createDesktopTokens({ secret: DESK_SECRET });
@@ -46,6 +53,7 @@ export function setupApp(
     host: DESK,
     linkTtlS: 120,
     sessionTtlS: 14_400,
+    isActive: async (userId) => !disabled.has(userId),
     logger: silentLogger,
     fetch: async (url, init) => {
       const headers = new Headers(init?.headers);
@@ -93,5 +101,5 @@ export function setupApp(
         },
       }),
     ) as ServerClient;
-  return { app, client, space, store, keys, apiKeys, upstream, tokens, desktop, service };
+  return { app, client, space, store, keys, apiKeys, upstream, tokens, desktop, service, disabled };
 }
