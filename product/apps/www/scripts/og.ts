@@ -61,7 +61,7 @@ for (const locale of Object.keys(COPIES) as Locale[]) {
     e2b: copy.nav.e2b,
     terminalLabel: copy.demo.terminalLabel,
     ready: copy.demo.session.ready,
-    running: copy.demo.session.resumed,
+    running: copy.visual.running,
     domain: DOMAIN,
   };
   const html = template.replace(/\{\{(\w+)\}\}/g, (_, key: string) => {
