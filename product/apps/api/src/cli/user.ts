@@ -97,7 +97,6 @@ try {
   const admin = createUserAdmin({
     store: createPrismaUserStore(db),
     credentials: createAuthCredentials(auth),
-    allowedEmails: env.ROOKBOX_ALLOWED_EMAILS,
     suspendMachines: (userId) => machines.suspendAll(userId),
     logger,
   });
@@ -129,9 +128,8 @@ try {
     process.stdout.write(`Enabled ${result.email}\n`);
   } else {
     for (const user of await admin.list()) {
-      const note = user.allowed ? "" : " (not in ROOKBOX_ALLOWED_EMAILS)";
       process.stdout.write(
-        `${user.email}\t${user.name}\t${user.status}\t${user.createdAt.toISOString()}${note}\n`,
+        `${user.email}\t${user.name}\t${user.status}\t${user.createdAt.toISOString()}\n`,
       );
     }
   }

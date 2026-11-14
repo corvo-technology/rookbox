@@ -64,7 +64,6 @@ try {
     auth,
     apiKeys,
     db,
-    allowedEmails: new Set(env.ROOKBOX_ALLOWED_EMAILS),
   });
   const space = createEcwClient({
     baseUrl: env.SPACE_ECW_API_URL,
@@ -150,7 +149,6 @@ try {
       // Sign-up stays closed on the server's own auth; this second instance is never mounted, it
       // only hashes and stores a password for an account the operator creates.
       credentials: createAuthCredentials(createAuth(db, env, logger, { allowSignUp: true })),
-      allowedEmails: env.ROOKBOX_ALLOWED_EMAILS,
       suspendMachines: (userId) => machines.suspendAll(userId),
       logger,
     }),

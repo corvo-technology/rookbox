@@ -59,11 +59,11 @@ export function cookieSettings(
 }
 
 /**
- * better-auth with email and password. Accounts exist only for ROOKBOX_ALLOWED_EMAILS, and the
- * public sign-up endpoint is closed: the owner account comes from the seed command.
+ * better-auth with email and password. The public sign-up endpoint is closed: the owner account
+ * comes from the seed command and every other account from an operator (the CLI or the admin
+ * panel), which is the authorization. An account that exists may sign in.
  */
 export function createAuth(db: Db, env: Env, logger: Logger, options: AuthOptions) {
-  const allowed = new Set(env.ROOKBOX_ALLOWED_EMAILS);
   return betterAuth({
     appName: "Rookbox",
     secret: env.BETTER_AUTH_SECRET,
@@ -96,17 +96,6 @@ export function createAuth(db: Db, env: Env, logger: Logger, options: AuthOption
           },
         },
       },
-      user: {
-        create: {
-          before: async (user) => {
-            if (!allowed.has(String(user.email).toLowerCase())) {
-              logger.warn("account refused: email not allowed");
-              return false;
-            }
-            return { data: user };
-          },
-        },
-      },
     },
   });
 }
@@ -117,18 +106,11 @@ export function createIdentity(deps: {
   auth: Pick<Auth, "api">;
   apiKeys: Pick<ApiKeyService, "authenticate">;
   db: Db;
-  /**
-   * Emails that may act. An account whose email is no longer listed is refused, session or key
-   * alike, which is how an operator locks someone out (remove the email, restart).
-   */
-  allowedEmails: ReadonlySet<string>;
 }): Identity {
   // The kill switch: a disabled account is refused on every request, session or key alike, so it
-  // takes effect at once, without waiting for a session to expire.
+  // takes effect at once, without waiting for a session to expire. Existing accounts are allowed.
   const permitted = (user: (AuthUser & { disabledAt?: Date | string | null }) | null) =>
-    user && !user.disabledAt && deps.allowedEmails.has(user.email.toLowerCase())
-      ? { id: user.id, email: user.email }
-      : null;
+    user && !user.disabledAt ? { id: user.id, email: user.email } : null;
   return async (headers) => {
     const bearer = headers.get("authorization")?.match(/^Bearer (rbx_[A-Za-z0-9]+)$/)?.[1];
     if (bearer) {

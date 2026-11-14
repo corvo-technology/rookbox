@@ -59,15 +59,12 @@ describe("identity", () => {
     db: { user: { findUnique: async () => user } } as never,
   };
 
-  it("refuses a signed-in account whose email is no longer allowed, session or key", async () => {
-    const allowed = createIdentity({ ...base, allowedEmails: new Set(["owner@example.test"]) });
-    expect(await allowed(new Headers())).toMatchObject({ id: "u1" });
-    expect(await allowed(new Headers({ authorization: "Bearer rbx_abc" }))).toMatchObject({
+  it("accepts an existing account, session or key, whatever the env allowlist says", async () => {
+    const identity = createIdentity(base);
+    expect(await identity(new Headers())).toMatchObject({ id: "u1" });
+    expect(await identity(new Headers({ authorization: "Bearer rbx_abc" }))).toMatchObject({
       id: "u1",
     });
-    const removed = createIdentity({ ...base, allowedEmails: new Set(["someone@example.test"]) });
-    expect(await removed(new Headers())).toBeNull();
-    expect(await removed(new Headers({ authorization: "Bearer rbx_abc" }))).toBeNull();
   });
 });
 
@@ -77,7 +74,6 @@ describe("disabled accounts", () => {
     auth: { api: { getSession: async () => ({ user }) } } as never,
     apiKeys: { authenticate: async () => "u1" },
     db: { user: { findUnique: async () => user } } as never,
-    allowedEmails: new Set(["owner@example.test"]),
   };
 
   it("refuses a session and a key while disabledAt is set, and accepts them again after", async () => {
@@ -103,13 +99,15 @@ describe("disabled accounts", () => {
       BETTER_AUTH_URL: API,
       APP_ORIGIN: "https://app.example.test",
       COOKIE_DOMAIN: undefined,
-      ROOKBOX_ALLOWED_EMAILS: ["a@example.test"],
+      ROOKBOX_ALLOWED_EMAILS: ["owner@example.test"],
     } as unknown as Env;
     const auth = createAuth({} as never, env, silentLogger, {
       allowSignUp: true,
       database: memoryAdapter(tables),
     });
     const body = { email: "a@example.test", password: "correct horse battery" };
+    // The account is not in the env allowlist (it lists someone else): creating it is the
+    // operator's call, and it can sign in all the same.
     await auth.api.signUpEmail({ body: { ...body, name: "A" } });
     await expect(auth.api.signInEmail({ body })).resolves.toBeTruthy();
 
@@ -124,7 +122,6 @@ describe("disabled accounts", () => {
       auth,
       apiKeys: { authenticate: async () => null },
       db: {} as never,
-      allowedEmails: new Set(["a@example.test"]),
     });
     expect(await identity(new Headers({ cookie }))).toMatchObject({ email: "a@example.test" });
 

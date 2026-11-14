@@ -141,8 +141,8 @@ function CreateUserDialog({
             </DialogTitle>
             <DialogDescription>
               <Trans>
-                The email must already be on the server's allowed list. There is no sign-up page, so
-                you give them the password yourself.
+                There is no sign-up page, so you give them the password yourself. They can sign in
+                right away.
               </Trans>
             </DialogDescription>
           </DialogHeader>
@@ -422,11 +422,6 @@ export function AdminUsersPage() {
                           <Trans>Admin</Trans>
                         </Tag>
                       ) : null}
-                      {user.allowed ? null : (
-                        <Tag>
-                          <Trans>Not on the allowed list</Trans>
-                        </Tag>
-                      )}
                     </span>
                   </TableCell>
                   <TableCell className="text-body2">

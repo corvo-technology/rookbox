@@ -86,8 +86,6 @@ function checkPassword(password: string) {
 export type UserAdminDeps = {
   store: UserStore;
   credentials: Credentials;
-  /** `ROOKBOX_ALLOWED_EMAILS`, lower-case. The gate for who may have an account. */
-  allowedEmails: readonly string[];
   /** Suspends every running machine of the account (`machines.suspendAll`). */
   suspendMachines?: (
     userId: string,
@@ -107,19 +105,13 @@ export function createUserAdmin(deps: UserAdminDeps) {
 
   return {
     /**
-     * Creates an account for an allowed email. Without a password one is generated; it is returned
+     * Creates an account; the operator calling this is the authorization. Without a password one is generated; it is returned
      * once for the caller to show, and is never logged or stored in clear.
      */
     async create(input: { email: string; name: string; password?: string }) {
       const email = normalize(input.email);
       const name = input.name.trim();
       if (!name) throw new UserAdminError("A name is required.", "name_required");
-      if (!deps.allowedEmails.includes(email)) {
-        throw new UserAdminError(
-          "That email is not in ROOKBOX_ALLOWED_EMAILS. Add it there first (the allowlist gates sign-up).",
-          "not_allowed",
-        );
-      }
       if (await store.findByEmail(email))
         throw new UserAdminError("An account already exists.", "exists");
       const generated = input.password === undefined;
@@ -170,7 +162,6 @@ export function createUserAdmin(deps: UserAdminDeps) {
         email: user.email,
         name: user.name,
         status: user.disabledAt ? ("disabled" as const) : ("active" as const),
-        allowed: deps.allowedEmails.includes(user.email.toLowerCase()),
         createdAt: user.createdAt,
       }));
     },

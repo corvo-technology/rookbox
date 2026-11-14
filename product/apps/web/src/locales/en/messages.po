@@ -134,10 +134,6 @@ msgstr "Actions for {name}"
 msgid "Active"
 msgstr "Active"
 
-#: src/components/ErrorNote.tsx
-msgid "Add it to ROOKBOX_ALLOWED_EMAILS on the server and deploy, then create the account."
-msgstr "Add it to ROOKBOX_ALLOWED_EMAILS on the server and deploy, then create the account."
-
 #: src/pages/admin/AdminUsersPage.tsx
 msgid "Admin"
 msgstr "Admin"
@@ -810,10 +806,6 @@ msgstr "Not answering"
 msgid "Not healthy"
 msgstr "Not healthy"
 
-#: src/pages/admin/AdminUsersPage.tsx
-msgid "Not on the allowed list"
-msgstr "Not on the allowed list"
-
 #: src/pages/UsagePage.tsx
 msgid "Nothing has been reported yet."
 msgstr "Nothing has been reported yet."
@@ -1196,10 +1188,6 @@ msgid "Terminal only"
 msgstr "Terminal only"
 
 #: src/components/ErrorNote.tsx
-msgid "That email isn't on the allowed list."
-msgstr "That email isn't on the allowed list."
-
-#: src/components/ErrorNote.tsx
 msgid "That isn't available on this server."
 msgstr "That isn't available on this server."
 
@@ -1234,10 +1222,6 @@ msgstr "The desktop did not open."
 #: src/components/CreateMachineDialog.tsx
 msgid "The desktop image built for AI agents that use a screen."
 msgstr "The desktop image built for AI agents that use a screen."
-
-#: src/pages/admin/AdminUsersPage.tsx
-msgid "The email must already be on the server's allowed list. There is no sign-up page, so you give them the password yourself."
-msgstr "The email must already be on the server's allowed list. There is no sign-up page, so you give them the password yourself."
 
 #: src/components/CreateMachineDialog.tsx
 msgid "The first start of a template can take about 15 seconds."
@@ -1282,6 +1266,10 @@ msgstr "The meter has not reported yet."
 #: src/pages/admin/AdminUsagePage.tsx
 msgid "The meter last reported"
 msgstr "The meter last reported"
+
+#: src/pages/admin/AdminUsersPage.tsx
+msgid "There is no sign-up page, so you give them the password yourself. They can sign in right away."
+msgstr "There is no sign-up page, so you give them the password yourself. They can sign in right away."
 
 #: src/components/ErrorNote.tsx
 msgid "There's no room for another machine at the moment. Try again later."

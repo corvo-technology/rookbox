@@ -8,7 +8,7 @@ import {
   type UserStore,
 } from "./users.js";
 
-function setup(allowed = ["owner@example.test", "friend@example.test"]) {
+function setup() {
   const users = new Map<string, UserRecord>();
   const passwords = new Map<string, string>();
   const calls: string[] = [];
@@ -38,7 +38,6 @@ function setup(allowed = ["owner@example.test", "friend@example.test"]) {
   const admin = createUserAdmin({
     store,
     credentials,
-    allowedEmails: allowed,
     suspendMachines: async (id) => {
       calls.push(`suspend:${id}`);
       return { suspended: 2, skipped: 0, failed: 0 };
@@ -71,12 +70,10 @@ describe("user create", () => {
     expect(ok.generated).toBe(false);
   });
 
-  it("refuses an email that is not on the allowlist, and a duplicate", async () => {
+  it("creates any email the operator names, and refuses a duplicate", async () => {
     const { admin, users } = setup();
-    await expect(admin.create({ email: "stranger@example.test", name: "S" })).rejects.toThrow(
-      /ROOKBOX_ALLOWED_EMAILS/,
-    );
-    expect(users.size).toBe(0);
+    await admin.create({ email: "stranger@example.test", name: "S" });
+    expect(users.size).toBe(1);
     await admin.create({ email: "friend@example.test", name: "F" });
     await expect(admin.create({ email: "friend@example.test", name: "F" })).rejects.toThrow(
       /already exists/,
@@ -104,7 +101,7 @@ describe("user set-password, disable, enable, list", () => {
     const loud = await admin.disable({ email: "friend@example.test", suspendMachines: true });
     expect(loud.suspended).toEqual({ suspended: 2, skipped: 0, failed: 0 });
     expect(calls).toContain("suspend:id-friend@example.test");
-    expect((await admin.list())[0]).toMatchObject({ status: "disabled", allowed: true });
+    expect((await admin.list())[0]).toMatchObject({ status: "disabled" });
     await admin.enable({ email: "friend@example.test" });
     expect((await admin.list())[0]?.status).toBe("active");
   });

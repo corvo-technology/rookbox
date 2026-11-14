@@ -233,7 +233,6 @@ export function createRouter({
               email: user.email,
               name: user.name,
               status: user.status,
-              allowed: user.allowed,
               admin: admins.has(user.email.toLowerCase()),
               createdAt: user.createdAt.toISOString(),
               machines: counts.get(user.id) ?? 0,
