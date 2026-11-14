@@ -442,6 +442,8 @@ describe("ensureDesktop", () => {
     expect(script).toContain("pgrep -x Xvfb");
     expect(script).toContain("-localhost");
     expect(script).toContain("export DISPLAY=:0");
+    // noVNC must not bind the wildcard: the machine's port forwarder holds 6080 on its own address.
+    expect(script).toContain("--listen 127.0.0.1:6080");
   });
 
   it("reports a stack that did not come up as a host error, without the output", async () => {

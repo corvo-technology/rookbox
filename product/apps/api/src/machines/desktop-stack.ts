@@ -11,6 +11,8 @@ export const DESKTOP_WAIT_S = 20;
 /** The exec timeout: the wait, plus room for the starts and the first checks. */
 export const DESKTOP_EXEC_TIMEOUT_MS = (DESKTOP_WAIT_S + 10) * 1_000;
 
+// noVNC listens on loopback only: the machine's port forwarder binds the machine's own address on
+// the same port, so a wildcard bind fails with "Address already in use".
 export const DESKTOP_SCRIPT = `
 export DISPLAY=:0
 ready() { curl -s -o /dev/null --max-time 2 ${DESKTOP_READY_URL}; }
@@ -26,7 +28,7 @@ if ! pgrep -x x11vnc >/dev/null; then
   bg x11vnc -display :0 -forever -wait 50 -shared -rfbport 5900 -nopw -localhost
 fi
 if ! pgrep -f novnc_proxy >/dev/null && ! pgrep -f websockify >/dev/null; then
-  bg /opt/noVNC/utils/novnc_proxy --vnc localhost:5900 --listen 6080 --web /opt/noVNC
+  bg /opt/noVNC/utils/novnc_proxy --vnc localhost:5900 --listen 127.0.0.1:6080 --web /opt/noVNC
 fi
 for _ in $(seq 1 ${DESKTOP_WAIT_S * 2}); do ready && exit 0; sleep 0.5; done
 echo "noVNC did not answer on port 6080" >&2
