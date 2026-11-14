@@ -18,6 +18,8 @@ import { createRouter } from "./router.js";
 import type { SpaceClient } from "./space/client.js";
 import type { UsageService } from "./usage/service.js";
 import type { UserAdmin } from "./users.js";
+import type { Waitlist } from "./waitlist.js";
+import { waitlistRoutes } from "./waitlist-routes.js";
 
 export type AppDeps = {
   appOrigin: string;
@@ -62,6 +64,12 @@ export type AppDeps = {
   e2b?: E2bFront;
   /** `POST /ingest/usage-events`, signed by the usage reporter. Without it the route is absent. */
   ingestUsage?: (request: Request) => Promise<Response>;
+  /** The beta waitlist: the admin procedures, and `POST /waitlist` when `wwwOrigin` is set. */
+  waitlist?: Waitlist;
+  /** The landing page's origin, the only one `POST /waitlist` accepts. Unset: the route is absent. */
+  wwwOrigin?: string;
+  /** Counts waitlist joins per address. */
+  waitlistLimiter?: RateLimiter;
   now?: () => number;
 };
 
@@ -116,6 +124,7 @@ export function createApp(deps: AppDeps) {
           throw new Error("The reconciler is not configured.");
         }),
       userAdmin: deps.userAdmin,
+      waitlist: deps.waitlist,
       adminHealth,
       logger,
       usage: deps.usage,
@@ -150,6 +159,20 @@ export function createApp(deps: AppDeps) {
   });
 
   const main = new Hono<{ Variables: { user: AuthUser } }>();
+
+  // The landing page's waitlist form: public, with its own CORS, so it goes before the app-wide one.
+  if (deps.waitlist && deps.wwwOrigin) {
+    main.route(
+      "/waitlist",
+      waitlistRoutes({
+        waitlist: deps.waitlist,
+        wwwOrigin: deps.wwwOrigin,
+        limiter: deps.waitlistLimiter,
+        ipOf,
+        logger,
+      }),
+    );
+  }
 
   // Only the dashboard's origin may call the API from a browser.
   main.use(

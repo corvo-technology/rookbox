@@ -28,6 +28,11 @@ msgstr "{0} inactiva"
 msgid "{0} is ready."
 msgstr "{0} está lista."
 
+#. placeholder {0}: result.email
+#: src/pages/admin/AdminWaitlistPage.tsx
+msgid "{0} was invited."
+msgstr "{0} fue invitado."
+
 #: src/components/CreateMachineDialog.tsx
 msgid "{elapsed} s"
 msgstr "{elapsed} s"
@@ -128,12 +133,17 @@ msgstr "Una máquina Linux privada que arranca en segundos."
 msgid "Account"
 msgstr "Cuenta"
 
+#: src/pages/admin/AdminWaitlistPage.tsx
+msgid "Account created"
+msgstr "Cuenta creada"
+
 #: src/pages/admin/AdminHealthPage.tsx
 msgid "Accounts and machines can't be read until it is back."
 msgstr "No se pueden leer cuentas ni máquinas hasta que vuelva."
 
 #: src/pages/admin/AdminMachinesPage.tsx
 #: src/pages/admin/AdminUsersPage.tsx
+#: src/pages/admin/AdminWaitlistPage.tsx
 #: src/pages/ApiKeysPage.tsx
 #: src/pages/MachinesPage.tsx
 msgid "Actions"
@@ -310,6 +320,7 @@ msgid "Copy key"
 msgstr "Copiar clave"
 
 #: src/pages/admin/AdminUsersPage.tsx
+#: src/pages/admin/AdminWaitlistPage.tsx
 msgid "Copy password"
 msgstr "Copiar contraseña"
 
@@ -480,6 +491,7 @@ msgid "e.g. ci-runner"
 msgstr "p. ej., ci-runner"
 
 #: src/pages/admin/AdminUsersPage.tsx
+#: src/pages/admin/AdminWaitlistPage.tsx
 #: src/pages/LoginPage.tsx
 msgid "Email"
 msgstr "Correo electrónico"
@@ -593,6 +605,7 @@ msgid "hours your machines were running"
 msgstr "horas con tus máquinas en ejecución"
 
 #: src/pages/admin/AdminUsersPage.tsx
+#: src/pages/admin/AdminWaitlistPage.tsx
 #: src/pages/ApiKeysPage.tsx
 msgid "I have saved it"
 msgstr "Ya la guardé"
@@ -609,6 +622,18 @@ msgstr "en este período"
 msgid "Integrations"
 msgstr "Integraciones"
 
+#: src/pages/admin/AdminWaitlistPage.tsx
+msgid "Invite"
+msgstr "Invitar"
+
+#: src/pages/admin/AdminWaitlistPage.tsx
+msgid "Invite {email}"
+msgstr "Invitar a {email}"
+
+#: src/pages/admin/AdminWaitlistPage.tsx
+msgid "Invited"
+msgstr "Invitado"
+
 #: src/pages/MachinesPage.tsx
 msgid "It appears here when it's ready."
 msgstr "Aparece aquí cuando esté lista."
@@ -620,6 +645,10 @@ msgstr "Puede que se haya eliminado. La lista se actualizará."
 #: src/components/MachineActions.tsx
 msgid "Its disk and saved memory are deleted. This can't be undone."
 msgstr "Se eliminan su disco y su memoria guardada. No se puede deshacer."
+
+#: src/pages/admin/AdminWaitlistPage.tsx
+msgid "Joined"
+msgstr "Se unió"
 
 #: src/components/CreateMachineDialog.tsx
 msgid "Keep working, tell me when it's ready"
@@ -686,6 +715,7 @@ msgstr "Linux con acceso root y sin pantalla. El más rápido en arrancar."
 #: src/pages/admin/AdminMachinesPage.tsx
 #: src/pages/admin/AdminUsagePage.tsx
 #: src/pages/admin/AdminUsersPage.tsx
+#: src/pages/admin/AdminWaitlistPage.tsx
 #: src/pages/MachinesPage.tsx
 #: src/pages/UsagePage.tsx
 msgid "Loading"
@@ -841,6 +871,10 @@ msgstr "Sin uso en este período"
 msgid "No user has used machines in this period."
 msgstr "Ningún usuario usó máquinas en este período."
 
+#: src/pages/admin/AdminWaitlistPage.tsx
+msgid "Nobody is waiting yet"
+msgstr "Nadie en la lista todavía"
+
 #: src/pages/admin/AdminHealthPage.tsx
 msgid "Not answering"
 msgstr "No responde"
@@ -902,6 +936,10 @@ msgstr "Página no encontrada"
 #: src/pages/LoginPage.tsx
 msgid "Password"
 msgstr "Contraseña"
+
+#: src/pages/admin/AdminWaitlistPage.tsx
+msgid "People who ask for access on the landing page show up here."
+msgstr "Quienes piden acceso en la página de inicio aparecen aquí."
 
 #: src/pages/admin/AdminUsagePage.tsx
 #: src/pages/UsagePage.tsx
@@ -1154,6 +1192,7 @@ msgstr "Filtro de estado"
 
 #: src/pages/admin/AdminMachinesPage.tsx
 #: src/pages/admin/AdminUsersPage.tsx
+#: src/pages/admin/AdminWaitlistPage.tsx
 #: src/pages/MachinesPage.tsx
 msgid "Status"
 msgstr "Estado"
@@ -1290,6 +1329,16 @@ msgstr "La imagen de escritorio creada para agentes de IA que usan una pantalla.
 msgid "The first start of a template can take about 15 seconds."
 msgstr "El primer arranque de una plantilla puede tardar unos 15 segundos."
 
+#. placeholder {0}: result.email
+#: src/pages/admin/AdminWaitlistPage.tsx
+msgid "The invitation email could not be sent to {0}. Send them the password yourself."
+msgstr "No se pudo enviar el email de invitación a {0}. Envíales la contraseña tú mismo."
+
+#. placeholder {0}: result.email
+#: src/pages/admin/AdminWaitlistPage.tsx
+msgid "The invitation email was sent to {0}."
+msgstr "El email de invitación se envió a {0}."
+
 #: src/components/ErrorNote.tsx
 msgid "The list may be out of date. Refresh it and try again."
 msgstr "Puede que la lista esté desactualizada. Actualízala e inténtalo de nuevo."
@@ -1379,6 +1428,10 @@ msgstr "Este mes"
 #: src/pages/admin/AdminHealthPage.tsx
 msgid "This page refreshes by itself every 15 seconds."
 msgstr "Esta página se actualiza sola cada 15 segundos."
+
+#: src/pages/admin/AdminWaitlistPage.tsx
+msgid "This temporary password is shown only once."
+msgstr "Esta contraseña temporal se muestra solo una vez."
 
 #: src/pages/MachinePage.tsx
 msgid "Timed out"
@@ -1518,6 +1571,15 @@ msgstr "Espera unos {minutes} minutos e inténtalo de nuevo."
 msgid "Wait for it to finish what it's doing, then try again."
 msgstr "Espera a que termine lo que está haciendo e inténtalo de nuevo."
 
+#: src/pages/admin/AdminWaitlistPage.tsx
+msgid "Waiting"
+msgstr "En espera"
+
+#: src/components/AppShell.tsx
+#: src/pages/admin/AdminWaitlistPage.tsx
+msgid "Waitlist"
+msgstr "Lista de espera"
+
 #: src/pages/ApiKeysPage.tsx
 msgid "We store only a hash of each key, so a key is shown once. If you lose it, revoke it and create a new one."
 msgstr "Solo guardamos un hash de cada clave, así que se muestra una sola vez. Si la pierdes, revócala y crea una nueva."
@@ -1525,6 +1587,10 @@ msgstr "Solo guardamos un hash de cada clave, así que se muestra una sola vez. 
 #: src/components/AppShell.tsx
 msgid "Webhooks"
 msgstr "Webhooks"
+
+#: src/pages/admin/AdminWaitlistPage.tsx
+msgid "What they will run"
+msgstr "Qué van a ejecutar"
 
 #: src/pages/MachinePage.tsx
 msgid "With E2B_API_KEY set to one of your Rookbox keys and E2B_API_URL set to the API address (see API keys), the E2B SDK reaches this machine by its id."

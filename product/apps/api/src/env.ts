@@ -38,6 +38,23 @@ const budget = (cls: LimitClass) =>
       return parsed;
     });
 
+/** The key travels in the request, so the endpoint must be https (http only on this computer). */
+function emailApiUrl(value: string, ctx: z.RefinementCtx): string {
+  const fail = () => {
+    ctx.addIssue({ code: "custom", message: "EMAIL_API_URL must be an https URL" });
+    return z.NEVER;
+  };
+  let url: URL;
+  try {
+    url = new URL(value.trim());
+  } catch {
+    return fail();
+  }
+  const loopback = ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
+  if (url.protocol !== "https:" && !(url.protocol === "http:" && loopback)) return fail();
+  return url.href;
+}
+
 const hostPattern = /^[a-z0-9]([a-z0-9.-]*[a-z0-9])?(:\d{1,5})?$/;
 
 /** Every setting the API reads, validated once at start so a bad deploy fails loudly. */
@@ -154,6 +171,18 @@ const EnvObject = z.object({
   INGEST_SECRET: z.string().min(32, "Use at least 32 characters (openssl rand -hex 32)").optional(),
   /** Emails that may see everyone's usage. Defaults to the owner, the first allowed email. */
   ADMIN_EMAILS: z.string().transform(csv).pipe(z.array(z.email())).optional(),
+  /** Transactional email: `none` (default) only logs, `resend` sends. Same names as Rook. */
+  EMAIL_PROVIDER: z.enum(["none", "resend"]).default("none"),
+  EMAIL_API_KEY: optionalText(z.string().min(1)),
+  /** A Resend-compatible send endpoint (https); Resend's own when unset. */
+  EMAIL_API_URL: optionalText(z.string().transform(emailApiUrl)),
+  /** The From header, e.g. `Pedro at Rook <pedro@rook.team>`. The domain must be verified. */
+  EMAIL_FROM: optionalText(z.string().min(3)),
+  /** The landing page's origin. Setting it turns on the public `POST /waitlist`, for that origin only. */
+  WWW_ORIGIN: optionalText(z.url()),
+  /** Waitlist joins allowed per address within the window. */
+  WAITLIST_MAX_PER_IP: z.coerce.number().int().min(1).max(1_000).default(10),
+  WAITLIST_WINDOW_S: z.coerce.number().int().min(10).max(86_400).default(3_600),
 });
 
 export const EnvSchema = EnvObject.superRefine((env, ctx) => {
@@ -170,6 +199,10 @@ export const EnvSchema = EnvObject.superRefine((env, ctx) => {
     if (env.NODE_ENV === "production" && !env.DESKTOP_LINK_SECRET) {
       issue("DESKTOP_LINK_SECRET", "Required in production when DESKTOP_HOST is set");
     }
+  }
+  if (env.EMAIL_PROVIDER === "resend") {
+    if (!env.EMAIL_API_KEY) issue("EMAIL_API_KEY", "Required when EMAIL_PROVIDER=resend");
+    if (!env.EMAIL_FROM) issue("EMAIL_FROM", "Required when EMAIL_PROVIDER=resend");
   }
   if (env.RECONCILE_KILL_ORPHANS && !env.RECONCILE_ACT) {
     issue("RECONCILE_KILL_ORPHANS", "Needs RECONCILE_ACT=true");

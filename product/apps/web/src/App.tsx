@@ -12,6 +12,7 @@ import { AdminHealthPage } from "./pages/admin/AdminHealthPage";
 import { AdminMachinesPage } from "./pages/admin/AdminMachinesPage";
 import { AdminUsagePage } from "./pages/admin/AdminUsagePage";
 import { AdminUsersPage } from "./pages/admin/AdminUsersPage";
+import { AdminWaitlistPage } from "./pages/admin/AdminWaitlistPage";
 import { CiPage } from "./pages/CiPage";
 import { LoginPage } from "./pages/LoginPage";
 import { MachinePage } from "./pages/MachinePage";
@@ -90,6 +91,7 @@ export function App() {
             <Route path="users" element={<AdminUsersPage />} />
             <Route path="machines" element={<AdminMachinesPage />} />
             <Route path="usage" element={<AdminUsagePage />} />
+            <Route path="waitlist" element={<AdminWaitlistPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
