@@ -27,6 +27,14 @@ export const API_ERRORS = {
   HOST_CAPACITY: { status: 503, message: "The machine service is at capacity." },
   /** SPACE's own quota or limit was reached. */
   HOST_QUOTA: { status: 429, message: "The machine service's limit was reached." },
+  /** Too many requests of one kind from this account or address; `retryAfterS` says when to retry. */
+  RATE_LIMITED: {
+    status: 429,
+    message: "Too many requests. Try again later.",
+    data: z.object({ retryAfterS: z.number().int().min(1) }),
+  },
+  /** The caller is signed in but may not do this (admin procedures). */
+  FORBIDDEN: { status: 403, message: "Not allowed." },
   /** Any other SPACE failure. */
   HOST_ERROR: { status: 502, message: "The machine service failed." },
 } as const;

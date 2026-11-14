@@ -80,6 +80,24 @@ export function useErrorText() {
             title: t`The machine's state doesn't allow that right now.`,
             hint: t`Wait for it to finish what it's doing, then try again.`,
           };
+        case "rate_limited": {
+          const seconds = found.retryAfterS;
+          const minutes = Math.ceil((seconds ?? 0) / 60);
+          return {
+            title: t`You're doing that too often.`,
+            hint:
+              seconds === undefined
+                ? t`Wait a little, then try again.`
+                : seconds < 90
+                  ? t`Wait ${seconds} seconds, then try again.`
+                  : t`Wait about ${minutes} minutes, then try again.`,
+          };
+        }
+        case "forbidden":
+          return {
+            title: t`You can't do that.`,
+            hint: t`Your account doesn't have permission for this action.`,
+          };
         case "space":
           return {
             title: t`The machine service had a problem.`,

@@ -90,8 +90,11 @@ export const MachineName = z
 
 /** How to reach a machine from outside. */
 export const MachineAccessSchema = z.object({
-  /** Opens the machine's desktop in a browser tab; null unless it is running and has one. */
-  desktopUrl: z.string().nullable(),
+  /**
+   * True when the machine is running and has a desktop. The link itself is short-lived and comes
+   * from `machines.desktopLink`, never from this record.
+   */
+  desktop: z.boolean(),
   /** Public URL of a port on the machine: replace `{port}`. */
   portUrlTemplate: z.string(),
 });
@@ -129,6 +132,14 @@ export const ForkMachineInput = z.object({
   name: MachineName.optional(),
 });
 export type ForkMachineInput = z.infer<typeof ForkMachineInput>;
+
+/** A signed, short-lived link that opens a machine's desktop on its own origin. */
+export const DesktopLinkSchema = z.object({
+  url: z.url(),
+  /** When the link stops working (ISO time). The desktop session it starts lasts longer. */
+  expiresAt: z.iso.datetime(),
+});
+export type DesktopLink = z.infer<typeof DesktopLinkSchema>;
 
 export const EXEC_LIMITS = {
   commandMaxLength: 8_192,

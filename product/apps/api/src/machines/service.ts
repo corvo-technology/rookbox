@@ -78,13 +78,13 @@ export type MachineServiceOptions = {
   space: SpaceClient;
   logger: Logger;
   e2bDomain: string;
-  /** Origin that serves the desktop proxy (the API itself). */
-  apiOrigin: string;
   /** Templates this deployment offers (`SPACE_TEMPLATES`). */
   templates: readonly MachineTemplate[];
   /** Idle seconds before a machine suspends, when the request does not choose. */
   defaultIdleTimeoutS: number;
   maxMachinesPerUser: number;
+  /** Send `allowInternetAccess` at create. The host's default is no internet. Default true. */
+  allowInternet?: boolean;
   now?: () => Date;
   random?: () => number;
 };
@@ -94,7 +94,7 @@ function randomSuffix(random: () => number): string {
 }
 
 export function createMachineService(options: MachineServiceOptions) {
-  const { store, space, logger, e2bDomain, apiOrigin } = options;
+  const { store, space, logger, e2bDomain } = options;
   const lock = keyedLock();
   const now = options.now ?? (() => new Date());
   const random = options.random ?? Math.random;
@@ -134,10 +134,7 @@ export function createMachineService(options: MachineServiceOptions) {
       createdAt: row.createdAt.toISOString(),
       forkedFrom: row.forkedFrom,
       access: {
-        desktopUrl:
-          hasDesktop && status === "running"
-            ? `${apiOrigin}/desktop/${encodeURIComponent(row.id)}/vnc.html?autoconnect=true&resize=scale&path=${encodeURIComponent(`desktop/${row.id}/websockify`)}`
-            : null,
+        desktop: hasDesktop && status === "running",
         // E2B's getHost(port) is `${port}-${sandboxId}.${domain}`.
         portUrlTemplate: `https://${sandboxHost("{port}", row.id, e2bDomain)}`,
       },
@@ -208,6 +205,21 @@ export function createMachineService(options: MachineServiceOptions) {
     return (await listMachines(ownerId)).length;
   }
 
+  async function suspendMachine(ownerId: string, id: string): Promise<Machine> {
+    const current = await view(ownerId, id);
+    if (!canPerform(current.status, "suspend")) {
+      throw new MachineError("CONFLICT", `A ${current.status} machine cannot be suspended.`);
+    }
+    try {
+      await withOp(id, "suspending", () => space.suspend(id));
+    } catch (error) {
+      wrap(error);
+    }
+    await store.setOp(id, null);
+    logger.info("machine suspended", { owner: ownerId, machine: id });
+    return view(ownerId, id);
+  }
+
   return {
     list: listMachines,
 
@@ -243,6 +255,7 @@ export function createMachineService(options: MachineServiceOptions) {
             metadata: { [OWNER_TAG]: ownerId, "rookbox.name": name },
             timeoutS: idleTimeoutS,
             size: input.size,
+            allowInternet: options.allowInternet ?? true,
           });
         } catch (error) {
           logger.warn("space create failed", { owner: ownerId, template: input.template, error });
@@ -273,20 +286,7 @@ export function createMachineService(options: MachineServiceOptions) {
       });
     },
 
-    async suspend(ownerId: string, id: string): Promise<Machine> {
-      const current = await view(ownerId, id);
-      if (!canPerform(current.status, "suspend")) {
-        throw new MachineError("CONFLICT", `A ${current.status} machine cannot be suspended.`);
-      }
-      try {
-        await withOp(id, "suspending", () => space.suspend(id));
-      } catch (error) {
-        wrap(error);
-      }
-      await store.setOp(id, null);
-      logger.info("machine suspended", { owner: ownerId, machine: id });
-      return view(ownerId, id);
-    },
+    suspend: suspendMachine,
 
     async restore(ownerId: string, id: string): Promise<Machine> {
       const current = await view(ownerId, id);
@@ -380,6 +380,37 @@ export function createMachineService(options: MachineServiceOptions) {
       } catch (error) {
         wrap(error);
       }
+    },
+
+    /**
+     * Suspends every running machine the user owns (an operator action). Machines already
+     * suspended or in transition are skipped; one that fails does not stop the others.
+     */
+    async suspendAll(
+      ownerId: string,
+    ): Promise<{ suspended: number; skipped: number; failed: number }> {
+      const result = { suspended: 0, skipped: 0, failed: 0 };
+      for (const row of await store.listByOwner(ownerId)) {
+        try {
+          const current = await view(ownerId, row.id);
+          if (!canPerform(current.status, "suspend")) {
+            result.skipped += 1;
+            continue;
+          }
+          await suspendMachine(ownerId, row.id);
+          result.suspended += 1;
+        } catch (error) {
+          logger.warn("suspend of a user's machine failed", {
+            owner: ownerId,
+            machine: row.id,
+            error,
+          });
+          if (error instanceof MachineError && error.code === "NOT_FOUND") result.skipped += 1;
+          else result.failed += 1;
+        }
+      }
+      logger.info("user machines suspended", { owner: ownerId, ...result });
+      return result;
     },
 
     /** What the desktop proxy needs: the sandbox id and its traffic token, for a running desktop. */

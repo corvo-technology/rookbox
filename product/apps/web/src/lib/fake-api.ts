@@ -99,7 +99,7 @@ export function createFakeApi(options: FakeApiOptions = {}): AppClient {
       createdAt: fields.createdAt.toISOString(),
       forkedFrom: fields.forkedFrom ?? null,
       // The fake has no real host, so there is no desktop to open.
-      access: { desktopUrl: null, portUrlTemplate: `https://{port}-${machineId}.box.example.com` },
+      access: { desktop: false, portUrlTemplate: `https://{port}-${machineId}.box.example.com` },
     };
     machines.set(machine.id, machine);
     return machine;
@@ -231,6 +231,12 @@ export function createFakeApi(options: FakeApiOptions = {}): AppClient {
           exitCode: 0,
           truncated: false,
         };
+      }),
+      // The fake has no desktop, so there is never a link to hand out.
+      desktopLink: os.machines.desktopLink.handler(async ({ input, errors }) => {
+        await latency();
+        if (!find(input.id)) throw errors.NOT_FOUND();
+        throw errors.NOT_FOUND({ message: "No such desktop." });
       }),
       delete: os.machines.delete.handler(async ({ input, errors }) => {
         await latency();

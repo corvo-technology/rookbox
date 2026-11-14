@@ -1,7 +1,7 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import type { ExecResult, Machine } from "@rookbox/contracts";
 import { canPerform, DESKTOP_TEMPLATES, isTransitional } from "@rookbox/contracts";
-import { Button, buttonVariants, Input, Skeleton, Spinner } from "@rookbox/ui-web";
+import { Button, Input, Skeleton, Spinner } from "@rookbox/ui-web";
 import { useIsMutating, useMutation, useQuery } from "@tanstack/react-query";
 import { GitFork, Monitor, Pause, Play, Trash2 } from "lucide-react";
 import type { FormEvent, ReactNode } from "react";
@@ -9,7 +9,7 @@ import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { CodeBlock } from "../components/CodeBlock";
 import { CopyButton } from "../components/CopyButton";
-import { ErrorNote, useErrorText } from "../components/ErrorNote";
+import { ErrorNote, useErrorText, useToastError } from "../components/ErrorNote";
 import {
   DeleteMachineDialog,
   MACHINE_ACTION_KEY,
@@ -245,6 +245,39 @@ function PortPanel({ machine }: { machine: Machine }) {
   );
 }
 
+/**
+ * Asks the API for a short-lived link, then opens it in a new tab. The tab is opened first, while
+ * the click still counts, so the browser does not take it for a pop-up. The desktop lives on its
+ * own origin and never gets the login cookie.
+ */
+function OpenDesktopButton({ id }: { id: string }) {
+  const toastError = useToastError();
+  const link = useMutation(orpc.machines.desktopLink.mutationOptions());
+  const open = async () => {
+    const tab = window.open("about:blank", "_blank");
+    if (tab) tab.opener = null;
+    try {
+      const { url } = await link.mutateAsync({ id });
+      if (tab) tab.location.href = url;
+      else window.location.assign(url);
+    } catch (error) {
+      tab?.close();
+      toastError(error);
+    }
+  };
+  return (
+    <Button
+      variant="outline"
+      className="mt-2 h-11 px-3"
+      onClick={() => void open()}
+      disabled={link.isPending}
+    >
+      {link.isPending ? <Spinner /> : null}
+      <Trans>Open desktop</Trans>
+    </Button>
+  );
+}
+
 export function MachinePage() {
   const { t, i18n } = useLingui();
   const { id = "" } = useParams();
@@ -352,15 +385,8 @@ export function MachinePage() {
                 <p>
                   <Trans>Chromium over VNC, in a new tab.</Trans>
                 </p>
-                {data.access.desktopUrl ? (
-                  <a
-                    href={data.access.desktopUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`${buttonVariants({ variant: "outline" })} mt-2 h-11 px-3`}
-                  >
-                    <Trans>Open desktop</Trans>
-                  </a>
+                {data.access.desktop ? (
+                  <OpenDesktopButton id={data.id} />
                 ) : (
                   <>
                     <Button

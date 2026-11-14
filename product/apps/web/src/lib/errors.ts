@@ -15,10 +15,14 @@ export type ErrorKind =
   | "not_found"
   | "conflict"
   | "space"
+  | "rate_limited"
+  | "forbidden"
   | "unknown";
 
 export type ClassifiedError = {
   kind: ErrorKind;
+  /** Seconds to wait, for `rate_limited`. */
+  retryAfterS?: number;
   /** The machine limit, for `limit`. */
   limit?: number;
   /** Trying the same thing again can work, without anyone changing anything. */
@@ -71,6 +75,16 @@ export function classifyError(error: unknown): ClassifiedError {
         return { kind: "not_found", retryable: false };
       case "CONFLICT":
         return { kind: "conflict", retryable: false };
+      case "RATE_LIMITED": {
+        const wait = field(data, "retryAfterS");
+        return {
+          kind: "rate_limited",
+          retryAfterS: typeof wait === "number" ? wait : undefined,
+          retryable: false,
+        };
+      }
+      case "FORBIDDEN":
+        return { kind: "forbidden", retryable: false };
     }
   }
   if (code === "UNAUTHORIZED" || status === 401) return { kind: "session", retryable: false };

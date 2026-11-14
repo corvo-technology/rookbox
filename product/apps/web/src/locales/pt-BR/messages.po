@@ -806,6 +806,18 @@ msgid "vCPU"
 msgstr "vCPU"
 
 #: src/components/ErrorNote.tsx
+msgid "Wait {seconds} seconds, then try again."
+msgstr "Aguarde {seconds} segundos e tente de novo."
+
+#: src/components/ErrorNote.tsx
+msgid "Wait a little, then try again."
+msgstr "Aguarde um pouco e tente de novo."
+
+#: src/components/ErrorNote.tsx
+msgid "Wait about {minutes} minutes, then try again."
+msgstr "Aguarde cerca de {minutes} minutos e tente de novo."
+
+#: src/components/ErrorNote.tsx
 msgid "Wait for it to finish what it's doing, then try again."
 msgstr "Espere ela terminar o que está fazendo e tente novamente."
 
@@ -818,12 +830,24 @@ msgid "Workspace"
 msgstr "Espaço de trabalho"
 
 #: src/components/ErrorNote.tsx
+msgid "You can't do that."
+msgstr "Você não pode fazer isso."
+
+#: src/components/ErrorNote.tsx
+msgid "You're doing that too often."
+msgstr "Você está fazendo isso com muita frequência."
+
+#: src/components/ErrorNote.tsx
 msgid "You've reached your limit of {limit} machines."
 msgstr "Você atingiu o limite de {limit} máquinas."
 
 #: src/components/ErrorNote.tsx
 msgid "You've reached your machine limit."
 msgstr "Você atingiu seu limite de máquinas."
+
+#: src/components/ErrorNote.tsx
+msgid "Your account doesn't have permission for this action."
+msgstr "Sua conta não tem permissão para esta ação."
 
 #: src/components/ErrorNote.tsx
 msgid "Your session ended."

@@ -25,6 +25,16 @@ describe("classifyError", () => {
     expect(classifyError(coded("CONFLICT", 409)).kind).toBe("conflict");
   });
 
+  it("carries the wait time of a rate limit", () => {
+    expect(classifyError(coded("RATE_LIMITED", 429, { retryAfterS: 42 }))).toEqual({
+      kind: "rate_limited",
+      retryAfterS: 42,
+      retryable: false,
+    });
+    expect(classifyError(coded("RATE_LIMITED", 429)).retryAfterS).toBeUndefined();
+    expect(classifyError(coded("FORBIDDEN", 403)).kind).toBe("forbidden");
+  });
+
   it("carries the machine limit", () => {
     expect(classifyError(coded("MACHINE_LIMIT", 409, { limit: 10 }))).toEqual({
       kind: "limit",

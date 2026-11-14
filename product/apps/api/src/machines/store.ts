@@ -18,6 +18,8 @@ export type MachineRow = {
 /** Ownership and bookkeeping for machines. Every read is scoped to an owner. */
 export interface MachineStore {
   listByOwner(ownerId: string): Promise<MachineRow[]>;
+  /** Every row, for the reconciler only. Never reachable from a request. */
+  listAll(): Promise<MachineRow[]>;
   find(ownerId: string, id: string): Promise<MachineRow | null>;
   insert(
     row: Omit<MachineRow, "op" | "opAt" | "createdAt"> & { createdAt?: Date },
@@ -65,6 +67,9 @@ export function createPrismaMachineStore(db: Db): MachineStore {
         orderBy: { createdAt: "desc" },
       });
       return rows.map(toRow);
+    },
+    async listAll() {
+      return (await db.machine.findMany({ orderBy: { createdAt: "asc" } })).map(toRow);
     },
     async find(ownerId, id) {
       const row = await db.machine.findFirst({ where: { id, ownerId } });
