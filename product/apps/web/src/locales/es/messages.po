@@ -47,6 +47,14 @@ msgstr "{vcpu} vCPU · {memory} de RAM · {disk} de disco"
 msgid "{vcpu} vCPU / {memory}"
 msgstr "{vcpu} vCPU / {memory}"
 
+#: src/pages/UsagePage.tsx
+msgid "30 days"
+msgstr "30 días"
+
+#: src/pages/UsagePage.tsx
+msgid "7 days"
+msgstr "7 días"
+
 #: src/pages/MachinePage.tsx
 msgid "A deleted machine"
 msgstr "Una máquina eliminada"
@@ -105,6 +113,10 @@ msgstr "Claves de API"
 msgid "Appearance"
 msgstr "Apariencia"
 
+#: src/pages/UsagePage.tsx
+msgid "Billing is coming soon."
+msgstr "La facturación llegará pronto."
+
 #: src/pages/MachinePage.tsx
 msgid "Breadcrumb"
 msgstr "Ruta de navegación"
@@ -138,13 +150,13 @@ msgstr "CI"
 msgid "Close menu"
 msgstr "Cerrar menú"
 
-#: src/pages/UsagePage.tsx
-msgid "Coming soon"
-msgstr "Próximamente"
-
 #: src/pages/MachinePage.tsx
 msgid "Command"
 msgstr "Comando"
+
+#: src/pages/UsagePage.tsx
+msgid "Compute"
+msgstr "Cómputo"
 
 #: src/components/CreateMachineDialog.tsx
 msgid "Computer-use desktop"
@@ -229,6 +241,10 @@ msgstr "Eliminar máquina"
 msgid "Delete machines you don't need, or try again later."
 msgstr "Elimina las máquinas que no necesites o inténtalo más tarde."
 
+#: src/pages/UsagePage.tsx
+msgid "deleted"
+msgstr "eliminada"
+
 #: src/components/StatusChip.tsx
 msgid "Deleting"
 msgstr "Eliminando"
@@ -248,6 +264,18 @@ msgstr "Disco"
 #: src/components/CreateMachineDialog.tsx
 msgid "Disk (GiB)"
 msgstr "Disco (GiB)"
+
+#: src/pages/UsagePage.tsx
+msgid "Disk GiB h"
+msgstr "Disco GiB h"
+
+#: src/pages/UsagePage.tsx
+msgid "Disk, running"
+msgstr "Disco, en ejecución"
+
+#: src/pages/UsagePage.tsx
+msgid "Disk, suspended"
+msgstr "Disco, suspendida"
 
 #: src/components/AppShell.tsx
 msgid "Docs"
@@ -308,8 +336,17 @@ msgstr "Fork creado en {forked}. Se copió el disco, no la memoria."
 msgid "Forking…"
 msgstr "Creando fork…"
 
+#: src/pages/UsagePage.tsx
+msgid "GiB-hours"
+msgstr "GiB-horas"
+
+#: src/pages/UsagePage.tsx
+msgid "GiB-hours, running"
+msgstr "GiB-horas, en ejecución"
+
 #: src/App.tsx
 #: src/pages/MachinePage.tsx
+#: src/pages/UsagePage.tsx
 msgid "Go to machines"
 msgstr "Ir a máquinas"
 
@@ -320,6 +357,10 @@ msgstr "Ocultar contraseña"
 #: src/pages/ApiKeysPage.tsx
 msgid "I have saved it"
 msgstr "Ya la guardé"
+
+#: src/pages/UsagePage.tsx
+msgid "in this period"
+msgstr "en este período"
 
 #: src/components/AppShell.tsx
 msgid "Integrations"
@@ -354,6 +395,10 @@ msgstr "Idioma"
 msgid "Large"
 msgstr "Grande"
 
+#: src/pages/UsagePage.tsx
+msgid "Last report"
+msgstr "Último reporte"
+
 #: src/pages/ApiKeysPage.tsx
 msgid "Last used"
 msgstr "Último uso"
@@ -372,22 +417,32 @@ msgstr "Linux con acceso root y sin pantalla. El más rápido en arrancar."
 
 #: src/App.tsx
 #: src/pages/MachinesPage.tsx
+#: src/pages/UsagePage.tsx
 msgid "Loading"
 msgstr "Cargando"
 
 #: src/pages/UsagePage.tsx
-msgid "Machine hours and billing"
-msgstr "Horas de máquina y facturación"
+msgid "Machine"
+msgstr "Máquina"
 
 #: src/pages/UsagePage.tsx
-msgid "Machine hours, plans and invoices are coming soon. Nothing is measured or billed yet, so there are no numbers to show here."
-msgstr "Las horas de máquina, los planes y las facturas llegarán pronto. Todavía no se mide ni se cobra nada, así que no hay números que mostrar aquí."
+msgid "machine-hours"
+msgstr "horas de máquina"
+
+#: src/components/UsageChart.tsx
+msgid "Machine-hours running per day"
+msgstr "Horas de máquina en ejecución por día"
 
 #: src/components/AppShell.tsx
 #: src/pages/MachinePage.tsx
 #: src/pages/MachinesPage.tsx
+#: src/pages/UsagePage.tsx
 msgid "Machines"
 msgstr "Máquinas"
+
+#: src/pages/UsagePage.tsx
+msgid "Measured every {seconds} seconds, so times are accurate to about that. Days are in UTC."
+msgstr "Medido cada {seconds} segundos, así que los tiempos son precisos más o menos a ese nivel. Los días son en UTC."
 
 #: src/components/CreateMachineDialog.tsx
 msgid "Medium"
@@ -398,8 +453,18 @@ msgid "Members"
 msgstr "Miembros"
 
 #: src/pages/MachinePage.tsx
+#: src/pages/UsagePage.tsx
 msgid "Memory"
 msgstr "Memoria"
+
+#: src/pages/UsagePage.tsx
+msgid "Memory GiB h"
+msgstr "Memoria GiB h"
+
+#. placeholder {0}: formatQuantity(peak, locale)
+#: src/components/UsageChart.tsx
+msgid "Most in a day: {0} h"
+msgstr "Máximo en un día: {0} h"
 
 #: src/components/CreateMachineDialog.tsx
 #: src/pages/ApiKeysPage.tsx
@@ -424,6 +489,10 @@ msgstr "Nueva máquina"
 msgid "No keys yet"
 msgstr "Aún no hay claves"
 
+#: src/pages/UsagePage.tsx
+msgid "No machine is running right now."
+msgstr "Ninguna máquina está en ejecución ahora."
+
 #: src/pages/MachinesPage.tsx
 msgid "No machines match."
 msgstr "Ninguna máquina coincide."
@@ -431,6 +500,14 @@ msgstr "Ninguna máquina coincide."
 #: src/pages/MachinesPage.tsx
 msgid "No machines yet"
 msgstr "Aún no hay máquinas"
+
+#: src/pages/UsagePage.tsx
+msgid "No usage in this period"
+msgstr "Sin uso en este período"
+
+#: src/pages/UsagePage.tsx
+msgid "Nothing has been reported yet."
+msgstr "Todavía no se ha reportado nada."
 
 #: src/pages/MachinePage.tsx
 msgid "Open desktop"
@@ -456,6 +533,10 @@ msgstr "Página no encontrada"
 msgid "Password"
 msgstr "Contraseña"
 
+#: src/pages/UsagePage.tsx
+msgid "Period"
+msgstr "Período"
+
 #: src/components/ErrorNote.tsx
 msgid "Pick another name."
 msgstr "Elige otro nombre."
@@ -480,6 +561,10 @@ msgstr "Preparando la máquina…"
 #: src/components/CreateMachineDialog.tsx
 msgid "RAM (GiB)"
 msgstr "RAM (GiB)"
+
+#: src/pages/UsagePage.tsx
+msgid "Reports have stopped, so the latest time may be missing."
+msgstr "Los reportes se detuvieron, así que puede faltar el tiempo más reciente."
 
 #: src/components/MachineActions.tsx
 #: src/pages/MachinePage.tsx
@@ -514,10 +599,6 @@ msgstr "¿Revocar {name}?"
 #: src/pages/ApiKeysPage.tsx
 msgid "Revoke key"
 msgstr "Revocar clave"
-
-#: src/pages/UsagePage.tsx
-msgid "Right now"
-msgstr "Ahora mismo"
 
 #: src/pages/MachinePage.tsx
 msgid "Rookbox API keys do not work with the E2B SDK yet. This shows how a machine will be reached once they do. Until then, use the terminal and the desktop here."
@@ -557,9 +638,29 @@ msgstr "Ejecuta un comando para ver su salida aquí."
 msgid "Running"
 msgstr "En ejecución"
 
+#: src/pages/UsagePage.tsx
+msgid "Running h"
+msgstr "Ejecución h"
+
+#: src/pages/UsagePage.tsx
+msgid "Running now"
+msgstr "En ejecución ahora"
+
+#: src/pages/UsagePage.tsx
+msgid "Running time"
+msgstr "Tiempo en ejecución"
+
+#: src/pages/UsagePage.tsx
+msgid "Running time per day"
+msgstr "Tiempo en ejecución por día"
+
 #: src/pages/MachinePage.tsx
 msgid "Runs in a shell as root"
 msgstr "Se ejecuta en un shell como root"
+
+#: src/pages/UsagePage.tsx
+msgid "Sample data"
+msgstr "Datos de ejemplo"
 
 #: src/pages/MachinePage.tsx
 msgid "Saving the machine's memory. This can take up to half a minute."
@@ -628,6 +729,10 @@ msgstr "Especificaciones"
 msgid "Start the machine to run commands."
 msgstr "Inicia la máquina para ejecutar comandos."
 
+#: src/pages/UsagePage.tsx
+msgid "State"
+msgstr "Estado"
+
 #: src/pages/MachinesPage.tsx
 msgid "State filter"
 msgstr "Filtro de estado"
@@ -658,6 +763,10 @@ msgstr "Suspender cuando esté inactiva"
 #: src/pages/UsagePage.tsx
 msgid "Suspended"
 msgstr "Suspendida"
+
+#: src/pages/UsagePage.tsx
+msgid "Suspended disk GiB h"
+msgstr "Disco suspendido GiB h"
 
 #: src/components/StatusChip.tsx
 msgid "Suspending"
@@ -753,6 +862,10 @@ msgstr "Es un problema de configuración de nuestra parte, no tuyo. Inténtalo d
 msgid "This is the only time it is shown. If you lose it, revoke it and create a new one."
 msgstr "Esta es la única vez que se muestra. Si la pierdes, revócala y crea una nueva."
 
+#: src/pages/UsagePage.tsx
+msgid "This month"
+msgstr "Este mes"
+
 #: src/pages/MachinePage.tsx
 msgid "Timed out"
 msgstr "Tiempo agotado"
@@ -762,7 +875,6 @@ msgid "Too many attempts. Try again in {minutes} min."
 msgstr "Demasiados intentos. Inténtalo de nuevo en {minutes} min."
 
 #: src/pages/MachinesPage.tsx
-#: src/pages/UsagePage.tsx
 msgid "Total"
 msgstr "Total"
 
@@ -789,6 +901,10 @@ msgstr "Tipo"
 msgid "Usage and billing"
 msgstr "Uso y facturación"
 
+#: src/pages/UsagePage.tsx
+msgid "Usage shows up here once a machine has run. It can take a minute to appear."
+msgstr "El uso aparece aquí una vez que una máquina haya funcionado. Puede tardar un minuto en aparecer."
+
 #: src/pages/ApiKeysPage.tsx
 msgid "Use it as a bearer token against the Rookbox API. It does not work with the E2B SDK yet."
 msgstr "Úsala como bearer token con la API de Rookbox. Todavía no funciona con el SDK de E2B."
@@ -804,6 +920,14 @@ msgstr "Usa la cuenta que te dieron."
 #: src/components/CreateMachineDialog.tsx
 msgid "vCPU"
 msgstr "vCPU"
+
+#: src/pages/UsagePage.tsx
+msgid "vCPU h"
+msgstr "vCPU h"
+
+#: src/pages/UsagePage.tsx
+msgid "vCPU-hours"
+msgstr "vCPU-horas"
 
 #: src/components/ErrorNote.tsx
 msgid "Wait for it to finish what it's doing, then try again."

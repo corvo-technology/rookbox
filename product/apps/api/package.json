@@ -12,7 +12,8 @@
     "check": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run --root ../.. apps/api/src",
     "db:migrate": "node --enable-source-maps dist/cli/migrate.js",
-    "owner:seed": "node --enable-source-maps dist/cli/seed-owner.js"
+    "owner:seed": "node --enable-source-maps dist/cli/seed-owner.js",
+    "usage:report": "node --enable-source-maps dist/cli/usage.js"
   },
   "dependencies": {
     "@hono/node-server": "2.1.5",

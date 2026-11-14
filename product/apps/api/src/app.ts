@@ -9,6 +9,7 @@ import type { MachineService } from "./machines/service.js";
 import type { RateLimiter } from "./rate-limit.js";
 import { createRouter } from "./router.js";
 import type { SpaceClient } from "./space/client.js";
+import type { UsageService } from "./usage/service.js";
 
 export type AppDeps = {
   appOrigin: string;
@@ -25,6 +26,10 @@ export type AppDeps = {
   space?: Pick<SpaceClient, "probe">;
   /** Counts failed sign-ins. Without it, sign-in is not limited here. */
   signInLimiter?: RateLimiter;
+  /** Measured usage for the dashboard and the admin view. Without it those answer 503. */
+  usage?: UsageService;
+  /** `POST /ingest/usage-events`, signed by the usage reporter. Without it the route is absent. */
+  ingestUsage?: (request: Request) => Promise<Response>;
   now?: () => number;
 };
 
@@ -37,7 +42,7 @@ function clientAddress(headers: Headers): string {
 export function createApp(deps: AppDeps) {
   const { logger } = deps;
   const rpc = new RPCHandler(
-    createRouter({ machines: deps.machines, apiKeys: deps.apiKeys, logger }),
+    createRouter({ machines: deps.machines, apiKeys: deps.apiKeys, logger, usage: deps.usage }),
   );
   const app = new Hono<{ Variables: { user: AuthUser } }>();
 
@@ -123,6 +128,10 @@ export function createApp(deps: AppDeps) {
   });
 
   app.on(["GET", "POST"], "/api/auth/*", (c) => deps.authHandler(c.req.raw));
+
+  // The usage reporter's door: not a user session, so it is signed instead (see usage/ingest.ts).
+  const ingestUsage = deps.ingestUsage;
+  if (ingestUsage) app.post("/ingest/usage-events", (c) => ingestUsage(c.req.raw));
 
   app.use("/rpc/*", async (c, next) => {
     // Preflight carries no credentials; the cors middleware above has already answered it.

@@ -52,6 +52,8 @@ path `apps/api/Dockerfile`, port `3000`). Guará injects `DATABASE_URL`; set the
 | `SIGNIN_WINDOW_S` | Optional, default `600`. The window for `SIGNIN_MAX_ATTEMPTS`, in seconds. |
 | `MACHINE_IDLE_TIMEOUT_S` | Optional, default `900`. Idle time before a machine suspends itself. |
 | `MAX_MACHINES_PER_USER` | Optional, default `10`. |
+| `INGEST_SECRET` | 32+ random characters: `openssl rand -hex 32`. The usage reporter signs its requests with it; the same value goes in the reporter's environment. Unset, `POST /ingest/usage-events` answers 503 and no usage is recorded. See "Usage metering" below. |
+| `ADMIN_EMAILS` | Optional, comma-separated. Who may see everyone's usage (the admin view and `usage:report`). Unset, only the first `ROOKBOX_ALLOWED_EMAILS` entry may. |
 | `LOG_LEVEL` | Optional, default `info`. |
 | `RUN_MIGRATIONS` | Optional, default `true`. |
 
@@ -135,6 +137,40 @@ rookbox.run     { reverse_proxy 127.0.0.1:8082 }
 app.rookbox.run { reverse_proxy 127.0.0.1:8081 }
 ```
 
+## Usage metering
+
+Usage is measured, not priced: machine-hours, vCPU-hours, GiB-hours of memory and disk. The
+sandbox server records none of this itself, and people may use the E2B SDK against it directly, so
+the meter does not sit in the request path. A small **reporter** (`apps/reporter`) runs on the
+dedicated server next to the sandbox server, lists the machines through the E2B-compatible API
+every 30 seconds, and posts what changed to the API's `POST /ingest/usage-events`, signed with
+`INGEST_SECRET`. Its README has the variables, the systemd unit and the Dockerfile. The API stores
+the events, derives per-machine intervals and shows them on the dashboard's Usage page.
+
+To turn it on:
+
+1. Set `INGEST_SECRET` (and, if the owner is not the only admin, `ADMIN_EMAILS`) on the API and
+   deploy. The new migration `20261114000000_usage_metering` runs at start. The log warns
+   `INGEST_SECRET is not set` until it is set.
+2. On the sandbox server, install and start the reporter (`apps/reporter/README.md`). It needs the
+   same `SPACE_ECW_API_KEY` (it only lists machines), `SPACE_ECW_API_URL`, `ROOKBOX_API_URL`
+   (`https://api.rookbox.run`) and the same `INGEST_SECRET`. Keep the server's clock right: a
+   request more than five minutes off is refused.
+3. Check it: `curl http://127.0.0.1:9464/healthz` on that server returns `"ok":true` and
+   `"delivery":"ok"`. A minute later the Usage page shows the machines. In the API's shell,
+   `node dist/cli/usage.js --period 7d` (`pnpm usage:report`) prints usage per user, the
+   unassigned bucket and how long ago the reporter last got through.
+
+How machines get an owner: the `rookbox.owner` tag when it names an account, else the API's own
+record of the machine (a fork loses the tag), else "unassigned", which only an admin sees. The tag
+is set by whoever creates the machine, so before giving customers their own keys to the sandbox
+server, move ownership to the key's organization instead of trusting the tag.
+
+Precision: time is measured to the reporter's poll interval (30 seconds). A machine created and
+deleted between two polls is not measured. If the reporter stops, machines still open stop
+accruing 15 minutes after its last contact. The sandbox server's list may report the disk's
+use rather than its provisioned size; verify against a machine you know.
+
 ## How machine access works
 
 - **Machines** are SPACE sandboxes created through its E2B-compatible API (ECW). ECW `pause` is
@@ -166,7 +202,8 @@ app.rookbox.run { reverse_proxy 127.0.0.1:8081 }
   accepting that a SPACE key sees every sandbox of the organization (SPACE scopes keys to an
   organization, not to a Rookbox user). Until then, create an E2B key for yourself with
   `scripts/seed-api-key.sh` and use that with the SDK.
-- **Usage and billing are not measured.** The Usage page says so and shows only how many machines are running now.
+- **Usage is measured, billing is not.** Once the reporter runs, the Usage page shows machine
+  hours and sizes. There are no prices, credits or invoices yet.
 - **Snapshots, secrets, webhooks, CI and members** are still "Soon" in the dashboard.
 - The SPACE side (`api.box.rookbox.run`) was not reachable while this was written, so the SPACE
   client was built from the ECW source and docs and tested against mocks. Run one real create,

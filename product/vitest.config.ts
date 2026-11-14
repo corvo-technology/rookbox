@@ -8,6 +8,7 @@ export default defineConfig({
       "apps/web/src/**/*.test.{ts,tsx}",
       "apps/www/src/**/*.test.ts",
       "apps/api/src/**/*.test.ts",
+      "apps/reporter/src/**/*.test.ts",
     ],
   },
 });

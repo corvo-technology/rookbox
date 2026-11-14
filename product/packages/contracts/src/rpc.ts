@@ -21,6 +21,7 @@ import {
   MachineIdInput,
   MachineSchema,
 } from "./machines.js";
+import { AdminUsageSchema, UsagePeriodInput, UsageSummarySchema } from "./usage.js";
 
 const ok = z.object({ ok: z.literal(true) });
 
@@ -43,6 +44,17 @@ export const appContract = {
     list: oc.output(z.array(ApiKeySchema)),
     create: oc.input(CreateApiKeyInput).output(CreatedApiKeySchema),
     revoke: oc.errors(API_ERRORS).input(RevokeApiKeyInput).output(ok),
+  },
+  /** Measured usage: raw quantities, no prices. */
+  usage: {
+    summary: oc.input(UsagePeriodInput).output(UsageSummarySchema),
+  },
+  /** For admins only (`ADMIN_EMAILS`): everyone's usage, and whether the meter is reporting. */
+  admin: {
+    usage: oc
+      .errors({ FORBIDDEN: { status: 403, message: "Admins only." } })
+      .input(UsagePeriodInput)
+      .output(AdminUsageSchema),
   },
   /** What this deployment offers: templates, limits and the sandbox domain. */
   config: {

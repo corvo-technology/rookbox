@@ -4,6 +4,8 @@ import { ApiKeyLimitError, type ApiKeyService } from "./api-keys.js";
 import type { AuthUser } from "./auth.js";
 import type { Logger } from "./logger.js";
 import { MachineError, type MachineService, toMachineError } from "./machines/service.js";
+import { usageHandlers } from "./usage/router.js";
+import type { UsageService } from "./usage/service.js";
 
 export type RpcContext = { user: AuthUser };
 
@@ -11,9 +13,11 @@ export type RouterDeps = {
   machines: MachineService;
   apiKeys: ApiKeyService;
   logger: Logger;
+  usage?: UsageService;
 };
 
-export function createRouter({ machines, apiKeys, logger }: RouterDeps) {
+export function createRouter({ machines, apiKeys, logger, usage }: RouterDeps) {
+  const usageNow = usageHandlers(usage);
   const os = implement(appContract).$context<RpcContext>();
 
   /**
@@ -83,6 +87,16 @@ export function createRouter({ machines, apiKeys, logger }: RouterDeps) {
         if (!(await apiKeys.revoke(context.user.id, input.id))) throw errors.NOT_FOUND();
         return { ok: true as const };
       }),
+    },
+    usage: {
+      summary: os.usage.summary.handler(({ input, context }) =>
+        usageNow.summary(context.user, input.period),
+      ),
+    },
+    admin: {
+      usage: os.admin.usage.handler(({ input, context }) =>
+        usageNow.admin(context.user, input.period),
+      ),
     },
     config: {
       get: os.config.get.handler(() => machines.config()),
