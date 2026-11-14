@@ -21,6 +21,7 @@ Tudo vive em `product/`, um workspace pnpm + Turborepo.
 | `product/apps/web` | Painel (Vite, React). Máquinas, chaves de API e uso. |
 | `product/apps/www` | Landing page (Astro), em pt-BR, inglês e espanhol. |
 | `product/apps/reporter` | Medição de uso: roda ao lado do servidor de máquinas e envia eventos de uso para a API. |
+| `product/apps/docs` | Documentação pública (Starlight), em pt-BR e inglês. |
 | `product/apps/cli` | Linha de comando `rookbox` (`rookbox new`, `rookbox shell`, ...). |
 | `product/packages/contracts` | Contrato oRPC compartilhado e regras do ciclo de vida das máquinas. |
 | `product/packages/ui-tokens`, `ui-web` | Tokens de design e componentes de interface. |
