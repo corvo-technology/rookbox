@@ -172,7 +172,7 @@ function layout(input: {
 <tr><td align="center" style="padding:40px 12px;">
 <table role="presentation" width="480" cellpadding="0" cellspacing="0" border="0" class="card" style="width:100%;max-width:480px;background:#ffffff;border:1px solid ${LINE};border-radius:12px;" bgcolor="#ffffff">
 <tr><td class="pad" style="padding:36px 36px 32px;">
-<div style="margin:0 0 36px;"><img class="logo-light" src="${escapeHtml(logo)}" width="128" height="32" alt="Rookbox" style="display:block;border:0;outline:none;height:32px;width:128px;"><!--[if !mso]><!--><img class="logo-dark" src="${escapeHtml(logoDark)}" width="128" height="32" alt="" style="display:none;max-height:0;overflow:hidden;border:0;outline:none;height:32px;width:128px;"><!--<![endif]--></div>
+<div style="margin:0 0 36px;"><img class="logo-light" src="${escapeHtml(logo)}" width="160" height="40" alt="Rookbox" style="display:block;border:0;outline:none;height:40px;width:160px;"><!--[if !mso]><!--><img class="logo-dark" src="${escapeHtml(logoDark)}" width="160" height="40" alt="" style="display:none;max-height:0;overflow:hidden;border:0;outline:none;height:40px;width:160px;"><!--<![endif]--></div>
 <h1 class="hd" style="margin:0 0 14px;font:600 26px/1.2 ${FONT};letter-spacing:-0.02em;color:${INK};">${escapeHtml(title)}</h1>
 ${blocks.map((block) => block.html).join("\n")}
 </td></tr>
