@@ -1,4 +1,5 @@
 import type { ReconcileReport } from "@rookbox/contracts";
+import { asSystem } from "./database-access.js";
 import type { Logger } from "./logger.js";
 import { OWNER_TAG } from "./machines/service.js";
 import type { MachineStore } from "./machines/store.js";
@@ -39,10 +40,12 @@ export type ReconcileMode = {
  * Report mode changes nothing. If the host cannot be listed the run fails; it never reads an
  * error as "no machines".
  */
-export async function reconcile(
-  deps: ReconcileDeps,
-  mode: ReconcileMode,
-): Promise<ReconcileReport> {
+export function reconcile(deps: ReconcileDeps, mode: ReconcileMode): Promise<ReconcileReport> {
+  // Every owner's rows, by design.
+  return asSystem("reconcile machines", () => reconcileRows(deps, mode));
+}
+
+async function reconcileRows(deps: ReconcileDeps, mode: ReconcileMode): Promise<ReconcileReport> {
   const now = (deps.now ?? Date.now)();
   const act = mode.act;
   const killOrphans = act && mode.killOrphans;

@@ -8,6 +8,7 @@ import { type AdminHealthReader, createAdminHealth } from "./admin-health.js";
 import type { ApiKeyService } from "./api-keys.js";
 import type { AuthUser, Identity } from "./auth.js";
 import { clientAddress } from "./client-ip.js";
+import { asSystem, withUser } from "./database-access.js";
 import type { DesktopProxy } from "./desktop.js";
 import type { E2bFront } from "./e2b/front.js";
 import type { Logger } from "./logger.js";
@@ -259,7 +260,10 @@ export function createApp(deps: AppDeps) {
     else if (email) limiter.reset(email);
   });
 
-  main.on(["GET", "POST"], "/api/auth/*", (c) => deps.authHandler(c.req.raw));
+  // Sign-in, sign-out and session reads touch the credential tables, which only system work sees.
+  main.on(["GET", "POST"], "/api/auth/*", (c) =>
+    asSystem("auth endpoint", () => deps.authHandler(c.req.raw)),
+  );
 
   // The usage reporter's door: not a user session, so it is signed instead (see usage/ingest.ts).
   const ingestUsage = deps.ingestUsage;
@@ -285,10 +289,14 @@ export function createApp(deps: AppDeps) {
   });
   main.all("/rpc/*", async (c) => {
     const user = c.get("user");
-    const { matched, response } = await rpc.handle(c.req.raw, {
-      prefix: "/rpc",
-      context: { user, ip: ipOf(c) },
-    });
+    // The caller is known: everything the handler reads or writes is limited to their rows.
+    // Operator procedures name their system work inside (see the stores).
+    const { matched, response } = await withUser(user.id, () =>
+      rpc.handle(c.req.raw, {
+        prefix: "/rpc",
+        context: { user, ip: ipOf(c) },
+      }),
+    );
     return matched ? c.newResponse(response.body, response) : c.notFound();
   });
 

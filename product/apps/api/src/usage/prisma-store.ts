@@ -1,3 +1,4 @@
+import { asSystem, inTransaction, systemStore, withUser } from "../database-access.js";
 import type { Db } from "../db.js";
 import type { IntervalRow } from "./aggregate.js";
 import type { EventRow } from "./derive.js";
@@ -25,7 +26,7 @@ const toInterval = (row: {
   endedAt: row.endedAt,
 });
 
-export function createPrismaUsageStore(db: Db): UsageStore {
+function buildUsageStore(db: Db): UsageStore {
   return {
     async insertEvents(events) {
       const result = await db.usageEvent.createMany({
@@ -55,10 +56,10 @@ export function createPrismaUsageStore(db: Db): UsageStore {
     },
 
     async replaceIntervals(machineId, intervals) {
-      await db.$transaction([
-        db.usageInterval.deleteMany({ where: { machineId } }),
-        db.usageInterval.createMany({ data: intervals.map((interval) => ({ ...interval })) }),
-      ]);
+      await inTransaction(db, async (tx) => {
+        await tx.usageInterval.deleteMany({ where: { machineId } });
+        await tx.usageInterval.createMany({ data: intervals.map((interval) => ({ ...interval })) });
+      });
     },
 
     async currentOwners(machineIds) {
@@ -168,5 +169,34 @@ export function createPrismaUsageStore(db: Db): UsageStore {
       });
       return new Map(rows.map((row) => [row.id, row.email]));
     },
+  };
+}
+
+/**
+ * Usage is written by the reporter's ingest and read by operators, so it runs as system work.
+ * The two reads a customer's own dashboard makes (a filter on one owner) run as that user
+ * instead, so the `usage_interval_tenant` policy backs the filter.
+ */
+export function createPrismaUsageStore(db: Db): UsageStore {
+  const inner = buildUsageStore(db);
+  const system = systemStore(inner, "usage");
+  const scoped =
+    <A extends unknown[], R>(
+      run: (...args: A) => Promise<R>,
+      ownerOf: (...args: A) => string | undefined,
+    ) =>
+    (...args: A): Promise<R> => {
+      const owner = ownerOf(...args);
+      return owner
+        ? withUser(owner, () => run(...args))
+        : asSystem("usage across owners", () => run(...args));
+    };
+  return {
+    ...system,
+    openIntervals: scoped(inner.openIntervals, (filter) => filter?.ownerUserId),
+    intervalsOverlapping: scoped(
+      inner.intervalsOverlapping,
+      (_range, filter) => filter?.ownerUserId,
+    ),
   };
 }

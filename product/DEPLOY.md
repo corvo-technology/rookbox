@@ -40,7 +40,8 @@ path `apps/api/Dockerfile`, port `3000`). Guará injects `DATABASE_URL`; set the
 
 | Variable | Value |
 | --- | --- |
-| `DATABASE_URL` | Injected by Guará. |
+| `DATABASE_URL` | Injected by Guará. Once row-level security is on, the **runtime login** (see "Database roles and row-level security"). |
+| `DATABASE_MIGRATION_URL` | Optional. The **owner** login that migrates and provisions the runtime login. Unset: `DATABASE_URL` does both and row-level security is not enforced. |
 | `NODE_ENV` | `production` |
 | `PORT` | `3000` (or what Guará injects). |
 | `BETTER_AUTH_SECRET` | 32+ random characters: `openssl rand -base64 32`. Changing it signs everyone out. |
@@ -414,6 +415,95 @@ Binaries are not code-signed: a macOS download through the installer carries no 
 one downloaded by hand from the release page may need `xattr -d com.apple.quarantine`. A bad
 release is withdrawn by deleting the release (the installer then falls back to the previous
 `cli-v*`); versions are never reused.
+
+## Database roles and row-level security
+
+A bug in the API must not be able to read or write another user's rows, so the database enforces
+it too (PostgreSQL row-level security, RLS). Two logins make that work:
+
+| Login | Variable | What it is |
+| --- | --- | --- |
+| Owner | `DATABASE_MIGRATION_URL` | Owns the tables. Runs migrations and the provisioning step. Bypasses RLS (table owners do). |
+| Runtime | `DATABASE_URL` | What the API, the CLIs and the reconciler connect with. A plain `LOGIN` that is a member of the `rookbox_app` group role: no superuser, no `BYPASSRLS`, no `CREATEDB`, no `CREATEROLE`, DML only on the app tables, no `CREATE` on the schema, no access to `_prisma_migrations`. |
+
+`rookbox_app` is a `NOLOGIN` group role the migration `20261117000000_row_level_security` creates
+(with a warning, not a failure, when the owner lacks `CREATEROLE`: create it yourself as
+`NOLOGIN NOSUPERUSER NOBYPASSRLS`).
+
+### How provisioning runs
+
+At every start (when `RUN_MIGRATIONS` is true) and in `node dist/cli/migrate.js`, as the owner and
+right after the migrations: the runtime login named in `DATABASE_URL` is created or updated with
+the password in that URL, made a member of `rookbox_app`, and the group's grants are reapplied
+(`SELECT/INSERT/UPDATE/DELETE` on all tables, sequence usage, default privileges for tables later
+migrations create, no `UPDATE`/`DELETE` on the append-only `usage_event`). It is idempotent, so a
+password changed in `DATABASE_URL` takes effect on the next start. Without `CREATEROLE` (some
+managed Postgres), have an administrator create the login and `GRANT rookbox_app TO` it; the step
+then leaves it alone. At start the API also checks what its own login is and logs a warning
+(`Row-level security is not enforced ...`) when it is a superuser, owns the tables or has
+`BYPASSRLS`, or when `DATABASE_MIGRATION_URL` is unset.
+
+### Transaction pooler: settings are transaction-local
+
+The managed Postgres endpoint is behind a **transaction-mode connection pooler**: one client
+connection is served by different backend connections between statements (measured: 6 distinct
+backends over 60 statements, a session-level `set_config` lost on 38 of 60). So no tenant setting
+may live on the connection. Every operation runs in one transaction whose first statement is
+`select set_config('app.user_id', $1, true), set_config('app.rls_bypass', $2, true)`
+(`is_local = true`: gone at commit or rollback). The Prisma client extension in
+`apps/api/src/database-access.ts` does this for each query; `inTransaction(db, ...)` does it once
+for an interactive transaction; a batch `$transaction([...])` is refused. A query with no
+`withUser(userId, ...)` or `asSystem(reason, ...)` around it is refused by the client, and the
+policies would return no rows and reject writes anyway. Never add `SET` or `set_config(..., false)`.
+
+### What each table does
+
+RLS is enabled, **not forced**: the owner must keep migrating, and the fallback (one login) must
+keep working. The runtime login is not the owner, so the policies bind it. Each protected table has
+permissive policies `<table>_tenant` (owner column = `app.user_id`) and `<table>_system`
+(`app.rls_bypass = 'on'`), except where noted. Inserting or moving a row to another owner fails the
+check.
+
+| Table | `_tenant` policy | `_system` | Who uses which |
+| --- | --- | --- | --- |
+| `machine` | `ownerId = app.user_id`, all commands | yes | Requests and the desktop/E2B paths as the user; reconciler and operator listing as system. |
+| `api_key` | `userId = app.user_id`, all commands | yes | List, create, revoke as the user; the lookup by hash and `lastUsedAt` as system (the key is how the owner is found). |
+| `usage_interval` | `ownerUserId = app.user_id`, **select only** | yes | A customer's own usage read as the user; the ingest, derivation and reassign as system. |
+| `user` | `id = app.user_id`, **select only** | yes | Sign-in, the active check, account admin and the CLI as system. |
+| `session`, `account`, `verification` | none (**system only**) | yes | better-auth endpoints and the identity lookup, as system. Password hashes and tokens are never readable by a user context. |
+| `usage_event`, `usage_reporter` | none (system only) | yes | The signed ingest and operator reports. `usage_event` also loses `UPDATE`/`DELETE` for the runtime role (append-only). |
+| `waitlist_entry` | none (system only) | yes | The public `POST /waitlist` and the admin panel. |
+
+Paths that run as system, and why: `/api/auth/*` and the identity resolution (who the caller is is
+unknown until it answers); `apiKeys.authenticate`; `isActive` (kill switch); the usage ingest and
+every operator usage report; `admin.*` user, waitlist and reconcile procedures, the scheduled
+reconciler and the CLIs (`user:*`, `owner:seed`, `reconcile`, `usage:*`); the health check. After
+the identity resolves, the `/rpc` handler runs under `withUser(user.id)`; the E2B front resolves the
+owner from the key (system) and runs the rest as that user. Grep `asSystem(` for the full list.
+
+Every table a later migration adds must enable RLS and get policies; a test fails when a table in
+the schema has none.
+
+### Rollout
+
+1. Deploy this code with both `DATABASE_URL` (the owner, as today) and `DATABASE_MIGRATION_URL`
+   unset. It works as before, applies the new migration, and logs `Row-level security is not
+   enforced`. Check `/health` and a sign-in.
+2. Pick a runtime login name and password (for example `rookbox_runtime`, `openssl rand -hex 24`).
+   Set `DATABASE_MIGRATION_URL` to the current owner URL and `DATABASE_URL` to
+   `postgresql://rookbox_runtime:<password>@<same host and database>`. Keep the owner credentials
+   out of any other service.
+3. Redeploy. The start creates the login, grants it, and the log says `row-level security is
+   enforced`. Sign in, create and delete a machine, create and revoke a key, open the usage page,
+   and call the E2B API with a key.
+4. Rollback at any time: set `DATABASE_URL` back to the owner URL and unset
+   `DATABASE_MIGRATION_URL`, then redeploy. Nothing else changes; the policies stay in place and the
+   owner bypasses them. Drop the login (`DROP OWNED BY rookbox_runtime; DROP ROLE rookbox_runtime;`
+   as the owner) only if you want it gone.
+
+If the managed pooler rejects the runtime login's name or the owner cannot create roles, the start
+fails with a message saying so rather than running unprotected silently; the fallback above is
+the way back.
 
 ## Known gaps
 

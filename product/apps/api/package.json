@@ -34,6 +34,8 @@
     "zod": "4.6.7"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.13",
+    "@electric-sql/pglite-socket": "0.2.16",
     "@orpc/client": "1.15.7",
     "@rookbox/contracts": "workspace:*",
     "@types/node": "24.19.2",

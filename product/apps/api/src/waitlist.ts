@@ -1,4 +1,5 @@
 import type { WaitlistEntry, WaitlistLocale } from "@rookbox/contracts";
+import { systemStore } from "./database-access.js";
 import type { Db } from "./db.js";
 import type { EmailSender } from "./email.js";
 import { waitlistInvitedEmail, waitlistJoinedEmail } from "./email-templates.js";
@@ -41,29 +42,33 @@ export function createPrismaWaitlistStore(db: Db): WaitlistStore {
     locale: row.locale === "pt" || row.locale === "es" ? row.locale : "en",
     status: row.status === "invited" ? "invited" : "waiting",
   });
-  return {
-    async insert(entry) {
-      // The unique index decides a race between two joins of the same address.
-      const result = await db.waitlistEntry.createMany({ data: [entry], skipDuplicates: true });
-      return result.count === 1 ? "created" : "exists";
+  // The waitlist is the operator's: public joins and the admin panel both run as system.
+  return systemStore<WaitlistStore>(
+    {
+      async insert(entry) {
+        // The unique index decides a race between two joins of the same address.
+        const result = await db.waitlistEntry.createMany({ data: [entry], skipDuplicates: true });
+        return result.count === 1 ? "created" : "exists";
+      },
+      async setNoteOnce(email, note) {
+        await db.waitlistEntry.updateMany({ where: { email, note: null }, data: { note } });
+      },
+      async find(email) {
+        const row = await db.waitlistEntry.findUnique({ where: { email } });
+        return row ? record(row) : null;
+      },
+      async list() {
+        return (await db.waitlistEntry.findMany({ orderBy: { createdAt: "asc" } })).map(record);
+      },
+      async markInvited(email, at) {
+        await db.waitlistEntry.update({
+          where: { email },
+          data: { status: "invited", invitedAt: at },
+        });
+      },
     },
-    async setNoteOnce(email, note) {
-      await db.waitlistEntry.updateMany({ where: { email, note: null }, data: { note } });
-    },
-    async find(email) {
-      const row = await db.waitlistEntry.findUnique({ where: { email } });
-      return row ? record(row) : null;
-    },
-    async list() {
-      return (await db.waitlistEntry.findMany({ orderBy: { createdAt: "asc" } })).map(record);
-    },
-    async markInvited(email, at) {
-      await db.waitlistEntry.update({
-        where: { email },
-        data: { status: "invited", invitedAt: at },
-      });
-    },
-  };
+    "waitlist",
+  );
 }
 
 export class WaitlistNotFoundError extends Error {

@@ -6,6 +6,7 @@ import {
 } from "@rookbox/contracts";
 import { type Context, Hono } from "hono";
 import type { ApiKeyService } from "../api-keys.js";
+import { withUser } from "../database-access.js";
 import type { Logger } from "../logger.js";
 import { MachineError, type MachineService, OWNER_TAG } from "../machines/service.js";
 import type { LimitClass, Throttle } from "../route-limits.js";
@@ -221,7 +222,8 @@ export function createE2bFront(options: E2bFrontOptions): E2bFront {
     }
     c.set("userId", userId);
     c.set("ip", ip);
-    return next();
+    // The key lookup above is system work; everything after it runs as the key's owner.
+    return withUser(userId, () => next());
   });
 
   async function create(c: Ctx): Promise<Response> {

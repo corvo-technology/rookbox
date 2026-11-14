@@ -1,4 +1,5 @@
 import type { MachineSize, MachineTemplate } from "@rookbox/contracts";
+import { asSystem } from "../database-access.js";
 import type { Db } from "../db.js";
 import type { MachineOp } from "./state.js";
 
@@ -69,7 +70,11 @@ export function createPrismaMachineStore(db: Db): MachineStore {
       return rows.map(toRow);
     },
     async listAll() {
-      return (await db.machine.findMany({ orderBy: { createdAt: "asc" } })).map(toRow);
+      // Across owners, by design: the reconciler and the operator panel.
+      const rows = await asSystem("list every machine", () =>
+        db.machine.findMany({ orderBy: { createdAt: "asc" } }),
+      );
+      return rows.map(toRow);
     },
     async find(ownerId, id) {
       const row = await db.machine.findFirst({ where: { id, ownerId } });

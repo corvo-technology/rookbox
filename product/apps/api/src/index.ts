@@ -3,6 +3,7 @@ import { serve } from "@hono/node-server";
 import { createApiKeyService, createPrismaApiKeyStore } from "./api-keys.js";
 import { createApp } from "./app.js";
 import { createAuth, createIdentity, createIsActive, seedOwner } from "./auth.js";
+import { asSystem, withUser } from "./database-access.js";
 import { createDb } from "./db.js";
 import { createDesktopProxy } from "./desktop.js";
 import { createDesktopTokens, deriveSecret } from "./desktop-token.js";
@@ -13,6 +14,12 @@ import { createLogger } from "./logger.js";
 import { createMachineService } from "./machines/service.js";
 import { createPrismaMachineStore } from "./machines/store.js";
 import { applyMigrations } from "./migrate.js";
+import {
+  databaseUrls,
+  describeRowSecurity,
+  provisionDatabase,
+  rowSecurityWarning,
+} from "./provision.js";
 import { createRateLimiter } from "./rate-limit.js";
 import { reconcile, startReconciler } from "./reconcile.js";
 import { createThrottle } from "./route-limits.js";
@@ -27,6 +34,7 @@ const bootLogger = createLogger("info", { service: "rookbox-api" });
 
 try {
   const env = loadEnv();
+  const urls = databaseUrls(env);
   const logger = createLogger(env.LOG_LEVEL, { service: "rookbox-api" });
 
   if (env.COOKIE_DOMAIN) {
@@ -56,11 +64,27 @@ try {
   if (env.RUN_MIGRATIONS) {
     const dir =
       env.MIGRATIONS_DIR ?? fileURLToPath(new URL("../prisma/migrations", import.meta.url));
-    const applied = await applyMigrations(env.DATABASE_URL, dir);
+    // Migrations run as the owner login; the runtime login is created or updated right after.
+    const applied = await applyMigrations(urls.migrationUrl, dir);
     logger.info("migrations applied", { count: applied.length, names: applied });
+    const provisioned = await provisionDatabase(urls);
+    if (provisioned.warning) logger.warn(provisioned.warning);
+    else logger.info("runtime database login provisioned");
   }
 
-  const { db, close } = createDb(env.DATABASE_URL);
+  const { db, close } = createDb(urls.url);
+  // Whatever the settings say, report what the connected login actually is.
+  const security = await describeRowSecurity({
+    query: async (sql, params = []) => ({
+      rows: await asSystem("row-level security check", () => db.$queryRawUnsafe(sql, ...params)),
+    }),
+  }).catch((error: unknown) => {
+    logger.warn("could not check row-level security", { error });
+    return null;
+  });
+  const insecure = security ? rowSecurityWarning(security) : undefined;
+  if (insecure) logger.warn(insecure);
+  else if (security) logger.info("row-level security is enforced", { role: security.role });
   const apiKeys = createApiKeyService(createPrismaApiKeyStore(db));
   const auth = createAuth(db, env, logger, { allowSignUp: false });
   const identity = createIdentity({
@@ -160,7 +184,10 @@ try {
     admins: new Set(adminEmails(env)),
     users: {
       async findIdByEmail(email) {
-        return (await db.user.findUnique({ where: { email } }))?.id ?? null;
+        return asSystem(
+          "find a user by email",
+          async () => (await db.user.findUnique({ where: { email } }))?.id ?? null,
+        );
       },
     },
     reconcile: (mode) => reconcile(reconcileDeps, mode),
@@ -169,7 +196,8 @@ try {
       // Sign-up stays closed on the server's own auth; this second instance is never mounted, it
       // only hashes and stores a password for an account the operator creates.
       credentials: createAuthCredentials(createAuth(db, env, logger, { allowSignUp: true })),
-      suspendMachines: (userId) => machines.suspendAll(userId),
+      // The operator acts on another account: its machines are read as that user.
+      suspendMachines: (userId) => withUser(userId, () => machines.suspendAll(userId)),
       logger,
     }),
     waitlist: createWaitlist({
@@ -198,7 +226,7 @@ try {
       windowMs: env.SIGNIN_WINDOW_S * 1_000,
     }),
     checkDb: async () => {
-      await db.$queryRaw`SELECT 1`;
+      await asSystem("health check", () => db.$queryRaw`SELECT 1`);
     },
   });
 
