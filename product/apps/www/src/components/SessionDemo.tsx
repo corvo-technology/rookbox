@@ -9,7 +9,7 @@ const TABS: { id: TabId; label: string }[] = [
 
 type Props = {
   sessions: Sessions;
-  steps: { label: string; note: string }[];
+  steps: string[];
   languageLabel: string;
   terminalLabel: string;
 };
@@ -93,12 +93,9 @@ export function SessionDemo({ sessions, steps, languageLabel, terminalLabel }: P
         {steps.map((step, i) => {
           const state = done || i < current ? "done" : i === current ? "now" : "";
           return (
-            <li key={step.label} className={`step ${state ? `step--${state}` : ""}`}>
+            <li key={step} className={`step ${state ? `step--${state}` : ""}`}>
               <i>{i + 1}</i>
-              <span>
-                {step.label}
-                <small>{step.note}</small>
-              </span>
+              <span>{step}</span>
             </li>
           );
         })}

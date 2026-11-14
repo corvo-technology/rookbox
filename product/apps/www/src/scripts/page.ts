@@ -1,7 +1,7 @@
 /**
- * The page's small behaviours: a hairline under the nav once the page scrolls, and sections that
- * rise in as they enter the screen. Without JavaScript, or with reduced motion, everything is
- * simply visible.
+ * The page's small behaviours: a hairline under the nav once the page scrolls, sections that rise
+ * in as they enter the screen, the pixel castle that reacts to the signup form, and the waitlist
+ * forms. Without JavaScript, or with reduced motion, everything is simply visible.
  */
 const nav = document.querySelector<HTMLElement>("[data-nav]");
 const onScroll = () => nav?.toggleAttribute("data-scrolled", window.scrollY > 8);
@@ -38,8 +38,8 @@ if (!reduce && "IntersectionObserver" in window) {
   for (const el of targets) el.classList.add("is-in");
 }
 
-/** Remember a language picked in the footer, so the home page stops guessing from the browser. */
-for (const link of document.querySelectorAll<HTMLAnchorElement>(".foot__langs a[hreflang]")) {
+/** Remember a language picked in the header, so the home page stops guessing from the browser. */
+for (const link of document.querySelectorAll<HTMLAnchorElement>("[data-langs] a[hreflang]")) {
   link.addEventListener("click", () => {
     try {
       localStorage.setItem("rb-lang", link.hreflang.slice(0, 2).toLowerCase());
@@ -47,27 +47,91 @@ for (const link of document.querySelectorAll<HTMLAnchorElement>(".foot__langs a[
   });
 }
 
+/** The header button goes to the hero form and puts the cursor in it. */
+for (const join of document.querySelectorAll<HTMLAnchorElement>("[data-join]")) {
+  join.addEventListener("click", (event) => {
+    const input = document.querySelector<HTMLInputElement>("#hero-email");
+    if (!input) return;
+    event.preventDefault();
+    window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+    input.focus({ preventScroll: true });
+  });
+}
+
 /**
- * The sample terminal in the hero mirrors the waitlist form: the address being typed appears on
- * its last line, and the line under it follows the form's state. Without JavaScript it simply
- * shows the idle text.
+ * The pixel castle. Marked up fully lit; with JavaScript it starts dark, builds itself from the
+ * foundation up to about 40%, then lights more pixels as an address is typed. A valid address lights
+ * every wall pixel; a successful signup also lights the doorway and says "ready".
  */
-type LiveState = "idle" | "typed" | "sending" | "done";
-const live = document.querySelector<HTMLElement>("[data-live]");
-const liveEmail = live?.querySelector<HTMLElement>("[data-live-email]");
-const liveState = live?.querySelector<HTMLElement>("[data-live-state]");
-const showLive = (state: LiveState, address: string) => {
-  if (!live || !liveEmail || !liveState) return;
-  live.dataset.state = state;
-  liveEmail.textContent = address || (live.dataset.placeholder ?? "");
-  liveEmail.classList.toggle("is-empty", !address);
-  liveState.textContent = live.dataset[state] ?? "";
+const rook = document.querySelector<HTMLElement>("[data-rook]");
+const rookState = rook?.querySelector<HTMLElement>("[data-rook-state]");
+const pixels = rook
+  ? [...rook.querySelectorAll<SVGRectElement>(".px:not(.px--door)")].sort(
+      (a, b) => Number(a.dataset.o) - Number(b.dataset.o),
+    )
+  : [];
+const total = pixels.length;
+const base = Math.round(total * 0.4);
+let shown = 0;
+let target = 0;
+let ticker: number | undefined;
+
+const paint = () => {
+  pixels.forEach((pixel, i) => {
+    pixel.classList.toggle("on", i < shown);
+  });
+};
+const tick = () => {
+  shown += shown < target ? 1 : -1;
+  paint();
+  if (shown === target) {
+    window.clearInterval(ticker);
+    ticker = undefined;
+  }
+};
+const moveTo = (next: number) => {
+  target = Math.max(0, Math.min(total, next));
+  window.clearInterval(ticker);
+  ticker = undefined;
+  if (reduce) {
+    shown = target;
+    paint();
+  } else if (shown !== target) {
+    ticker = window.setInterval(tick, 14);
+  }
+};
+const setRookText = (key: "booting" | "waiting" | "ready") => {
+  if (rook && rookState) rookState.textContent = rook.dataset[key] ?? "";
+};
+
+if (rook && total) {
+  setRookText("booting");
+  window.setTimeout(
+    () => {
+      moveTo(base);
+      window.setTimeout(() => setRookText("waiting"), reduce ? 0 : base * 14 + 200);
+    },
+    reduce ? 0 : 450,
+  );
+}
+
+const showRook = (state: "idle" | "typed" | "done", address: string) => {
+  if (!rook || !total) return;
+  if (state === "done") {
+    rook.classList.add("is-ready");
+    moveTo(total);
+    setRookText("ready");
+    return;
+  }
+  rook.classList.remove("is-ready");
+  setRookText("waiting");
+  const progress = Math.min(1, address.length / 22);
+  moveTo(state === "typed" ? total : base + Math.round((total - base) * progress * 0.9));
 };
 
 /**
  * The waitlist forms. They post JSON to the API and show success or a plain error in place; the
- * address is only ever sent to the API the form's `data-waitlist` names. After a successful join,
- * a second, optional post for the same address records what they plan to run.
+ * address is only ever sent to the API the form's `data-waitlist` names.
  */
 for (const form of document.querySelectorAll<HTMLFormElement>("form[data-waitlist]")) {
   const root = form.closest<HTMLElement>("[data-waitlist-root]");
@@ -78,7 +142,7 @@ for (const form of document.querySelectorAll<HTMLFormElement>("form[data-waitlis
   if (!root || !error || !submit || !done || !email) continue;
   const label = submit.textContent ?? "";
   const data = form.dataset;
-  const mirrors = !!live && !form.closest(".cta");
+  const mirrors = !form.closest(".cta");
 
   const fail = (message: string) => {
     error.textContent = message;
@@ -89,16 +153,9 @@ for (const form of document.querySelectorAll<HTMLFormElement>("form[data-waitlis
   if (mirrors) {
     email.addEventListener("input", () => {
       const value = email.value.trim();
-      showLive(value && email.checkValidity() ? "typed" : "idle", value);
+      showRook(value && email.checkValidity() ? "typed" : "idle", value);
     });
   }
-
-  const post = (body: Record<string, unknown>) =>
-    fetch(data.waitlist ?? "", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ ...body, locale: data.locale, website: "" }),
-    });
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -114,7 +171,6 @@ for (const form of document.querySelectorAll<HTMLFormElement>("form[data-waitlis
     submit.disabled = true;
     submit.setAttribute("aria-busy", "true");
     submit.textContent = data.sending ?? label;
-    if (mirrors) showLive("sending", address);
     try {
       const response = await fetch(data.waitlist ?? "", {
         method: "POST",
@@ -122,34 +178,12 @@ for (const form of document.querySelectorAll<HTMLFormElement>("form[data-waitlis
         body: JSON.stringify({ email: address, locale: data.locale, website }),
       });
       if (response.ok) {
-        const body = done.querySelector<HTMLElement>("[data-done-body]");
-        if (body) body.textContent = (data.okBody ?? "").replace("{email}", address);
         form.hidden = true;
-        root.querySelector<HTMLElement>(".wl__login")?.setAttribute("hidden", "");
         done.hidden = false;
         done.focus();
-        showLive("done", address);
-
-        const follow = done.querySelector<HTMLElement>("[data-followup]");
-        const thanks = done.querySelector<HTMLElement>("[data-thanks]");
-        const picks = done.querySelectorAll<HTMLButtonElement>("[data-pick]");
-        for (const pick of picks) {
-          pick.addEventListener("click", async () => {
-            for (const other of picks) other.disabled = true;
-            let saved = false;
-            try {
-              saved = (await post({ email: address, note: pick.dataset.pick })).ok;
-            } catch {}
-            if (follow) follow.hidden = true;
-            if (thanks) {
-              thanks.textContent = (saved ? data.followupThanks : data.followupError) ?? "";
-              thanks.hidden = false;
-            }
-          });
-        }
+        showRook("done", address);
         return;
       }
-      if (mirrors) showLive("typed", address);
       fail(
         response.status === 429
           ? (data.errorRate ?? "")
@@ -158,7 +192,6 @@ for (const form of document.querySelectorAll<HTMLFormElement>("form[data-waitlis
             : (data.errorGeneric ?? ""),
       );
     } catch {
-      if (mirrors) showLive("typed", address);
       fail(data.errorGeneric ?? "");
     } finally {
       submit.disabled = false;
@@ -167,3 +200,5 @@ for (const form of document.querySelectorAll<HTMLFormElement>("form[data-waitlis
     }
   });
 }
+
+export {};

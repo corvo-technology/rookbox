@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { en } from "./i18n/copy/en";
 import { es } from "./i18n/copy/es";
 import { pt } from "./i18n/copy/pt";
-import { buildE2bSnippets, buildQuickstart, buildSessions } from "./snippets";
+import { buildE2bSnippets, buildSessions } from "./snippets";
 
 const COPIES = { en, pt, es };
 
@@ -63,22 +63,30 @@ describe("landing copy", () => {
     expect(keys(pt)).toEqual(keys(en));
     expect(keys(es)).toEqual(keys(en));
     expect(pt.demo.steps).toHaveLength(en.demo.steps.length);
-    expect(es.features.items).toHaveLength(en.features.items.length);
-    expect(pt.quickstart.steps).toHaveLength(5);
-    expect(es.quickstart.steps).toHaveLength(5);
+    expect(es.demo.steps).toHaveLength(en.demo.steps.length);
+  });
+
+  it.each(Object.entries(COPIES))("%s has no em dashes and keeps the owner's cuts", (_, copy) => {
+    for (const text of strings(copy)) {
+      expect(text).not.toContain("\u2014");
+      expect(text).not.toMatch(
+        /iof|ainda não disponível|not yet available|only by invitation|só por convite/i,
+      );
+    }
   });
 });
 
 describe("snippets", () => {
-  it("changes only the domain line in the E2B before/after", () => {
-    const { py, ts } = buildE2bSnippets("box.rookbox.run");
-    expect(py.after).toContain('domain="box.rookbox.run"');
-    expect(ts.after).toContain('domain: "box.rookbox.run"');
-    expect(py.before).not.toContain("domain");
-    expect(ts.before).not.toContain("domain");
-    const without = (text: string) => text.split("\n").filter((l) => !l.includes("domain"));
-    expect(without(py.after).length).toBe(py.before.split("\n").length);
-    expect(without(ts.after).length).toBe(ts.before.split("\n").length);
+  it("changes only the environment for E2B, and never asks for E2B_DOMAIN or a template", () => {
+    const { env, code } = buildE2bSnippets("https://api.rookbox.run");
+    expect(env.before).toBe("E2B_API_KEY=e2b_...");
+    expect(env.after).toContain("E2B_API_KEY=rbx_...");
+    expect(env.after).toContain("E2B_API_URL=https://api.rookbox.run");
+    for (const text of [env.before, env.after, code.py, code.ts]) {
+      expect(text).not.toMatch(/E2B_DOMAIN|domain|seed/);
+    }
+    expect(code.py).toContain("Sandbox.create()");
+    expect(code.ts).toContain("Sandbox.create()");
   });
 
   it("uses the given domain in the sample session and has no CLI tab", () => {
@@ -86,6 +94,7 @@ describe("snippets", () => {
     expect(Object.keys(sessions)).toEqual(["py", "ts"]);
     for (const lines of Object.values(sessions)) {
       expect(lines.some(([, text]) => text.endsWith(".box.rookbox.run"))).toBe(true);
+      expect(lines.every(([, text]) => !text.includes("seed"))).toBe(true);
     }
   });
 
@@ -95,15 +104,6 @@ describe("snippets", () => {
       expect(new Set(lines.map(([step]) => step)).size).toBe(en.demo.steps.length);
       expect(lines.some(([, text]) => text.includes("connect("))).toBe(true);
     }
-  });
-
-  it("has one quickstart block per step and only the E2B package", () => {
-    const { py, ts } = buildQuickstart("box.rookbox.run");
-    expect(py).toHaveLength(en.quickstart.steps.length);
-    expect(ts).toHaveLength(en.quickstart.steps.length);
-    expect(py[0]).toBe("pip install e2b");
-    expect(ts[0]).toBe("npm install e2b");
-    expect(py[1]).toContain("E2B_DOMAIN=box.rookbox.run");
   });
 });
 
