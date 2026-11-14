@@ -51,7 +51,7 @@ const SPACE_CODES: Record<SpaceErrorCode, ApiErrorCode> = {
 };
 
 /**
- * Turns a SPACE failure into a coded error with a generic message, so what SPACE said (which may
+ * Turns a sandbox engine failure into a coded error with a generic message, so what the sandbox engine said (which may
  * name internals) never reaches a client. Anything else comes back unchanged.
  */
 export function toMachineError(error: unknown): unknown {
@@ -107,7 +107,7 @@ export function createMachineService(options: MachineServiceOptions) {
   const now = options.now ?? (() => new Date());
   const random = options.random ?? Math.random;
 
-  /** SPACE's answer, but only for a sandbox this user owns. */
+  /** The engine's answer, but only for a sandbox this user owns. */
   async function owned(
     ownerId: string,
     id: string,
@@ -165,8 +165,8 @@ export function createMachineService(options: MachineServiceOptions) {
     try {
       return await run();
     } catch (error) {
-      // A call that timed out or lost its connection may still finish on SPACE's side, so the
-      // operation stays marked (it expires on its own) and the status follows what SPACE shows.
+      // A call that timed out or lost its connection may still finish on the engine's side, so the
+      // operation stays marked (it expires on its own) and the status follows what the sandbox engine shows.
       const unsure =
         error instanceof SpaceError && (error.code === "TIMEOUT" || error.code === "UNREACHABLE");
       if (!unsure) await store.setOp(id, null);
@@ -196,7 +196,7 @@ export function createMachineService(options: MachineServiceOptions) {
     );
     const machines: Machine[] = [];
     for (const row of rows) {
-      // A row SPACE did not list may be a fork that carries no tag; ask for it by id.
+      // A row the sandbox engine did not list may be a fork that carries no tag; ask for it by id.
       const info = listed.get(row.id) ?? (await space.get(row.id));
       const tag = info?.metadata[OWNER_TAG];
       const machine = info && (tag === undefined || tag === ownerId) ? toMachine(row, info) : null;
@@ -478,7 +478,7 @@ export function createMachineService(options: MachineServiceOptions) {
       } catch (error) {
         wrap(error);
       }
-      // A queued delete stays visible as "deleting" until SPACE drops the sandbox.
+      // A queued delete stays visible as "deleting" until the sandbox engine drops the sandbox.
       if (outcome !== "queued") await store.remove(id);
       logger.info("machine deleted", { owner: ownerId, machine: id, outcome });
     },

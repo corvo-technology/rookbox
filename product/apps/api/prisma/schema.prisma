@@ -92,8 +92,8 @@ model ApiKey {
   @@map("api_key")
 }
 
-/// A machine a user owns. The id is the SPACE sandbox id. SPACE holds the state; this row holds
-/// ownership, the name, the lineage and an in-flight operation, which SPACE cannot report.
+/// A machine a user owns. The id is the engine's sandbox id. The sandbox engine holds the state; this row holds
+/// ownership, the name, the lineage and an in-flight operation, which the sandbox engine cannot report.
 model Machine {
   id        String    @id
   ownerId   String
@@ -103,7 +103,7 @@ model Machine {
   vcpu      Int
   memoryMib Int
   diskMib   Int
-  /// Seconds without activity before SPACE suspends the machine.
+  /// Seconds without activity before the sandbox engine suspends the machine.
   idleTimeoutS Int @default(900)
   forkedFrom String?
   /// `suspending`, `restoring` or `deleting` while that call is in flight.

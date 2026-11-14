@@ -276,7 +276,7 @@ describe("suspendAll", () => {
 });
 
 describe("owner filtering", () => {
-  it("lists only the caller's machines, and asks SPACE with the owner tag", async () => {
+  it("lists only the caller's machines, and asks the sandbox engine with the owner tag", async () => {
     const { space, service } = newMachineService();
     const mine = await service.create("alice", { name: "mine", template: "seed", size: small });
     await service.create("bob", { name: "theirs", template: "seed", size: small });
@@ -286,7 +286,7 @@ describe("owner filtering", () => {
     expect(listCall?.args[0]).toEqual({ [OWNER_TAG]: "alice" });
   });
 
-  it("answers not found for another user's machine, for every action, without touching SPACE", async () => {
+  it("answers not found for another user's machine, for every action, without touching the sandbox engine", async () => {
     const { space, service } = newMachineService();
     const bobs = await service.create("bob", { name: "theirs", template: "desktop", size: small });
     const before = space.calls.length;
@@ -306,7 +306,7 @@ describe("owner filtering", () => {
     expect(mutating).toEqual([]);
   });
 
-  it("refuses a sandbox that SPACE tags for someone else even if a row points at it", async () => {
+  it("refuses a sandbox that the sandbox engine tags for someone else even if a row points at it", async () => {
     const { space, service, store } = newMachineService();
     const bobs = await service.create("bob", { name: "theirs", template: "seed", size: small });
     await store.insert({
@@ -324,7 +324,7 @@ describe("owner filtering", () => {
     );
   });
 
-  it("drops a machine SPACE no longer has", async () => {
+  it("drops a machine the sandbox engine no longer has", async () => {
     const { space, service, store } = newMachineService();
     const machine = await service.create("alice", { name: "gone", template: "seed", size: small });
     space.sandboxes.delete(machine.id);
@@ -386,7 +386,7 @@ describe("state mapping and lifecycle", () => {
   });
 });
 
-describe("SPACE failures", () => {
+describe("sandbox engine failures", () => {
   const cases: [SpaceError, string][] = [
     [new SpaceError(401, "Invalid or missing API key"), "HOST_AUTH"],
     [new SpaceError(403, "forbidden"), "HOST_AUTH"],
@@ -413,7 +413,7 @@ describe("SPACE failures", () => {
     expect(error.message).not.toContain(upstream.message);
   });
 
-  it("keeps a timed-out suspend marked in flight, since SPACE may still finish it", async () => {
+  it("keeps a timed-out suspend marked in flight, since the sandbox engine may still finish it", async () => {
     const { space, service } = newMachineService();
     const machine = await service.create("alice", { name: "m", template: "seed", size: small });
     space.suspend = async () => {
@@ -423,7 +423,7 @@ describe("SPACE failures", () => {
     expect((await service.get("alice", machine.id)).status).toBe("suspending");
   });
 
-  it("clears the in-flight mark when SPACE refuses outright", async () => {
+  it("clears the in-flight mark when the sandbox engine refuses outright", async () => {
     const { space, service } = newMachineService();
     const machine = await service.create("alice", { name: "m", template: "seed", size: small });
     space.suspend = async () => {

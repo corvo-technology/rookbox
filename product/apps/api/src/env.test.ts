@@ -33,7 +33,7 @@ describe("loadEnv", () => {
     expect(() => loadEnv({ ...valid, SPACE_TEMPLATES: "" })).toThrow(/SPACE_TEMPLATES/);
   });
 
-  it("starts without a SPACE key, so /health/space can report it missing", () => {
+  it("starts without a sandbox engine key, so /health/space can report it missing", () => {
     expect(loadEnv({ ...valid, SPACE_ECW_API_KEY: undefined }).SPACE_ECW_API_KEY).toBe("");
   });
 

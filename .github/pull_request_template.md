@@ -1,42 +1,19 @@
-<!--
-Describe what merging this pull request does, for a reader who sees only this
-page. Size the description to the risk of the change, not to the effort behind
-it: most changes need a few short paragraphs. CONTRIBUTING.md, under "Submit a
-pull request", explains each section.
--->
+## What
 
-## Summary
+<!-- What does merging this change? Say whether it touches product/, the sandbox engine, or both. -->
 
-<!-- What changes and why. Lead with the effect of merging, and link the issue
-when there is one. -->
+## Why
 
-## Validation
+<!-- Why is it needed? Link the issue if there is one. -->
 
-<!-- What you ran and what it showed at this head, or "CI on this head". For a
-bug fix, name a test that fails on main for the expected reason and passes
-here. For a Kind run, say where it ran (Pull CI, or a local or remote
-cluster), whether it ran every scenario or which ones, and which scenario
-reaches the changed code. Say what you did not validate. -->
+## How tested
 
-## Severity and risk
+<!-- What you ran and what it showed: `pnpm lint check test build` in product/, the engine
+checks you ran, or "CI on this head". Say what you did not test. -->
 
-<!-- Severity: how much the problem matters and why, or "does not apply".
-Risk: what could break and for whom, and how to roll back. -->
+## Risk and rollout
 
-<!-- Optional sections. Uncomment the ones that apply.
+<!-- What could break, for whom, and how to roll back. Note new or changed environment variables
+and deploy steps (product/DEPLOY.md). Write "none" if it does not apply. -->
 
-## Rollout
-
-Ordering, migrations, flags, and behavior while old and new versions run together.
-
-## Stack
-
-What this depends on, and the merge order.
-
-## Not covered
-
-Known gaps and accepted costs. Link an issue for each follow-up.
--->
-
-AI assistance: <!-- "None", or the tool and the parts it drafted or changed:
-code, tests, this description. -->
+AI assistance: <!-- "None", or the tool and the parts it drafted. -->

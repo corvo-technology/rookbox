@@ -118,7 +118,7 @@ describe("ECW client", () => {
     expect(await space.kill("x")).toBe("queued");
   });
 
-  it("surfaces SPACE errors with their status", async () => {
+  it("surfaces the sandbox engine errors with their status", async () => {
     const { space } = client(() => json({ message: "already paused" }, { status: 409 }));
     await expect(space.suspend("x")).rejects.toMatchObject({
       status: 409,
@@ -144,7 +144,7 @@ function frame(flags: number, payload: unknown) {
 const b64 = (text: string) => Buffer.from(text).toString("base64");
 
 describe("failures and retries", () => {
-  it("classifies SPACE statuses", () => {
+  it("classifies sandbox engine statuses", () => {
     expect(new SpaceError(401, "Invalid or missing API key").code).toBe("AUTH");
     expect(new SpaceError(409, "x").code).toBe("CONFLICT");
     expect(new SpaceError(503, "x").code).toBe("CAPACITY");
@@ -187,7 +187,7 @@ describe("failures and retries", () => {
     expect(calls).toHaveLength(3);
   });
 
-  it("retries a network failure on a read, then reports SPACE as unreachable", async () => {
+  it("retries a network failure on a read, then reports the sandbox engine as unreachable", async () => {
     let n = 0;
     const { space } = client(() => {
       n += 1;
@@ -261,7 +261,7 @@ describe("failures and retries", () => {
     expect(calls[0]!.headers.has("x-api-key")).toBe(false);
   });
 
-  it("probes an unreachable SPACE without throwing", async () => {
+  it("probes an unreachable sandbox engine without throwing", async () => {
     const { space } = client(() => {
       throw new TypeError("fetch failed");
     });

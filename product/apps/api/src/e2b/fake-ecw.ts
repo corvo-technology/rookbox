@@ -62,7 +62,7 @@ export function fakeEcwFetch(space: ReturnType<typeof fakeSpace>, serviceKey = "
       return json(201, detail(space.sandboxes.get(id) as FakeSandbox));
     }
     if (method === "GET" && (p === "/sandboxes" || p === "/v2/sandboxes")) {
-      // SPACE accepts ONE comma-separated state parameter.
+      // The sandbox engine accepts ONE comma-separated state parameter.
       const states = url.searchParams.getAll("state");
       if (states.length > 1) return json(400, { code: 400, message: "one state param only" });
       const wanted = (states[0] ?? "running,paused").split(",");

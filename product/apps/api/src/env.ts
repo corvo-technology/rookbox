@@ -129,10 +129,10 @@ const EnvObject = z.object({
   /** When set, the first allowed email gets an account with this password at start, once. */
   ROOKBOX_SEED_OWNER_PASSWORD: z.string().min(12).optional(),
 
-  /** Base URL of SPACE's E2B-compatible API, e.g. https://api.box.rookbox.run. */
+  /** Base URL of the engine's E2B-compatible API, e.g. https://api.box.rookbox.run. */
   SPACE_ECW_API_URL: z.url(),
   /**
-   * The SPACE service key. Optional so the API can start and `/health/space` can say it is
+   * The sandbox engine service key. Optional so the API can start and `/health/space` can say it is
    * missing; every machine call then fails with a credentials error.
    */
   SPACE_ECW_API_KEY: z.string().default(""),
@@ -142,7 +142,7 @@ const EnvObject = z.object({
     .default("desktop,corvo-computer,seed")
     .transform(csv)
     .pipe(z.array(z.enum(TEMPLATES)).min(1)),
-  /** How long to wait on a SPACE call that waits on a VM (create, suspend, restore, fork). */
+  /** How long to wait on a sandbox engine call that waits on a VM (create, suspend, restore, fork). */
   SPACE_TIMEOUT_MS: z.coerce.number().int().min(5_000).max(300_000).default(60_000),
   /** Failed sign-ins allowed per email and per address within the window. */
   SIGNIN_MAX_ATTEMPTS: z.coerce.number().int().min(1).max(100).default(5),

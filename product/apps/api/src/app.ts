@@ -205,7 +205,7 @@ export function createApp(deps: AppDeps) {
     }
   });
 
-  // Whether SPACE answers and accepts the service key. It reports only the HTTP status class,
+  // Whether the sandbox engine answers and accepts the service key. It reports only the HTTP status class,
   // and answers even when no key is set, so the owner can check a fresh deploy.
   let spaceCache: { at: number; body: unknown; ok: boolean } | null = null;
   main.get("/health/space", async (c) => {

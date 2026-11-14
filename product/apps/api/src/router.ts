@@ -111,7 +111,7 @@ export function createRouter({
     } catch (raw) {
       const error = toMachineError(raw);
       if (error instanceof MachineError) {
-        if (error.code === "HOST_AUTH") logger.error("SPACE rejected the service key");
+        if (error.code === "HOST_AUTH") logger.error("The sandbox engine rejected the service key");
         throw new ORPCError(error.code, {
           status: API_ERRORS[error.code].status,
           message: error.message,

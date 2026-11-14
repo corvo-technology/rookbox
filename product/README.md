@@ -1,14 +1,17 @@
 # Rookbox product
 
-The Rookbox marketing site and dashboard. This folder is its own pnpm + Turborepo workspace,
-separate from the Rust SPACE workspace around it.
+Everything customer-facing in Rookbox: the API, dashboard, landing page, docs site, usage reporter
+and command line tool. This folder is its own pnpm + Turborepo workspace, separate from the Rust
+sandbox engine at the repository root.
 
 | Path | What it is |
 | --- | --- |
 | `apps/www` | Marketing site: Astro, React islands, Tailwind v4, sitemap. English, Brazilian Portuguese (`/pt/`) and Spanish (`/es/`). |
 | `apps/web` | Dashboard: Vite, React, React Router, TanStack Query, shadcn/ui on Base UI, Tailwind v4, Lingui (en, pt-BR, es). |
-| `apps/api` | The product API: Hono, oRPC, Prisma + Postgres, better-auth. Runs machines on SPACE through its E2B-compatible API. See `DEPLOY.md` and `apps/api/.env.example`. |
+| `apps/api` | The product API: Hono, oRPC, Prisma + Postgres, better-auth. Runs machines on the sandbox engine through its E2B-compatible API. See `DEPLOY.md` and `apps/api/.env.example`. |
 | `apps/reporter` | The usage reporter: runs next to the sandbox server, lists the machines, and ships usage events to the API. Node 22, no runtime dependencies. See its README. |
+| `apps/docs` | Public docs site (`docs.rookbox.run`): Astro Starlight, Brazilian Portuguese and English. |
+| `apps/cli` | The `rookbox` command line tool, a thin layer on the E2B SDK. See its README. |
 | `packages/contracts` | The dashboard's oRPC contract (machines, API keys) and the machine lifecycle rules. |
 | `packages/ui-tokens` | Semantic colour tokens; `src/index.ts` generates `src/tokens.css`. |
 | `packages/ui-web` | Vendored shadcn/ui components on Base UI, plus the shared theme CSS. |
@@ -24,13 +27,17 @@ pnpm --filter @rookbox/www dev   # http://127.0.0.1:4321
 pnpm --filter @rookbox/web dev   # http://127.0.0.1:5173
 ```
 
-`pnpm dev` starts both through Turborepo. Other commands, from `product/`:
+`pnpm dev` starts the apps through Turborepo. Each app has its own `dev`, `build`, `check` and
+`test` scripts, so `pnpm --filter @rookbox/<app> <script>` runs one in isolation. Every environment
+variable of the API and reporter is documented in `DEPLOY.md` (tables) and in
+`apps/api/.env.example`. Other commands, from `product/`:
 
 ```bash
-pnpm build      # turbo build: both apps
+pnpm build      # turbo build: every app
 pnpm check      # turbo check: tsc for packages and the dashboard, astro check for the site
 pnpm lint       # Biome
-pnpm test       # Vitest: contracts, tokens, fake API, dashboard helpers
+pnpm test       # Vitest: contracts, tokens, API, reporter, CLI, fake API, dashboard helpers
+pnpm format     # Biome, writes fixes
 pnpm --filter @rookbox/web intl:extract   # refresh the Lingui catalogs after changing copy
 ```
 
@@ -58,7 +65,7 @@ installed Google Chrome through Playwright and writes PNGs to `.screenshots/` (i
 
 ## Run the real API locally
 
-Needs a Postgres and a SPACE (or any ECW-compatible endpoint). Copy `apps/api/.env.example` to
+Needs a Postgres and a sandbox engine (or any ECW-compatible endpoint). Copy `apps/api/.env.example` to
 `apps/api/.env`, fill it in, then:
 
 ```bash
