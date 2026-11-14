@@ -1,3 +1,4 @@
+import { type CustomerRule, customerOwnerFor } from "./customers.js";
 import type { Machine } from "./types.js";
 
 /** The metadata key the product API tags every machine it makes with. */
@@ -27,6 +28,8 @@ export type EcwOptions = {
   apiKey: string;
   timeoutMs?: number;
   pageSize?: number;
+  /** Where a machine has no `rookbox.owner` tag, its metadata may name a customer instead. */
+  customerRules?: readonly CustomerRule[];
   fetch?: typeof fetch;
 };
 
@@ -46,7 +49,7 @@ function whole(value: unknown, field: string, id: string): number {
  * `cpuCount`, `memoryMB`, `diskSizeMB`, `startedAt`, `metadata` and `state`, which is `running`
  * or `paused` (a paused sandbox is a suspended one). Anything else is refused.
  */
-export function parseSandbox(raw: unknown): Machine {
+export function parseSandbox(raw: unknown, customerRules: readonly CustomerRule[] = []): Machine {
   if (!raw || typeof raw !== "object") throw new EcwError("a listed sandbox is not an object", 0);
   const item = raw as Json;
   const id = item.sandboxID;
@@ -62,7 +65,8 @@ export function parseSandbox(raw: unknown): Machine {
       : null;
   return {
     id,
-    owner: typeof owner === "string" && owner ? owner : null,
+    // The tag wins; a customer rule only fills in where there is none.
+    owner: typeof owner === "string" && owner ? owner : customerOwnerFor(metadata, customerRules),
     template: typeof item.templateID === "string" ? item.templateID : "",
     vcpu: whole(item.cpuCount, "cpuCount", id),
     memoryMib: whole(item.memoryMB, "memoryMB", id),
@@ -103,7 +107,7 @@ export function createEcwClient(options: EcwOptions): EcwClient {
         }
         if (!Array.isArray(body)) throw new EcwError("list did not answer with an array", 0);
         for (const item of body) {
-          const machine = parseSandbox(item);
+          const machine = parseSandbox(item, options.customerRules);
           byId.set(machine.id, machine);
         }
         token = response.headers.get("x-next-token") || null;

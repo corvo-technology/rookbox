@@ -1,9 +1,12 @@
-import type {
-  AdminUsage,
-  IngestAck,
-  IngestMessage,
-  UsagePeriod,
-  UsageSummary,
+import {
+  type AdminUsage,
+  type AdminUsageCustomer,
+  CUSTOMER_OWNER_PREFIX,
+  type IngestAck,
+  type IngestMessage,
+  parseCustomerOwner,
+  type UsagePeriod,
+  type UsageSummary,
 } from "@rookbox/contracts";
 import type { Logger } from "../logger.js";
 import { periodRange, summarize } from "./aggregate.js";
@@ -47,7 +50,9 @@ export function createUsageService(options: UsageServiceOptions): UsageService {
   /**
    * Re-derives each machine's intervals from all of its events. The owner is the `rookbox.owner`
    * tag when it names a real account, else the owner of the API's own record of the machine
-   * (this is how a fork, which loses its tag, is found), else whoever owned it before, else nobody.
+   * (this is how a fork, which loses its tag, is found), else the customer the reporter's rules
+   * named (`customer:<id>`, a customer app on the same sandbox key), else whoever owned it
+   * before, else nobody.
    */
   async function rebuild(machineIds: readonly string[]) {
     if (machineIds.length === 0) return;
@@ -62,12 +67,18 @@ export function createUsageService(options: UsageServiceOptions): UsageService {
     )) {
       if (event.ownerTag) tagOf.set(event.machineId, event.ownerTag);
     }
-    const known = await store.existingUsers([...new Set(tagOf.values())]);
+    const known = await store.existingUsers(
+      [...new Set(tagOf.values())].filter((tag) => !tag.startsWith(CUSTOMER_OWNER_PREFIX)),
+    );
     for (const id of machineIds) {
       const mine = events.filter((event) => event.machineId === id);
       const tag = tagOf.get(id);
       const owner =
-        (tag && known.has(tag) ? tag : null) ?? rows.get(id)?.ownerId ?? current.get(id) ?? null;
+        (tag && known.has(tag) ? tag : null) ??
+        rows.get(id)?.ownerId ??
+        (parseCustomerOwner(tag) ? tag : null) ??
+        current.get(id) ??
+        null;
       await store.replaceIntervals(id, deriveIntervals(mine, owner));
     }
   }
@@ -140,12 +151,21 @@ export function createUsageService(options: UsageServiceOptions): UsageService {
     const openBy = new Map(open.map((row) => [row.machineId, row]));
     const out: NewEvent[] = [];
     const listed = new Set<string>();
+    // A machine the reporter now files under a customer, whose stored time has no owner yet (it
+    // was recorded before the rule existed), is restated so the rebuild can give it that owner.
+    const customerIds = message.machines
+      .filter((machine) => parseCustomerOwner(machine.owner))
+      .map((machine) => machine.machineId);
+    const owned = customerIds.length ? await store.currentOwners(customerIds) : new Map();
 
     for (const machine of message.machines) {
       listed.add(machine.machineId);
       const have = openBy.get(machine.machineId);
       if (have && have.startedAt.getTime() > stamp) continue;
+      const needsOwner =
+        parseCustomerOwner(machine.owner) !== null && !owned.has(machine.machineId);
       if (
+        !needsOwner &&
         have &&
         have.state === machine.state &&
         have.template === machine.template &&
@@ -223,6 +243,8 @@ export function createUsageService(options: UsageServiceOptions): UsageService {
   }
 
   async function summary(userId: string, period: UsagePeriod): Promise<UsageSummary> {
+    // Customer usage is never a user's: an account id cannot look like a customer owner.
+    if (userId.startsWith(CUSTOMER_OWNER_PREFIX)) throw new Error("not a user account");
     const now = clock();
     const range = periodRange(period, now);
     const { latest, last, live } = await liveUntil(now);
@@ -266,7 +288,25 @@ export function createUsageService(options: UsageServiceOptions): UsageService {
     for (const row of rows) {
       byOwner.set(row.ownerUserId, [...(byOwner.get(row.ownerUserId) ?? []), row]);
     }
-    const userIds = [...byOwner.keys()].filter((id): id is string => id !== null);
+    const isCustomer = (owner: string | null) => owner?.startsWith(CUSTOMER_OWNER_PREFIX) ?? false;
+    const userIds = [...byOwner.keys()].filter(
+      (id): id is string => id !== null && !isCustomer(id),
+    );
+    const customers: AdminUsageCustomer[] = [...byOwner.entries()]
+      .flatMap(([owner, list]) => {
+        const customerId = parseCustomerOwner(owner);
+        if (!customerId) return [];
+        const totals = summarize(list, range, live).totals;
+        const now = new Set(
+          list
+            .filter((row) => row.endedAt === null && row.state === "running")
+            .map((row) => row.machineId),
+        );
+        return totals.machines > 0 ? [{ customerId, ...totals, machinesNow: now.size }] : [];
+      })
+      .sort(
+        (a, b) => b.runningSeconds - a.runningSeconds || a.customerId.localeCompare(b.customerId),
+      );
     const emails = await store.userEmails(userIds);
     const users = userIds
       .map((userId) => ({
@@ -293,6 +333,7 @@ export function createUsageService(options: UsageServiceOptions): UsageService {
         stale,
       },
       users,
+      customers,
       unassigned: summarize(byOwner.get(null) ?? [], range, live).totals,
     };
   }

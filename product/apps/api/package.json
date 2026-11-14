@@ -19,7 +19,8 @@
     "user:set-password": "node --enable-source-maps dist/cli/user.js set-password",
     "user:disable": "node --enable-source-maps dist/cli/user.js disable",
     "user:enable": "node --enable-source-maps dist/cli/user.js enable",
-    "user:list": "node --enable-source-maps dist/cli/user.js list"
+    "user:list": "node --enable-source-maps dist/cli/user.js list",
+    "usage:reassign": "node --enable-source-maps dist/cli/usage-reassign.js"
   },
   "dependencies": {
     "@hono/node-server": "2.1.5",

@@ -39,6 +39,7 @@ export const config: Config = {
   sendTimeoutMs: 1_000,
   diskResizeMinMib: 1_024,
   missedPollsForGone: 2,
+  customerRules: [],
   logLevel: "error",
 };
 
