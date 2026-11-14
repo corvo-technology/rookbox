@@ -38,12 +38,6 @@ if (!reduce && "IntersectionObserver" in window) {
   for (const el of targets) el.classList.add("is-in");
 }
 
-// Fail open: if the observer never fires (slow script, odd viewport, headless capture), nothing
-// stays hidden.
-window.setTimeout(() => {
-  for (const el of targets) el.classList.add("is-in");
-}, 2500);
-
 /**
  * The waitlist forms. They post JSON to the API and show success or a plain error in place; the
  * address is only ever sent to the API the form's `data-waitlist` names.
