@@ -14,6 +14,9 @@ export function memoryMachineStore(): MachineStore & { rows: Map<string, Machine
     async listByOwner(ownerId) {
       return [...rows.values()].filter((row) => row.ownerId === ownerId);
     },
+    async listAll() {
+      return [...rows.values()];
+    },
     async find(ownerId, id) {
       const row = rows.get(id);
       return row && row.ownerId === ownerId ? row : null;
@@ -137,7 +140,11 @@ export function fakeSpace() {
 }
 
 export function newMachineService(
-  overrides: { maxMachinesPerUser?: number; templates?: MachineTemplate[] } = {},
+  overrides: {
+    maxMachinesPerUser?: number;
+    templates?: MachineTemplate[];
+    allowInternet?: boolean;
+  } = {},
 ) {
   const store = memoryMachineStore();
   const space = fakeSpace();
@@ -146,10 +153,10 @@ export function newMachineService(
     space,
     logger: silentLogger,
     e2bDomain: "box.example.test",
-    apiOrigin: "https://api.example.test",
     templates: overrides.templates ?? ["desktop", "corvo-computer", "seed"],
     defaultIdleTimeoutS: 900,
     maxMachinesPerUser: overrides.maxMachinesPerUser ?? 10,
+    allowInternet: overrides.allowInternet ?? true,
     random: () => 0.5,
   });
   return { store, space, service };

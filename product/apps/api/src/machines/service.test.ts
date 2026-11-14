@@ -31,14 +31,26 @@ describe("create", () => {
     expect(machine.access.portUrlTemplate).toBe(`https://{port}-${machine.id}.box.example.test`);
   });
 
-  it("gives a desktop template a proxied desktop link while it runs", async () => {
+  it("asks for open internet by default, and not when the deployment turns it off", async () => {
+    const on = newMachineService();
+    await on.service.create("alice", { name: "a", template: "seed", size: small });
+    expect(on.space.calls.find((c) => c.op === "create")?.args[0]).toMatchObject({
+      allowInternet: true,
+    });
+    const off = newMachineService({ allowInternet: false });
+    await off.service.create("alice", { name: "a", template: "seed", size: small });
+    expect(off.space.calls.find((c) => c.op === "create")?.args[0]).toMatchObject({
+      allowInternet: false,
+    });
+  });
+
+  it("marks a desktop template as having a desktop while it runs, and no link in the record", async () => {
     const { service } = newMachineService();
     const desktop = await service.create("alice", { name: "d", template: "desktop", size: small });
-    expect(desktop.access.desktopUrl).toContain(
-      `https://api.example.test/desktop/${desktop.id}/vnc.html`,
-    );
+    expect(desktop.access.desktop).toBe(true);
+    expect(JSON.stringify(desktop)).not.toContain("/open/");
     const plain = await service.create("alice", { name: "p", template: "seed", size: small });
-    expect(plain.access.desktopUrl).toBeNull();
+    expect(plain.access.desktop).toBe(false);
   });
 
   it("refuses a duplicate name and a full account", async () => {
@@ -69,6 +81,72 @@ describe("create", () => {
     ]);
     expect(results.map((r) => r.status).sort()).toEqual(["fulfilled", "rejected"]);
     expect(space.calls.filter((c) => c.op === "create")).toHaveLength(1);
+  });
+
+  it("never lets parallel creates and forks pass the cap, and never loses count of a sandbox", async () => {
+    const cap = 3;
+    const { service, space, store } = newMachineService({ maxMachinesPerUser: cap });
+    // Slow the host down so every request is in flight at once.
+    const create = space.create;
+    space.create = async (input) => {
+      await new Promise((done) => setTimeout(done, 5));
+      return create(input);
+    };
+    const attempts = Array.from({ length: 12 }, (_, n) =>
+      service.create("alice", { name: `m${n}`, template: "seed", size: small }),
+    );
+    const results = await Promise.allSettled(attempts);
+    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(cap);
+    const refused = results.filter((r) => r.status === "rejected");
+    expect(refused).toHaveLength(12 - cap);
+    for (const r of refused)
+      expect(((r as PromiseRejectedResult).reason as MachineError).code).toBe("MACHINE_LIMIT");
+    expect(space.calls.filter((c) => c.op === "create")).toHaveLength(cap);
+    expect(space.sandboxes.size).toBe(cap);
+    expect((await store.listByOwner("alice")).length).toBe(cap);
+
+    // Forks race the same cap, and another account's cap is its own.
+    const [first] = await store.listByOwner("alice");
+    const forks = await Promise.allSettled(
+      Array.from({ length: 4 }, () => service.fork("alice", { id: first?.id ?? "" })),
+    );
+    expect(forks.every((f) => f.status === "rejected")).toBe(true);
+    expect(space.calls.filter((c) => c.op === "fork")).toHaveLength(0);
+    await expect(
+      service.create("bob", { name: "b", template: "seed", size: small }),
+    ).resolves.toMatchObject({ name: "b" });
+  });
+
+  it("releases the slot when the host refuses or loses a create", async () => {
+    const { service, space, store } = newMachineService({ maxMachinesPerUser: 1 });
+    const create = space.create;
+    for (const failWith of [
+      new SpaceError(503, "full"),
+      new SpaceError(0, "gone", "UNREACHABLE"),
+      new SpaceError(0, "slow", "TIMEOUT"),
+    ]) {
+      space.create = async () => {
+        throw failWith;
+      };
+      const error = await failure(
+        service.create("alice", { name: "a", template: "seed", size: small }),
+      );
+      expect(error).toBeInstanceOf(MachineError);
+      expect((await store.listByOwner("alice")).length).toBe(0);
+    }
+    // Several failed attempts in parallel leave nothing behind, and the next create succeeds.
+    space.create = async () => {
+      throw new SpaceError(503, "full");
+    };
+    await Promise.allSettled(
+      Array.from({ length: 5 }, (_, n) =>
+        service.create("alice", { name: `p${n}`, template: "seed", size: small }),
+      ),
+    );
+    space.create = create;
+    const ok = await service.create("alice", { name: "a", template: "seed", size: small });
+    expect(ok.status).toBe("running");
+    expect((await store.listByOwner("alice")).length).toBe(1);
   });
 
   it("frees the cap when a machine's sandbox is already gone", async () => {
@@ -126,6 +204,33 @@ describe("create", () => {
     store.listByOwner = original;
     expect((error as MachineError).code).toBe("NAME_TAKEN");
     expect(space.calls.some((c) => c.op === "kill")).toBe(true);
+  });
+});
+
+describe("suspendAll", () => {
+  it("suspends what runs, skips the rest, and only touches that owner", async () => {
+    const { service, space } = newMachineService();
+    const a = await service.create("alice", { name: "a", template: "seed", size: small });
+    const b = await service.create("alice", { name: "b", template: "seed", size: small });
+    await service.suspend("alice", b.id);
+    const other = await service.create("bob", { name: "o", template: "seed", size: small });
+    expect(await service.suspendAll("alice")).toEqual({ suspended: 1, skipped: 1, failed: 0 });
+    expect(space.sandboxes.get(a.id)?.state).toBe("paused");
+    expect(space.sandboxes.get(other.id)?.state).toBe("running");
+  });
+
+  it("counts a machine the host refuses to suspend and keeps going", async () => {
+    const { service, space } = newMachineService();
+    await service.create("alice", { name: "a", template: "seed", size: small });
+    await service.create("alice", { name: "b", template: "seed", size: small });
+    const suspend = space.suspend;
+    let calls = 0;
+    space.suspend = async (id) => {
+      calls += 1;
+      if (calls === 1) throw new SpaceError(500, "boom");
+      return suspend(id);
+    };
+    expect(await service.suspendAll("alice")).toEqual({ suspended: 1, skipped: 0, failed: 1 });
   });
 });
 

@@ -18,11 +18,48 @@ export type AuthOptions = {
 export const MIN_PASSWORD_LENGTH = 12;
 
 /**
+ * The session cookie's scope.
+ *
+ * Host-only by default: no `Domain` attribute, so the browser sends the cookie to the API's own
+ * host and to no other, in particular not to the machine hosts (`<port>-<id>.box...`) where any
+ * customer can run a web server. Over HTTPS the cookies also take the `__Host-` prefix, which makes
+ * the browser refuse any copy of them set with a `Domain` attribute (a page on a sibling host
+ * cannot plant a cookie of that name for this one). `COOKIE_DOMAIN` is a dangerous override that
+ * shares the cookie with every subdomain and gives up the prefix.
+ */
+export function cookieSettings(
+  env: Pick<Env, "BETTER_AUTH_URL" | "COOKIE_DOMAIN">,
+): NonNullable<Parameters<typeof betterAuth>[0]["advanced"]> {
+  const secure = new URL(env.BETTER_AUTH_URL).protocol === "https:";
+  const defaultCookieAttributes = { sameSite: "lax", secure, httpOnly: true } as const;
+  if (env.COOKIE_DOMAIN) {
+    return {
+      useSecureCookies: secure,
+      crossSubDomainCookies: { enabled: true, domain: env.COOKIE_DOMAIN },
+      defaultCookieAttributes,
+    };
+  }
+  if (!secure) return { useSecureCookies: false, defaultCookieAttributes };
+  const host = (name: string) => ({ name: `__Host-rookbox.${name}` });
+  return {
+    // better-auth would add `__Secure-` in front of our `__Host-` names; the attributes below
+    // already make every cookie Secure, so its own prefixing is switched off.
+    useSecureCookies: false,
+    defaultCookieAttributes,
+    cookies: {
+      session_token: host("session_token"),
+      session_data: host("session_data"),
+      account_data: host("account_data"),
+      dont_remember: host("dont_remember"),
+    },
+  };
+}
+
+/**
  * better-auth with email and password. Accounts exist only for ROOKBOX_ALLOWED_EMAILS, and the
  * public sign-up endpoint is closed: the owner account comes from the seed command.
  */
 export function createAuth(db: Db, env: Env, logger: Logger, options: AuthOptions) {
-  const secure = new URL(env.BETTER_AUTH_URL).protocol === "https:";
   const allowed = new Set(env.ROOKBOX_ALLOWED_EMAILS);
   return betterAuth({
     appName: "Rookbox",
@@ -37,13 +74,7 @@ export function createAuth(db: Db, env: Env, logger: Logger, options: AuthOption
       minPasswordLength: MIN_PASSWORD_LENGTH,
       maxPasswordLength: 128,
     },
-    advanced: {
-      useSecureCookies: secure,
-      ...(env.COOKIE_DOMAIN
-        ? { crossSubDomainCookies: { enabled: true, domain: env.COOKIE_DOMAIN } }
-        : {}),
-      defaultCookieAttributes: { sameSite: "lax", secure, httpOnly: true },
-    },
+    advanced: cookieSettings(env),
     databaseHooks: {
       user: {
         create: {
@@ -66,17 +97,24 @@ export function createIdentity(deps: {
   auth: Pick<Auth, "api">;
   apiKeys: Pick<ApiKeyService, "authenticate">;
   db: Db;
+  /**
+   * Emails that may act. An account whose email is no longer listed is refused, session or key
+   * alike, which is how an operator locks someone out (remove the email, restart).
+   */
+  allowedEmails: ReadonlySet<string>;
 }): Identity {
+  const permitted = (user: AuthUser | null) =>
+    user && deps.allowedEmails.has(user.email.toLowerCase()) ? user : null;
   return async (headers) => {
     const bearer = headers.get("authorization")?.match(/^Bearer (rbx_[A-Za-z0-9]+)$/)?.[1];
     if (bearer) {
       const userId = await deps.apiKeys.authenticate(bearer);
       if (!userId) return null;
       const user = await deps.db.user.findUnique({ where: { id: userId } });
-      return user ? { id: user.id, email: user.email } : null;
+      return permitted(user ? { id: user.id, email: user.email } : null);
     }
     const session = await deps.auth.api.getSession({ headers });
-    return session ? { id: session.user.id, email: session.user.email } : null;
+    return permitted(session ? { id: session.user.id, email: session.user.email } : null);
   };
 }
 

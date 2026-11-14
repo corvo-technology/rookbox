@@ -5,12 +5,15 @@ import { createApp } from "./app.js";
 import { createAuth, createIdentity, seedOwner } from "./auth.js";
 import { createDb } from "./db.js";
 import { createDesktopProxy } from "./desktop.js";
-import { apiOrigin, loadEnv } from "./env.js";
+import { createDesktopTokens, deriveSecret } from "./desktop-token.js";
+import { adminEmails, desktopOrigin, loadEnv, routeLimits } from "./env.js";
 import { createLogger } from "./logger.js";
 import { createMachineService } from "./machines/service.js";
 import { createPrismaMachineStore } from "./machines/store.js";
 import { applyMigrations } from "./migrate.js";
 import { createRateLimiter } from "./rate-limit.js";
+import { reconcile, startReconciler } from "./reconcile.js";
+import { createThrottle } from "./route-limits.js";
 import { createEcwClient } from "./space/client.js";
 
 const bootLogger = createLogger("info", { service: "rookbox-api" });
@@ -18,6 +21,30 @@ const bootLogger = createLogger("info", { service: "rookbox-api" });
 try {
   const env = loadEnv();
   const logger = createLogger(env.LOG_LEVEL, { service: "rookbox-api" });
+
+  if (env.COOKIE_DOMAIN) {
+    logger.warn(
+      "COOKIE_DOMAIN is set: the session cookie is sent to every subdomain of it, including machine hosts. Unset it.",
+      { domain: env.COOKIE_DOMAIN },
+    );
+  }
+  if (env.NODE_ENV === "production") {
+    if (env.TRUSTED_PROXY_HOPS === 0) {
+      logger.warn(
+        "TRUSTED_PROXY_HOPS is 0: client addresses are the proxy's, so per-address limits are shared by everyone. Set it to the number of proxies in front of the API.",
+      );
+    }
+    if (!env.DESKTOP_HOST) {
+      logger.warn(
+        "DESKTOP_HOST is not set: the desktop is served from the API's own origin. Serve it from its own host.",
+      );
+    }
+    if (!env.DESKTOP_LINK_SECRET) {
+      logger.warn(
+        "DESKTOP_LINK_SECRET is not set: desktop links are signed with a key derived from BETTER_AUTH_SECRET.",
+      );
+    }
+  }
 
   if (env.RUN_MIGRATIONS) {
     const dir =
@@ -29,34 +56,62 @@ try {
   const { db, close } = createDb(env.DATABASE_URL);
   const apiKeys = createApiKeyService(createPrismaApiKeyStore(db));
   const auth = createAuth(db, env, logger, { allowSignUp: false });
-  const identity = createIdentity({ auth, apiKeys, db });
+  const identity = createIdentity({
+    auth,
+    apiKeys,
+    db,
+    allowedEmails: new Set(env.ROOKBOX_ALLOWED_EMAILS),
+  });
   const space = createEcwClient({
     baseUrl: env.SPACE_ECW_API_URL,
     apiKey: env.SPACE_ECW_API_KEY,
     domain: env.E2B_DOMAIN,
     timeoutMs: env.SPACE_TIMEOUT_MS,
+    maxOutputBytes: env.EXEC_MAX_OUTPUT_BYTES,
   });
-  const origin = apiOrigin(env);
+  const store = createPrismaMachineStore(db);
   const machines = createMachineService({
-    store: createPrismaMachineStore(db),
+    store,
     space,
     logger,
     e2bDomain: env.E2B_DOMAIN,
-    apiOrigin: origin,
     templates: env.SPACE_TEMPLATES,
     defaultIdleTimeoutS: env.MACHINE_IDLE_TIMEOUT_S,
     maxMachinesPerUser: env.MAX_MACHINES_PER_USER,
+    allowInternet: env.MACHINE_ALLOW_INTERNET,
   });
   const desktop = createDesktopProxy({
     machines,
-    identity,
+    tokens: createDesktopTokens({
+      secret: env.DESKTOP_LINK_SECRET ?? deriveSecret(env.BETTER_AUTH_SECRET),
+      previousSecret: env.DESKTOP_LINK_SECRET_PREVIOUS,
+    }),
     e2bDomain: env.E2B_DOMAIN,
-    allowedOrigin: origin,
+    origin: desktopOrigin(env),
+    host: env.DESKTOP_HOST ?? null,
+    linkTtlS: env.DESKTOP_LINK_TTL_S,
+    sessionTtlS: env.DESKTOP_SESSION_TTL_S,
     logger,
   });
 
   const seeded = await seedOwner(db, env, logger);
   if (seeded === "skipped") logger.info("no owner seed requested");
+
+  const reconcileDeps = {
+    store,
+    space,
+    logger,
+    stuckAfterMs: env.RECONCILE_STUCK_AFTER_S * 1_000,
+    orphanGraceMs: env.RECONCILE_ORPHAN_GRACE_S * 1_000,
+  };
+  const stopReconciler =
+    env.RECONCILE_INTERVAL_S > 0
+      ? startReconciler(
+          reconcileDeps,
+          { act: env.RECONCILE_ACT, killOrphans: env.RECONCILE_KILL_ORPHANS },
+          env.RECONCILE_INTERVAL_S,
+        )
+      : () => undefined;
 
   const app = createApp({
     appOrigin: env.APP_ORIGIN,
@@ -66,6 +121,16 @@ try {
     machines,
     apiKeys,
     desktop,
+    desktopHost: env.DESKTOP_HOST ?? null,
+    throttle: createThrottle(routeLimits(env), { enabled: env.RATE_LIMITS_ENABLED }),
+    trustedProxyHops: env.TRUSTED_PROXY_HOPS,
+    admins: new Set(adminEmails(env)),
+    users: {
+      async findIdByEmail(email) {
+        return (await db.user.findUnique({ where: { email } }))?.id ?? null;
+      },
+    },
+    reconcile: (mode) => reconcile(reconcileDeps, mode),
     space,
     signInLimiter: createRateLimiter({
       max: env.SIGNIN_MAX_ATTEMPTS,
@@ -82,6 +147,7 @@ try {
   desktop.attach(server as never);
 
   const shutdown = () => {
+    stopReconciler();
     server.close(() => void close().then(() => process.exit(0)));
     setTimeout(() => process.exit(0), 5_000).unref();
   };

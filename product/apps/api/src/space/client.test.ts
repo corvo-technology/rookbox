@@ -60,13 +60,19 @@ describe("ECW client", () => {
       metadata: { "rookbox.owner": "u1" },
       timeoutS: 900,
       size: { vcpu: 2, memoryMib: 2048, diskMib: 10240 },
+      allowInternet: true,
     });
     expect(created).toEqual({ id: "sbx1" });
     const call = calls[0]!;
     expect(call.url).toBe("https://api.box.example.test/sandboxes");
     expect(call.headers.get("x-api-key")).toBe("service-key");
     const body = JSON.parse(call.body!);
-    expect(body).toMatchObject({ templateID: "seed", timeout: 900, autoPause: true });
+    expect(body).toMatchObject({
+      templateID: "seed",
+      timeout: 900,
+      autoPause: true,
+      allowInternetAccess: true,
+    });
     expect(body.metadata["rookbox.owner"]).toBe("u1");
     expect(JSON.parse(body.metadata["space.resources"])).toEqual({
       vcpu: 2,
@@ -152,6 +158,7 @@ describe("failures and retries", () => {
       space.create({
         templateId: "nope",
         metadata: {},
+        allowInternet: true,
         timeoutS: 900,
         size: { vcpu: 1, memoryMib: 512, diskMib: 1024 },
       }),
@@ -195,6 +202,7 @@ describe("failures and retries", () => {
       space.create({
         templateId: "seed",
         metadata: {},
+        allowInternet: true,
         timeoutS: 900,
         size: { vcpu: 1, memoryMib: 512, diskMib: 1024 },
       }),

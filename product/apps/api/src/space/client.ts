@@ -10,6 +10,8 @@ export type SandboxInfo = {
   metadata: Record<string, string>;
   /** Present on a single-sandbox read; lets the API talk to the machine's process service. */
   envdAccessToken?: string;
+  /** ISO time the sandbox started, when the host reports it. */
+  startedAt?: string;
 };
 
 export type SpaceSize = { vcpu: number; memoryMib: number; diskMib: number };
@@ -34,6 +36,8 @@ export interface SpaceClient {
     metadata: Record<string, string>;
     timeoutS: number;
     size: SpaceSize;
+    /** ECW `allowInternetAccess`. The server's default is closed (no DNS, no internet). */
+    allowInternet: boolean;
   }): Promise<{ id: string }>;
   /** Sandboxes whose metadata contains every given pair. */
   list(metadata: Record<string, string>): Promise<SandboxInfo[]>;
@@ -123,6 +127,7 @@ export function resourcesMetadata(size: SpaceSize): string {
  * the pairs are joined with `&`, and that string is encoded again as the parameter value.
  */
 export function metadataQuery(metadata: Record<string, string>): string {
+  if (Object.keys(metadata).length === 0) return "";
   const inner = Object.entries(metadata)
     .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
     .join("&");
@@ -149,6 +154,7 @@ function toInfo(raw: Json): SandboxInfo {
     state,
     metadata,
     envdAccessToken: typeof raw.envdAccessToken === "string" ? raw.envdAccessToken : undefined,
+    startedAt: typeof raw.startedAt === "string" ? raw.startedAt : undefined,
   };
 }
 
@@ -166,6 +172,8 @@ export type EcwClientOptions = {
   retries?: number;
   /** Replaces the wait between attempts (tests). */
   sleep?: (ms: number) => Promise<void>;
+  /** Most bytes of stdout, and of stderr, that `exec` keeps. Default 256 KiB. */
+  maxOutputBytes?: number;
 };
 
 const MAX_OUTPUT_BYTES = 256 * 1024;
@@ -273,13 +281,14 @@ export function createEcwClient(options: EcwClientOptions): SpaceClient {
   const enc = encodeURIComponent;
 
   return {
-    async create({ templateId, metadata, timeoutS, size }) {
+    async create({ templateId, metadata, timeoutS, size, allowInternet }) {
       let json: unknown;
       try {
         ({ json } = await call("POST", "/sandboxes", {
           templateID: templateId,
           timeout: timeoutS,
           autoPause: true,
+          allowInternetAccess: allowInternet,
           metadata: { ...metadata, "space.resources": resourcesMetadata(size) },
         }));
       } catch (error) {
@@ -374,6 +383,7 @@ export function createEcwClient(options: EcwClientOptions): SpaceClient {
         command,
         timeoutMs,
         doFetch,
+        maxOutputBytes: options.maxOutputBytes,
       });
     },
 
@@ -428,8 +438,9 @@ class Capped {
   private chunks: Buffer[] = [];
   private size = 0;
   truncated = false;
+  constructor(private readonly max: number) {}
   push(chunk: Buffer) {
-    const room = MAX_OUTPUT_BYTES - this.size;
+    const room = this.max - this.size;
     if (room <= 0) {
       this.truncated = true;
       return;
@@ -454,9 +465,10 @@ export async function execViaEnvd(input: {
   command: string;
   timeoutMs: number;
   doFetch: typeof fetch;
+  maxOutputBytes?: number | undefined;
 }): Promise<ExecResult> {
-  const stdout = new Capped();
-  const stderr = new Capped();
+  const stdout = new Capped(input.maxOutputBytes ?? MAX_OUTPUT_BYTES);
+  const stderr = new Capped(input.maxOutputBytes ?? MAX_OUTPUT_BYTES);
   let exitCode: number | null = null;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), input.timeoutMs);

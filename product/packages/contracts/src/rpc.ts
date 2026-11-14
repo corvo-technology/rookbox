@@ -5,6 +5,7 @@ import type {
 } from "@orpc/contract";
 import { oc } from "@orpc/contract";
 import * as z from "zod";
+import { adminContract } from "./admin.js";
 import {
   ApiKeySchema,
   CreateApiKeyInput,
@@ -15,6 +16,7 @@ import { ConfigSchema } from "./config.js";
 import { API_ERRORS } from "./errors.js";
 import {
   CreateMachineInput,
+  DesktopLinkSchema,
   ExecInput,
   ExecResultSchema,
   ForkMachineInput,
@@ -38,10 +40,12 @@ export const appContract = {
     delete: oc.errors(API_ERRORS).input(MachineIdInput).output(ok),
     /** Runs a shell command in a running machine and waits for it to end. */
     exec: oc.errors(API_ERRORS).input(ExecInput).output(ExecResultSchema),
+    /** Checks ownership and returns a short-lived link that opens the desktop on its own origin. */
+    desktopLink: oc.errors(API_ERRORS).input(MachineIdInput).output(DesktopLinkSchema),
   },
   apiKeys: {
-    list: oc.output(z.array(ApiKeySchema)),
-    create: oc.input(CreateApiKeyInput).output(CreatedApiKeySchema),
+    list: oc.errors(API_ERRORS).output(z.array(ApiKeySchema)),
+    create: oc.errors(API_ERRORS).input(CreateApiKeyInput).output(CreatedApiKeySchema),
     revoke: oc.errors(API_ERRORS).input(RevokeApiKeyInput).output(ok),
   },
   /** What this deployment offers: templates, limits and the sandbox domain. */
@@ -49,6 +53,10 @@ export const appContract = {
     get: oc.output(ConfigSchema),
   },
 };
+
+/** The whole server API: the dashboard's contract plus the operator procedures. */
+export const serverContract = { ...appContract, admin: adminContract };
+export type ServerClient = ContractRouterClient<typeof serverContract>;
 
 export type AppContract = typeof appContract;
 export type AppClient = ContractRouterClient<AppContract>;
