@@ -64,7 +64,17 @@ const EnvObject = z.object({
   HOST: z.string().min(1).default("0.0.0.0"),
   LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
 
+  /**
+   * What the API connects with at run time: the `rookbox_app` runtime login, which row-level
+   * security applies to. With DATABASE_MIGRATION_URL unset it is also what migrations use, as the
+   * owner, and row-level security is not enforced (a warning says so at start).
+   */
   DATABASE_URL: z.string().min(1),
+  /**
+   * The owner login that migrates and provisions the runtime login. It owns the tables, so keep it
+   * out of the running API's reach: only the start-up migration step and `db:migrate` use it.
+   */
+  DATABASE_MIGRATION_URL: optionalText(z.string().min(1)),
   /** Apply pending Prisma migrations when the server starts. */
   RUN_MIGRATIONS: flag.default(true),
   MIGRATIONS_DIR: z.string().min(1).optional(),

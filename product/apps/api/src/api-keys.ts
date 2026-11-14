@@ -1,6 +1,7 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import type { ApiKey, CreatedApiKey } from "@rookbox/contracts";
 import { API_KEY_PREFIX } from "@rookbox/contracts";
+import { asSystem } from "./database-access.js";
 import type { Db } from "./db.js";
 
 export type ApiKeyRow = {
@@ -96,9 +97,16 @@ export function createPrismaApiKeyStore(db: Db): ApiKeyStore {
       });
       return result.count > 0;
     },
-    findActiveByHash: (keyHash) => db.apiKey.findFirst({ where: { keyHash, revokedAt: null } }),
+    // The caller of these two is not known yet (the key is how we find out), so they are system
+    // work: a lookup by the hash of a secret, and the bookkeeping of the key it found.
+    findActiveByHash: (keyHash) =>
+      asSystem("api key lookup", () =>
+        db.apiKey.findFirst({ where: { keyHash, revokedAt: null } }),
+      ),
     async touch(id, at) {
-      await db.apiKey.update({ where: { id }, data: { lastUsedAt: at } });
+      await asSystem("api key last used", () =>
+        db.apiKey.update({ where: { id }, data: { lastUsedAt: at } }),
+      );
     },
   };
 }

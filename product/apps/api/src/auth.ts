@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import type { ApiKeyService } from "./api-keys.js";
+import { asSystem } from "./database-access.js";
 import type { Db } from "./db.js";
 import { apiOrigin, type Env } from "./env.js";
 import type { Logger } from "./logger.js";
@@ -111,24 +112,31 @@ export function createIdentity(deps: {
   // takes effect at once, without waiting for a session to expire. Existing accounts are allowed.
   const permitted = (user: (AuthUser & { disabledAt?: Date | string | null }) | null) =>
     user && !user.disabledAt ? { id: user.id, email: user.email } : null;
-  return async (headers) => {
-    const bearer = headers.get("authorization")?.match(/^Bearer (rbx_[A-Za-z0-9]+)$/)?.[1];
-    if (bearer) {
-      const userId = await deps.apiKeys.authenticate(bearer);
-      if (!userId) return null;
-      return permitted(await deps.db.user.findUnique({ where: { id: userId } }));
-    }
-    const session = await deps.auth.api.getSession({ headers });
-    return permitted(session?.user ?? null);
-  };
+  // Who the caller is is not known until this answers, so it runs as system work; the handler's
+  // own work then runs as that user (`withUser`).
+  return (headers) =>
+    asSystem("authenticate", async () => {
+      const bearer = headers.get("authorization")?.match(/^Bearer (rbx_[A-Za-z0-9]+)$/)?.[1];
+      if (bearer) {
+        const userId = await deps.apiKeys.authenticate(bearer);
+        if (!userId) return null;
+        return permitted(await deps.db.user.findUnique({ where: { id: userId } }));
+      }
+      const session = await deps.auth.api.getSession({ headers });
+      return permitted(session?.user ?? null);
+    });
 }
 
 /** True when the account exists and is not disabled. The desktop proxy asks it on every request. */
 export function createIsActive(db: Db): (userId: string) => Promise<boolean> {
-  return async (userId) => {
-    const user = await db.user.findUnique({ where: { id: userId }, select: { disabledAt: true } });
-    return user !== null && user.disabledAt === null;
-  };
+  return (userId) =>
+    asSystem("is the account active", async () => {
+      const user = await db.user.findUnique({
+        where: { id: userId },
+        select: { disabledAt: true },
+      });
+      return user !== null && user.disabledAt === null;
+    });
 }
 
 /** Creates the owner account from ROOKBOX_SEED_OWNER_PASSWORD when it does not exist yet. */
@@ -140,9 +148,11 @@ export async function seedOwner(
   const password = env.ROOKBOX_SEED_OWNER_PASSWORD;
   const email = env.ROOKBOX_ALLOWED_EMAILS[0];
   if (!password || !email) return "skipped";
-  if (await db.user.findUnique({ where: { email } })) return "exists";
-  const auth = createAuth(db, env, logger, { allowSignUp: true });
-  await auth.api.signUpEmail({ body: { email, password, name: email.split("@")[0] ?? "Owner" } });
-  logger.info("owner account created", { email });
-  return "created";
+  return asSystem("seed the owner account", async () => {
+    if (await db.user.findUnique({ where: { email } })) return "exists";
+    const auth = createAuth(db, env, logger, { allowSignUp: true });
+    await auth.api.signUpEmail({ body: { email, password, name: email.split("@")[0] ?? "Owner" } });
+    logger.info("owner account created", { email });
+    return "created";
+  });
 }

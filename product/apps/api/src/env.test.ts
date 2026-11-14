@@ -23,6 +23,17 @@ describe("loadEnv", () => {
     expect(env.ROOKBOX_ALLOWED_EMAILS).toEqual(["owner@example.test", "second@example.test"]);
   });
 
+  it("treats DATABASE_MIGRATION_URL as optional, and an empty one as unset", () => {
+    expect(loadEnv(valid).DATABASE_MIGRATION_URL).toBeUndefined();
+    expect(
+      loadEnv({ ...valid, DATABASE_MIGRATION_URL: "" }).DATABASE_MIGRATION_URL,
+    ).toBeUndefined();
+    expect(
+      loadEnv({ ...valid, DATABASE_MIGRATION_URL: "postgres://owner:p@localhost:5432/db" })
+        .DATABASE_MIGRATION_URL,
+    ).toBe("postgres://owner:p@localhost:5432/db");
+  });
+
   it("offers every template by default, and takes an allowlist from the environment", () => {
     expect(loadEnv(valid).SPACE_TEMPLATES).toEqual([
       "desktop-v2",

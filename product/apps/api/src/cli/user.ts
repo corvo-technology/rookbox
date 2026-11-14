@@ -11,6 +11,7 @@
 // logged: the logger here is silent below `error`.
 import { parseArgs } from "node:util";
 import { createAuth } from "../auth.js";
+import { withUser } from "../database-access.js";
 import { createDb } from "../db.js";
 import { loadEnv } from "../env.js";
 import { createLogger } from "../logger.js";
@@ -97,7 +98,7 @@ try {
   const admin = createUserAdmin({
     store: createPrismaUserStore(db),
     credentials: createAuthCredentials(auth),
-    suspendMachines: (userId) => machines.suspendAll(userId),
+    suspendMachines: (userId) => withUser(userId, () => machines.suspendAll(userId)),
     logger,
   });
   const email = values.email ?? "";

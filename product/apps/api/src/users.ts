@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import type { UserAdminReason } from "@rookbox/contracts";
 import { type Auth, MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "./auth.js";
+import { systemStore } from "./database-access.js";
 import type { Db } from "./db.js";
 import type { Logger } from "./logger.js";
 
@@ -38,29 +39,36 @@ export class UserAdminError extends Error {
 }
 
 export function createPrismaUserStore(db: Db): UserStore {
-  return {
-    findByEmail: (email) => db.user.findUnique({ where: { email } }),
-    list: () => db.user.findMany({ orderBy: { createdAt: "asc" } }),
-    async setDisabled(id, at) {
-      await db.user.update({ where: { id }, data: { disabledAt: at } });
+  // Account administration (operator panel and CLI) spans users: system work.
+  return systemStore<UserStore>(
+    {
+      findByEmail: (email) => db.user.findUnique({ where: { email } }),
+      list: () => db.user.findMany({ orderBy: { createdAt: "asc" } }),
+      async setDisabled(id, at) {
+        await db.user.update({ where: { id }, data: { disabledAt: at } });
+      },
+      async deleteSessions(id) {
+        await db.session.deleteMany({ where: { userId: id } });
+      },
     },
-    async deleteSessions(id) {
-      await db.session.deleteMany({ where: { userId: id } });
-    },
-  };
+    "user administration",
+  );
 }
 
 /** Hashes with better-auth's own hasher and writes through its adapter. */
 export function createAuthCredentials(auth: Auth): Credentials {
-  return {
-    async create({ email, name, password }) {
-      await auth.api.signUpEmail({ body: { email, password, name } });
+  return systemStore<Credentials>(
+    {
+      async create({ email, name, password }) {
+        await auth.api.signUpEmail({ body: { email, password, name } });
+      },
+      async setPassword(userId, password) {
+        const context = await auth.$context;
+        await context.internalAdapter.updatePassword(userId, await context.password.hash(password));
+      },
     },
-    async setPassword(userId, password) {
-      const context = await auth.$context;
-      await context.internalAdapter.updatePassword(userId, await context.password.hash(password));
-    },
-  };
+    "user credentials",
+  );
 }
 
 /** 24 URL-safe characters from 18 random bytes (144 bits). */

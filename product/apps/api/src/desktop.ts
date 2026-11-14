@@ -2,6 +2,7 @@ import type { IncomingMessage, Server } from "node:http";
 import type { Duplex } from "node:stream";
 import { API_ERRORS, type DesktopLink } from "@rookbox/contracts";
 import WebSocket, { WebSocketServer } from "ws";
+import { withUser } from "./database-access.js";
 import type { DesktopTokens } from "./desktop-token.js";
 import type { Logger } from "./logger.js";
 import { MachineError, type MachineService } from "./machines/service.js";
@@ -99,7 +100,8 @@ export function createDesktopProxy(deps: DesktopDeps) {
     const key = `${userId}:${id}`;
     const hit = trafficTokens.get(key);
     if (hit && hit.until > now()) return hit.token;
-    const { trafficToken } = await deps.machines.desktopTarget(userId, id);
+    // The token or cookie named this user; their machine row is read as them.
+    const { trafficToken } = await withUser(userId, () => deps.machines.desktopTarget(userId, id));
     trafficTokens.set(key, { token: trafficToken, until: now() + TOKEN_TTL_MS });
     if (trafficTokens.size > 200) trafficTokens.delete(trafficTokens.keys().next().value as string);
     return trafficToken;
@@ -146,9 +148,11 @@ export function createDesktopProxy(deps: DesktopDeps) {
      * machine is not theirs, not running, or has no desktop.
      */
     async issueLink(userId: string, machineId: string): Promise<DesktopLink> {
-      await deps.machines.desktopTarget(userId, machineId);
-      // The stack is not running on a machine the API created, or after a restore.
-      await deps.machines.ensureDesktop(userId, machineId);
+      await withUser(userId, async () => {
+        await deps.machines.desktopTarget(userId, machineId);
+        // The stack is not running on a machine the API created, or after a restore.
+        await deps.machines.ensureDesktop(userId, machineId);
+      });
       const { token, expiresAt } = deps.tokens.sign("link", { machineId, userId }, deps.linkTtlS);
       return { url: `${deps.origin}/open/${token}`, expiresAt: expiresAt.toISOString() };
     },
