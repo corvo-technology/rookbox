@@ -29,6 +29,8 @@ type Fake = {
   create: { status: number; body: unknown };
   seen: { method: string; path: string; key: string | undefined }[];
   sandboxes: unknown[];
+  /** Answers queued for the next matching requests, before the normal handler runs. */
+  queue: { method: string; status: number; body: string; type: string }[];
 };
 
 function startFake(): Promise<Fake> {
@@ -36,6 +38,7 @@ function startFake(): Promise<Fake> {
     create: { status: 201, body: {} },
     seen: [],
     sandboxes: [],
+    queue: [],
   } as unknown as Fake;
   fake.server = createServer((req, res) => {
     const key = req.headers["x-api-key"] as string | undefined;
@@ -45,8 +48,18 @@ function startFake(): Promise<Fake> {
       res.writeHead(status, { "content-type": "application/json" });
       res.end(body === undefined ? "" : JSON.stringify(body));
     };
+    const queuedAt = fake.queue.findIndex((q) => q.method === req.method);
+    if (queuedAt !== -1) {
+      const [q] = fake.queue.splice(queuedAt, 1);
+      res.writeHead(q?.status ?? 500, { "content-type": q?.type ?? "text/html" });
+      return res.end(q?.body ?? "");
+    }
     if (key !== GOOD_KEY) return send(401, { code: 401, message: "Invalid API key." });
     if (req.method === "GET" && path.startsWith("/v2/sandboxes")) return send(200, fake.sandboxes);
+    if (req.method === "DELETE" && path.startsWith("/sandboxes/")) {
+      res.writeHead(204);
+      return res.end();
+    }
     if (req.method === "POST" && (path === "/sandboxes" || path === "/v2/sandboxes")) {
       return send(fake.create.status, fake.create.body);
     }
@@ -72,6 +85,7 @@ afterAll(() => {
 afterEach(() => {
   fake.seen.length = 0;
   fake.sandboxes = [];
+  fake.queue = [];
   fake.create = { status: 201, body: {} };
   for (const dir of dirs.splice(0)) rmSync(dir, { recursive: true, force: true });
 });
@@ -91,6 +105,7 @@ async function cli(
     stdinText?: string;
     api?: (auth: { apiKey: string; apiUrl: string }) => Api;
     tty?: boolean;
+    stderrTty?: boolean;
   } = {},
 ): Promise<Result & { dir: string }> {
   const dir = home();
@@ -113,7 +128,11 @@ async function cli(
     version: "1.2.3",
     stdin,
     stdout,
-    stderr: { write: (s: string) => errChunks.push(s) },
+    stderr: {
+      isTTY: options.stderrTty ?? false,
+      write: (s: string) => errChunks.push(s),
+    } as Deps["stderr"],
+    sleep: async () => undefined,
     makeApi: options.api ?? sdkApi,
     openUrl: async () => false,
     fetch: async () => new Response("[]"),
@@ -298,7 +317,7 @@ describe("new and error mapping", () => {
     const r = await cli(["ls"], {
       env: { ROOKBOX_API_KEY: GOOD_KEY, ROOKBOX_API_URL: "http://127.0.0.1:1" },
     });
-    expect(r.code).toBe(1);
+    expect(r.code).toBe(6);
     expect(r.err).toContain("http://127.0.0.1:1");
   }, 30_000);
 });
@@ -426,5 +445,144 @@ describe("help and small helpers", () => {
     expect(maskKey("rbx_abcdefghijklmnop")).toBe("rbx_abcd...mnop");
     expect(compareVersions("0.2.0", "0.1.9")).toBeGreaterThan(0);
     expect(compareVersions("0.1.0", "0.1.0")).toBe(0);
+  });
+});
+
+const EDGE_HTML =
+  '<!DOCTYPE html>\n<!--[if lt IE 7]> <html class="ie6"> <![endif]-->\n<html><head><title>502 Bad Gateway</title></head><body><center><h1>502 Bad Gateway</h1></center><hr><center>edge</center></body></html>';
+
+const edge = (status: number, method: string) => ({
+  method,
+  status,
+  body: EDGE_HTML.replace(/502/g, String(status)),
+  type: "text/html",
+});
+
+describe("transient failures", () => {
+  const env = () => ({ ROOKBOX_API_KEY: GOOD_KEY });
+  const calls = (method: string) => fake.seen.filter((s) => s.method === method).length;
+
+  it("kill: a 502 HTML page then success retries and succeeds", async () => {
+    fake.queue.push(edge(502, "DELETE"));
+    const r = await cli(["kill", "abc", "-y"], { env: env() });
+    expect(r.code).toBe(0);
+    expect(r.out).toContain("abc");
+    expect(r.err).not.toContain("<");
+    expect(calls("DELETE")).toBe(2);
+  }, 30_000);
+
+  it("shows Retrying... only on a TTY", async () => {
+    fake.queue.push(edge(502, "DELETE"));
+    const quiet = await cli(["kill", "abc", "-y"], { env: env() });
+    expect(quiet.err).not.toContain("Retrying");
+    fake.queue.push(edge(502, "DELETE"));
+    const tty = await cli(["kill", "abc", "-y"], { env: env(), stderrTty: true });
+    expect(tty.err).toContain("Retrying...");
+    expect(tty.out).not.toContain("Retrying");
+  }, 30_000);
+
+  it("kill: persistent 502 gives a friendly message, exit 6 and no HTML", async () => {
+    for (let i = 0; i < 4; i++) fake.queue.push(edge(502, "DELETE"));
+    const r = await cli(["kill", "abc", "-y"], { env: env() });
+    expect(r.code).toBe(6);
+    expect(r.err).toContain("temporarily unavailable");
+    expect(r.err).not.toMatch(/<|DOCTYPE|Bad Gateway/);
+    expect(r.out).toBe("");
+    expect(calls("DELETE")).toBe(4);
+  }, 30_000);
+
+  it("pt message", async () => {
+    for (let i = 0; i < 4; i++) fake.queue.push(edge(504, "DELETE"));
+    const r = await cli(["kill", "abc", "-y"], { env: { ...env(), ROOKBOX_LANG: "pt" } });
+    expect(r.code).toBe(6);
+    expect(r.err).toContain("temporariamente indisponível");
+  }, 30_000);
+
+  it("new: a 502 is not retried and points at rookbox ls", async () => {
+    fake.queue.push(edge(502, "POST"));
+    const r = await cli(["new"], { env: env() });
+    expect(r.code).toBe(6);
+    expect(calls("POST")).toBe(1);
+    expect(r.err).toContain("rookbox ls");
+    expect(r.err).not.toMatch(/<|DOCTYPE/);
+  }, 30_000);
+
+  it("--debug shows the raw body, ROOKBOX_DEBUG too, and the default does not", async () => {
+    for (let i = 0; i < 4; i++) fake.queue.push(edge(502, "DELETE"));
+    const plain = await cli(["kill", "abc", "-y"], { env: env() });
+    expect(plain.err).not.toContain("DOCTYPE");
+    for (let i = 0; i < 4; i++) fake.queue.push(edge(502, "DELETE"));
+    const debug = await cli(["kill", "abc", "-y", "--debug"], { env: env() });
+    expect(debug.err).toContain("502");
+    expect(debug.err).toContain("DOCTYPE");
+    for (let i = 0; i < 4; i++) fake.queue.push(edge(502, "DELETE"));
+    const viaEnv = await cli(["kill", "abc", "-y"], { env: { ...env(), ROOKBOX_DEBUG: "1" } });
+    expect(viaEnv.err).toContain("DOCTYPE");
+  }, 30_000);
+
+  it("ls --json keeps stdout clean while retrying", async () => {
+    fake.queue.push(edge(503, "GET"));
+    fake.sandboxes = [];
+    const r = await cli(["ls", "--json"], { env: env(), stderrTty: true });
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.out)).toEqual([]);
+  }, 30_000);
+
+  it("a 503 with a plain API message stays a capacity error", async () => {
+    fake.create = { status: 503, body: { code: 503, message: "The beta is full right now" } };
+    const r = await cli(["new"], { env: env() });
+    expect(r.code).toBe(5);
+    expect(calls("POST")).toBe(1);
+  }, 30_000);
+
+  it("a 502 on a machine's own command is never retried", async () => {
+    let runs = 0;
+    const api = () =>
+      ({
+        run: async () => {
+          runs++;
+          throw Object.assign(new Error("502: <html>x</html>"), { statusCode: 502 });
+        },
+      }) as unknown as Api;
+    const r = await cli(["run", "abc", "--", "ls"], { env: env(), api });
+    expect(runs).toBe(1);
+    expect(r.code).toBe(6);
+  });
+});
+
+describe("mapError for upstream bodies", () => {
+  const t = translator("en");
+  const ctx = { t, apiUrl: "https://api.rookbox.run" };
+  const html = "<html><body><h1>oops</h1></body></html>";
+  const withStatus = (message: string, statusCode: number) =>
+    Object.assign(new Error(message), { name: "SandboxError", statusCode });
+
+  it("maps 502/503/504 and HTML bodies to short sentences", async () => {
+    for (const status of [502, 503, 504]) {
+      const e = await mapError(withStatus(`${status}: ${html}`, status), ctx);
+      expect(e.exitCode).toBe(6);
+      expect(e.message).not.toContain("<");
+    }
+    expect((await mapError(withStatus(`401: ${html}`, 401), ctx)).exitCode).toBe(3);
+    expect((await mapError(withStatus(`403: ${html}`, 403), ctx)).message).not.toContain("<");
+    expect((await mapError(withStatus(`404: ${html}`, 404), ctx)).exitCode).toBe(4);
+    expect((await mapError(withStatus(`429: ${html}`, 429), ctx)).exitCode).toBe(5);
+    expect((await mapError(withStatus(`500: ${html}`, 500), ctx)).message).not.toContain("<");
+  });
+
+  it("truncates a long unknown body", async () => {
+    const e = await mapError(new Error(`418: ${"teapot ".repeat(200)}`), ctx);
+    expect(e.message.length).toBeLessThan(300);
+  });
+
+  it("maps network errors", async () => {
+    for (const code of ["ECONNRESET", "ETIMEDOUT", "ENOTFOUND", "EAI_AGAIN"]) {
+      const cause = Object.assign(new Error("x"), { code });
+      const e = await mapError(new TypeError("fetch failed", { cause }), ctx);
+      expect(e.exitCode).toBe(6);
+    }
+    expect((await mapError(new TypeError("fetch failed"), ctx)).exitCode).toBe(6);
+    const bun = new Error("Unable to connect. Is the computer able to access the url?");
+    expect((await mapError(bun, ctx)).exitCode).toBe(6);
   });
 });

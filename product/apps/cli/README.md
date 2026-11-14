@@ -32,7 +32,7 @@ skips the prompt (a key piped to stdin works too).
 | Command | What it does |
 | --- | --- |
 | `login [--key k]`, `logout`, `whoami` | Save, forget and show the key in use |
-| `new [--name n] [--timeout 30m] [--json]` | Create a machine. `--timeout` is the idle time before it pauses (1m to 24h) |
+| `new [--name n] [--timeout 30m] [--json]` | Create a machine. `--timeout` is how long an idle machine lives before it is deleted (1m to 24h) |
 | `ls [--json]` | List machines |
 | `run <id> -- <command...>` | Run a command, streaming stdout and stderr; exits with its exit code |
 | `shell <id>` | Interactive terminal (raw mode, resize) |
@@ -51,7 +51,13 @@ Messages are English or Portuguese: `ROOKBOX_LANG=pt` (otherwise from `LANG`). C
 a terminal and `NO_COLOR` turns them off.
 
 Exit codes: `0` ok, `1` failure, `2` usage, `3` bad or missing key, `4` not found, `5` machine
-limit or no capacity. `run` exits with the command's own code instead.
+limit or no capacity, `6` service temporarily unavailable (502/503/504 or a network error). `run`
+exits with the command's own code instead.
+
+Safe calls (`ls`, `kill`, `pause`, `resume`, `url`, `login`, `whoami`) retry up to three times with
+a short backoff when the service answers 502/503/504 or the connection drops. `new`, `run` and
+`shell` never retry: if `new` fails that way, run `rookbox ls` before trying again. Error pages are
+never printed raw; `--debug` (or `ROOKBOX_DEBUG=1`) adds the raw details.
 
 `ROOKBOX_API_URL` points the CLI somewhere else (default `https://api.rookbox.run`); it is also what
 the SDK sees as `E2B_API_URL`. There is no `usage` command: usage needs a dashboard session, not an

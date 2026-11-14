@@ -16,8 +16,8 @@ export const COMMANDS: Record<string, Entry> = {
   },
   new: {
     usage: "new [--name <name>] [--timeout 30m] [--json]",
-    en: "Create a machine. --timeout is the idle time before it pauses (1m to 24h).",
-    pt: "Cria uma máquina. --timeout é o tempo parada antes de pausar (1m a 24h).",
+    en: "Create a machine. --timeout is how long an idle machine lives before it is deleted (1m to 24h).",
+    pt: "Cria uma máquina. --timeout é quanto tempo uma máquina ociosa vive antes de ser apagada (1m a 24h).",
   },
   ls: {
     usage: "ls [--json]",
@@ -77,9 +77,9 @@ const TEXT = {
     env: "Environment",
     exits: "Exit codes",
     exitsBody:
-      "0 ok, 1 failure, 2 usage, 3 bad key, 4 not found, 5 limit or no capacity.\n`run` exits with the command's own code.",
+      "0 ok, 1 failure, 2 usage, 3 bad key, 4 not found, 5 limit or no capacity, 6 service unavailable.\n`run` exits with the command's own code.",
     envBody:
-      "ROOKBOX_API_KEY / E2B_API_KEY  use this key instead of the saved one\nROOKBOX_API_URL                API address (default https://api.rookbox.run)\nROOKBOX_LANG                   en or pt (default: from LANG)\nNO_COLOR                       turn colors off",
+      "ROOKBOX_API_KEY / E2B_API_KEY  use this key instead of the saved one\nROOKBOX_API_URL                API address (default https://api.rookbox.run)\nROOKBOX_LANG                   en or pt (default: from LANG)\nROOKBOX_DEBUG=1 / --debug      show raw error details\nNO_COLOR                       turn colors off",
     start: "Start",
   },
   pt: {
@@ -91,9 +91,9 @@ const TEXT = {
     env: "Ambiente",
     exits: "Códigos de saída",
     exitsBody:
-      "0 ok, 1 falha, 2 uso, 3 chave inválida, 4 não encontrado, 5 limite ou sem capacidade.\n`run` sai com o código do próprio comando.",
+      "0 ok, 1 falha, 2 uso, 3 chave inválida, 4 não encontrado, 5 limite ou sem capacidade, 6 serviço indisponível.\n`run` sai com o código do próprio comando.",
     envBody:
-      "ROOKBOX_API_KEY / E2B_API_KEY  usa esta chave no lugar da salva\nROOKBOX_API_URL                endereço da API (padrão https://api.rookbox.run)\nROOKBOX_LANG                   en ou pt (padrão: vem de LANG)\nNO_COLOR                       desliga as cores",
+      "ROOKBOX_API_KEY / E2B_API_KEY  usa esta chave no lugar da salva\nROOKBOX_API_URL                endereço da API (padrão https://api.rookbox.run)\nROOKBOX_LANG                   en ou pt (padrão: vem de LANG)\nROOKBOX_DEBUG=1 / --debug      mostra os detalhes do erro\nNO_COLOR                       desliga as cores",
     start: "Comece",
   },
 } as const;

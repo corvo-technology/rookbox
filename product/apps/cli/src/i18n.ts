@@ -24,7 +24,7 @@ const en = {
   "new.creating": "Creating a machine...",
   "new.created": "Machine ready: {id}",
   "new.use":
-    "Use it:\n  rookbox shell {id}\n  rookbox run {id} -- uname -a\n  rookbox desktop {id}\nIdle machines pause after {timeout}; `rookbox resume {id}` brings one back.",
+    "Use it:\n  rookbox shell {id}\n  rookbox run {id} -- uname -a\n  rookbox desktop {id}\nIdle machines are deleted after {timeout}.",
   "ls.empty": "No machines yet. Create one with: rookbox new",
   "ls.id": "ID",
   "ls.name": "NAME",
@@ -60,7 +60,13 @@ const en = {
     "Machine limit reached. Free one with `rookbox kill <id>` (see `rookbox ls`), then try again.",
   "err.429.rate": "Too many requests. Wait a moment and try again.",
   "err.503": "No capacity right now: the beta is full. Try again in a few minutes.",
-  "err.network": "Could not reach {url}. Check your connection.",
+  "err.network": "Could not reach {url}. Check your connection, or try again in a few seconds.",
+  "err.unavailable": "The Rookbox service is temporarily unavailable. Try again in a few seconds.",
+  "err.maybeCreated":
+    "The machine may have been created anyway: run `rookbox ls` before trying again.",
+  "err.server": "The Rookbox service returned an error ({status}). Try again in a few seconds.",
+  "err.debug": "details: {detail}",
+  "retry.waiting": "Retrying...",
   "err.generic": "Something went wrong: {message}",
   "err.unknownCommand": "Unknown command: {name}. Run `rookbox --help`.",
   "err.missingId": "Missing machine id. List yours with `rookbox ls`.",
@@ -90,7 +96,7 @@ const pt: Record<MessageKey, string> = {
   "new.creating": "Criando uma máquina...",
   "new.created": "Máquina pronta: {id}",
   "new.use":
-    "Para usar:\n  rookbox shell {id}\n  rookbox run {id} -- uname -a\n  rookbox desktop {id}\nMáquinas paradas pausam depois de {timeout}; `rookbox resume {id}` traz de volta.",
+    "Para usar:\n  rookbox shell {id}\n  rookbox run {id} -- uname -a\n  rookbox desktop {id}\nMáquinas ociosas são apagadas depois de {timeout}.",
   "ls.empty": "Nenhuma máquina ainda. Crie uma com: rookbox new",
   "ls.id": "ID",
   "ls.name": "NOME",
@@ -126,7 +132,16 @@ const pt: Record<MessageKey, string> = {
     "Limite de máquinas atingido. Libere uma com `rookbox kill <id>` (veja `rookbox ls`) e tente de novo.",
   "err.429.rate": "Muitas requisições. Espere um momento e tente de novo.",
   "err.503": "Sem capacidade agora: o beta está cheio. Tente de novo em alguns minutos.",
-  "err.network": "Não consegui falar com {url}. Confira sua conexão.",
+  "err.network":
+    "Não consegui falar com {url}. Confira sua conexão ou tente de novo em alguns segundos.",
+  "err.unavailable":
+    "O serviço do Rookbox está temporariamente indisponível. Tente de novo em alguns segundos.",
+  "err.maybeCreated":
+    "A máquina pode ter sido criada mesmo assim: rode `rookbox ls` antes de tentar de novo.",
+  "err.server":
+    "O serviço do Rookbox devolveu um erro ({status}). Tente de novo em alguns segundos.",
+  "err.debug": "detalhes: {detail}",
+  "retry.waiting": "Tentando de novo...",
   "err.generic": "Algo deu errado: {message}",
   "err.unknownCommand": "Comando desconhecido: {name}. Rode `rookbox --help`.",
   "err.missingId": "Falta o id da máquina. Veja as suas com `rookbox ls`.",
