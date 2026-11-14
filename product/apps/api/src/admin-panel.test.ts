@@ -5,7 +5,7 @@ import { setupApp } from "./test-app.js";
 import { type Credentials, createUserAdmin, type UserRecord, type UserStore } from "./users.js";
 
 /** Accounts in memory; an id is the part of the email before the `@`, like the test identity. */
-function memoryUsers(allowed: string[]) {
+function memoryUsers() {
   const users = new Map<string, UserRecord>();
   const passwords = new Map<string, string>();
   const sessionsEnded: string[] = [];
@@ -42,7 +42,6 @@ function memoryUsers(allowed: string[]) {
   const userAdmin = createUserAdmin({
     store,
     credentials,
-    allowedEmails: allowed,
     suspendMachines: async () => ({ suspended: 0, skipped: 0, failed: 0 }),
     logger: silentLogger,
   });
@@ -50,7 +49,7 @@ function memoryUsers(allowed: string[]) {
 }
 
 function setup() {
-  const people = memoryUsers(["alice@example.test", "bob@example.test", "admin@example.test"]);
+  const people = memoryUsers();
   const app = setupApp(
     { userAdmin: people.userAdmin, maxRunningTotal: 5 },
     { maxMachinesPerUser: 3 },
@@ -106,7 +105,6 @@ describe("admin panel: users", () => {
         email: "bob@example.test",
         name: "Bob",
         status: "active",
-        allowed: true,
         admin: false,
         machines: 0,
       }),
@@ -117,9 +115,6 @@ describe("admin panel: users", () => {
   it("explains a refused create by reason", async () => {
     const { client } = setup();
     const admin = client("admin").admin;
-    await expect(
-      admin.users.create({ email: "stranger@example.test", name: "S" }),
-    ).rejects.toMatchObject({ status: 400, data: { reason: "not_allowed" } });
     await expect(
       admin.users.create({ email: "bob@example.test", name: "Bob", password: "short" }),
     ).rejects.toMatchObject({ data: { reason: "password_short" } });
