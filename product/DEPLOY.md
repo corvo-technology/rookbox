@@ -169,6 +169,9 @@ the public `POST https://api.rookbox.run/waitlist` (the landing's `PUBLIC_API_UR
   records it shows), then set `EMAIL_PROVIDER`, `EMAIL_API_KEY` and `EMAIL_FROM` on the API. With
   `EMAIL_PROVIDER=none` (the default), or if the provider refuses, the entry is kept and the failure
   is logged; the visitor still sees success.
+- The emails show the logo from `<WWW_ORIGIN>/email/logo.png` (`https://rookbox.run` when unset), a
+  PNG served by the landing from `apps/www/public/email/`, because Gmail and Outlook block SVG.
+  Deploy the landing before sending, or the logo shows as its alt text.
 - In the dashboard, operators (`ADMIN_EMAILS`/`ROOKBOX_ADMIN_EMAILS`) get **Waitlist** under
   Operator. "Invite" creates the account with a generated password, marks the entry invited and
   emails the sign-in link (`APP_ORIGIN`) and the temporary password. The password is also shown

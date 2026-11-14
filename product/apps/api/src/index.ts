@@ -182,6 +182,7 @@ try {
       }),
       logger,
       signInUrl: env.APP_ORIGIN,
+      siteUrl: env.WWW_ORIGIN,
     }),
     wwwOrigin: env.WWW_ORIGIN ? new URL(env.WWW_ORIGIN).origin : undefined,
     waitlistLimiter: createRateLimiter({

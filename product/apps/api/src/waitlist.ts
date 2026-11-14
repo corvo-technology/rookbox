@@ -73,6 +73,8 @@ export type WaitlistDeps = {
   logger: Logger;
   /** Where the invitation email sends people: the dashboard. */
   signInUrl: string;
+  /** The landing's origin, where the email logo is served. Default `https://rookbox.run`. */
+  siteUrl?: string;
   now?: () => Date;
 };
 
@@ -95,7 +97,7 @@ export function createWaitlist(deps: WaitlistDeps) {
       if (outcome === "exists") return { created: false as const };
       logger.info("waitlist joined", { locale });
       // Awaited so the answer reflects a settled send, but `send` never throws.
-      await email.send(waitlistJoinedEmail(address, locale));
+      await email.send(waitlistJoinedEmail({ to: address, locale, siteUrl: deps.siteUrl }));
       return { created: true as const };
     },
 
@@ -133,6 +135,7 @@ export function createWaitlist(deps: WaitlistDeps) {
           to: address,
           locale: entry.locale,
           signInUrl: deps.signInUrl,
+          siteUrl: deps.siteUrl,
           password: account.password,
         }),
       );

@@ -326,10 +326,29 @@ describe("email sender", () => {
     expect(invited.text).toContain("p<w>&1");
     expect(invited.text).toContain("https://app.example.test");
     for (const locale of ["en", "pt", "es"] as const) {
-      const joined = waitlistJoinedEmail("a@example.test", locale);
+      const joined = waitlistJoinedEmail({ to: "a@example.test", locale });
       expect(joined.subject).not.toBe("");
-      expect(joined.text.length).toBeGreaterThan(50);
+      expect(joined.text).toContain("Pedro, Rook");
+      // Short: a headline, one paragraph, the sign-off and one footer line.
+      expect(joined.text.length).toBeLessThan(420);
     }
+  });
+
+  it("references the logo by an absolute URL from the landing origin, with fixed size and alt text", () => {
+    const withSite = waitlistJoinedEmail({
+      to: "a@example.test",
+      locale: "pt",
+      siteUrl: "https://www.example.test/",
+    });
+    expect(withSite.html).toContain('src="https://www.example.test/email/logo.png"');
+    // A white variant swaps in for dark mode.
+    expect(withSite.html).toContain(
+      'class="logo-dark" src="https://www.example.test/email/logo-dark.png"',
+    );
+    expect(withSite.html).toContain(".logo-light { display:none !important; }");
+    expect(withSite.html).toMatch(/<img [^>]*width="160" height="40" alt="Rookbox"/);
+    const fallback = waitlistJoinedEmail({ to: "a@example.test", locale: "en" });
+    expect(fallback.html).toContain('src="https://rookbox.run/email/logo.png"');
   });
 });
 
