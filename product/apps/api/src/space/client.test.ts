@@ -103,6 +103,8 @@ describe("ECW client", () => {
       ["s2", "paused"],
     ]);
     expect(calls[0]!.url).toContain("/v2/sandboxes?metadata=");
+    // The sandbox server rejects a repeated `state` parameter (400); the states go in one list.
+    expect(new URL(calls[0]!.url).searchParams.getAll("state")).toEqual(["running,paused"]);
     expect(calls[1]!.url).toContain("nextToken=t1");
   });
 
