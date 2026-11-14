@@ -2,8 +2,10 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { Button, cn } from "@rookbox/ui-web";
 import type { LucideIcon } from "lucide-react";
 import {
+  Activity,
   ChartColumn,
   GitBranch,
+  HardDrive,
   KeyRound,
   Layers,
   Lock,
@@ -14,22 +16,38 @@ import {
   Settings,
   Sun,
   Unplug,
+  UserCog,
   Users,
   X,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useIsAdmin } from "../lib/admin";
 import { setAppearance } from "../lib/appearance";
 import { useSession } from "../lib/auth";
 import { DOCS_URL, FILTER_INPUT_ID } from "../lib/site";
 import { LanguageSelect } from "./LanguageSelect";
 import { Logo } from "./Logo";
 
-type NavItem = { icon: LucideIcon; label: string; to?: string };
+type NavItem = { icon: LucideIcon; label: string; to?: string; end?: boolean };
 
 function useNav(): { heading?: string; items: NavItem[] }[] {
   const { t } = useLingui();
+  const { isAdmin } = useIsAdmin();
+  const operator = isAdmin
+    ? [
+        {
+          heading: t`Operator`,
+          items: [
+            { icon: Activity, label: t`Health`, to: "/admin", end: true },
+            { icon: UserCog, label: t`Users`, to: "/admin/users" },
+            { icon: HardDrive, label: t`All machines`, to: "/admin/machines" },
+            { icon: ChartColumn, label: t`Usage by user`, to: "/admin/usage" },
+          ],
+        },
+      ]
+    : [];
   return [
     {
       items: [
@@ -54,6 +72,7 @@ function useNav(): { heading?: string; items: NavItem[] }[] {
         { icon: Settings, label: t`Settings`, to: "/settings" },
       ],
     },
+    ...operator,
   ];
 }
 
@@ -76,6 +95,7 @@ function SidebarItem({ item, onNavigate }: { item: NavItem; onNavigate?: () => v
   return (
     <NavLink
       to={item.to}
+      end={item.end}
       onClick={onNavigate}
       className={({ isActive }) =>
         cn(

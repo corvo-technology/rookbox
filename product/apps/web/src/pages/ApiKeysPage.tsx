@@ -232,9 +232,21 @@ export function ApiKeysPage() {
       ) : keys.isError ? (
         <ErrorNote error={keys.error} onRetry={() => keys.refetch()} />
       ) : keys.data.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-border px-6 py-12 text-center text-body1 text-muted-foreground">
-          <Trans>No keys yet</Trans>
-        </p>
+        <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border px-6 py-12 text-center">
+          <p className="text-heading3 font-medium text-foreground">
+            <Trans>No keys yet</Trans>
+          </p>
+          <p className="max-w-[420px] text-body1 text-muted-foreground">
+            <Trans>Create a key to call the Rookbox API from a script or a CI job.</Trans>
+          </p>
+          <Button
+            className="h-11 px-[18px] text-body1 font-semibold"
+            onClick={() => setCreating(true)}
+          >
+            <Plus aria-hidden="true" />
+            <Trans>Create key</Trans>
+          </Button>
+        </div>
       ) : (
         <div className="overflow-hidden rounded-2xl border border-border bg-card">
           <Table>

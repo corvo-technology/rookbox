@@ -6,6 +6,7 @@ import type {
 import { oc } from "@orpc/contract";
 import * as z from "zod";
 import { adminContract } from "./admin.js";
+import { adminPanelContract } from "./admin-panel.js";
 import {
   ApiKeySchema,
   CreateApiKeyInput,
@@ -53,12 +54,13 @@ export const appContract = {
   usage: {
     summary: oc.input(UsagePeriodInput).output(UsageSummarySchema),
   },
-  /** For admins only (`ADMIN_EMAILS`): everyone's usage, and whether the meter is reporting. */
+  /** For admins only (`ADMIN_EMAILS`): the operator panel. `access` is open to any signed-in user. */
   admin: {
     usage: oc
       .errors({ FORBIDDEN: { status: 403, message: "Admins only." } })
       .input(UsagePeriodInput)
       .output(AdminUsageSchema),
+    ...adminPanelContract,
   },
   /** What this deployment offers: templates, limits and the sandbox domain. */
   config: {

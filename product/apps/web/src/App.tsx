@@ -1,12 +1,17 @@
 import { Trans } from "@lingui/react/macro";
 import { Button, Spinner } from "@rookbox/ui-web";
 import { Link, Navigate, Route, Routes } from "react-router-dom";
+import { AdminGuard } from "./components/AdminGuard";
 import { AppShell } from "./components/AppShell";
 import { ErrorNote } from "./components/ErrorNote";
 import { LanguageSelect } from "./components/LanguageSelect";
 import { Logo } from "./components/Logo";
 import { AUTH_ENABLED, useSession } from "./lib/auth";
 import { ApiKeysPage } from "./pages/ApiKeysPage";
+import { AdminHealthPage } from "./pages/admin/AdminHealthPage";
+import { AdminMachinesPage } from "./pages/admin/AdminMachinesPage";
+import { AdminUsagePage } from "./pages/admin/AdminUsagePage";
+import { AdminUsersPage } from "./pages/admin/AdminUsersPage";
 import { LoginPage } from "./pages/LoginPage";
 import { MachinePage } from "./pages/MachinePage";
 import { MachinesPage } from "./pages/MachinesPage";
@@ -78,6 +83,12 @@ export function App() {
           <Route path="/keys" element={<ApiKeysPage />} />
           <Route path="/usage" element={<UsagePage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/admin" element={<AdminGuard />}>
+            <Route index element={<AdminHealthPage />} />
+            <Route path="users" element={<AdminUsersPage />} />
+            <Route path="machines" element={<AdminMachinesPage />} />
+            <Route path="usage" element={<AdminUsagePage />} />
+          </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>

@@ -4,6 +4,7 @@ import { ResponseHeadersPlugin } from "@orpc/server/plugins";
 import type { ReconcileReport } from "@rookbox/contracts";
 import { type Context, Hono } from "hono";
 import { cors } from "hono/cors";
+import { type AdminHealthReader, createAdminHealth } from "./admin-health.js";
 import type { ApiKeyService } from "./api-keys.js";
 import type { AuthUser, Identity } from "./auth.js";
 import { clientAddress } from "./client-ip.js";
@@ -15,6 +16,7 @@ import type { Throttle } from "./route-limits.js";
 import { createRouter } from "./router.js";
 import type { SpaceClient } from "./space/client.js";
 import type { UsageService } from "./usage/service.js";
+import type { UserAdmin } from "./users.js";
 
 export type AppDeps = {
   appOrigin: string;
@@ -34,8 +36,12 @@ export type AppDeps = {
   throttle?: Throttle;
   /** Resolves when the database answers; `/health` reports it. */
   checkDb?: () => Promise<void>;
-  /** For `/health/space`. */
-  space?: Pick<SpaceClient, "probe">;
+  /** For `/health/space` and the operator panel's health view. */
+  space?: Pick<SpaceClient, "probe" | "list">;
+  /** Account management for the operator panel. Without it the user procedures answer 503. */
+  userAdmin?: UserAdmin;
+  /** The limit the health view shows: `MAX_RUNNING_MACHINES_TOTAL` (0: no cap). */
+  maxRunningTotal?: number;
   /** Counts failed sign-ins. Without it, sign-in is not limited here. */
   signInLimiter?: RateLimiter;
   /** Proxies in front of the API whose `X-Forwarded-For` entries are trusted. Default 0. */
@@ -76,6 +82,20 @@ export function createApp(deps: AppDeps) {
       trustedHops: hops,
     });
 
+  const startedAt = (deps.now ?? Date.now)();
+  const adminHealth: AdminHealthReader = createAdminHealth({
+    now: deps.now ?? Date.now,
+    startedAt,
+    checkDb: deps.checkDb,
+    space: deps.space,
+    usage: deps.usage,
+    countRows: async () =>
+      [...(await deps.machines.countByOwner()).values()].reduce((a, b) => a + b, 0),
+    maxRunning: deps.maxRunningTotal ?? 0,
+    maxPerUser: deps.machines.config().maxMachines,
+    logger,
+  });
+
   const rpc = new RPCHandler(
     createRouter({
       machines: deps.machines,
@@ -89,6 +109,8 @@ export function createApp(deps: AppDeps) {
         (async () => {
           throw new Error("The reconciler is not configured.");
         }),
+      userAdmin: deps.userAdmin,
+      adminHealth,
       logger,
       usage: deps.usage,
     }),
@@ -141,8 +163,6 @@ export function createApp(deps: AppDeps) {
     await next();
     if (!c.res.headers.has("content-security-policy")) c.header("x-frame-options", "DENY");
   });
-
-  const startedAt = (deps.now ?? Date.now)();
 
   main.get("/health", async (c) => {
     const uptimeS = Math.round(((deps.now ?? Date.now)() - startedAt) / 1000);

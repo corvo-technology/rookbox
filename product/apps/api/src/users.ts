@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto";
+import type { UserAdminReason } from "@rookbox/contracts";
 import { type Auth, MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "./auth.js";
 import type { Db } from "./db.js";
 import type { Logger } from "./logger.js";
@@ -26,8 +27,15 @@ export interface Credentials {
   setPassword(userId: string, password: string): Promise<void>;
 }
 
-/** A failure the CLI prints as-is (no secret in it). */
-export class UserAdminError extends Error {}
+/** A failure the CLI prints as-is and the API reports by `reason` (no secret in either). */
+export class UserAdminError extends Error {
+  constructor(
+    message: string,
+    readonly reason: UserAdminReason,
+  ) {
+    super(message);
+  }
+}
 
 export function createPrismaUserStore(db: Db): UserStore {
   return {
@@ -62,10 +70,16 @@ export function generatePassword(): string {
 
 function checkPassword(password: string) {
   if (password.length < MIN_PASSWORD_LENGTH) {
-    throw new UserAdminError(`The password needs at least ${MIN_PASSWORD_LENGTH} characters.`);
+    throw new UserAdminError(
+      `The password needs at least ${MIN_PASSWORD_LENGTH} characters.`,
+      "password_short",
+    );
   }
   if (password.length > MAX_PASSWORD_LENGTH) {
-    throw new UserAdminError(`The password can have at most ${MAX_PASSWORD_LENGTH} characters.`);
+    throw new UserAdminError(
+      `The password can have at most ${MAX_PASSWORD_LENGTH} characters.`,
+      "password_long",
+    );
   }
 }
 
@@ -87,7 +101,7 @@ export function createUserAdmin(deps: UserAdminDeps) {
 
   async function existing(email: string): Promise<UserRecord> {
     const user = await store.findByEmail(normalize(email));
-    if (!user) throw new UserAdminError("No account has that email.");
+    if (!user) throw new UserAdminError("No account has that email.", "no_account");
     return user;
   }
 
@@ -99,13 +113,15 @@ export function createUserAdmin(deps: UserAdminDeps) {
     async create(input: { email: string; name: string; password?: string }) {
       const email = normalize(input.email);
       const name = input.name.trim();
-      if (!name) throw new UserAdminError("A name is required.");
+      if (!name) throw new UserAdminError("A name is required.", "name_required");
       if (!deps.allowedEmails.includes(email)) {
         throw new UserAdminError(
           "That email is not in ROOKBOX_ALLOWED_EMAILS. Add it there first (the allowlist gates sign-up).",
+          "not_allowed",
         );
       }
-      if (await store.findByEmail(email)) throw new UserAdminError("An account already exists.");
+      if (await store.findByEmail(email))
+        throw new UserAdminError("An account already exists.", "exists");
       const generated = input.password === undefined;
       const password = input.password ?? generatePassword();
       checkPassword(password);
@@ -135,7 +151,7 @@ export function createUserAdmin(deps: UserAdminDeps) {
       let suspended: { suspended: number; skipped: number; failed: number } | null = null;
       if (input.suspendMachines) {
         if (!deps.suspendMachines)
-          throw new UserAdminError("Suspending machines is not available.");
+          throw new UserAdminError("Suspending machines is not available.", "unavailable");
         suspended = await deps.suspendMachines(user.id);
       }
       return { email: user.email, suspended };
@@ -150,6 +166,7 @@ export function createUserAdmin(deps: UserAdminDeps) {
 
     async list() {
       return (await store.list()).map((user) => ({
+        id: user.id,
         email: user.email,
         name: user.name,
         status: user.disabledAt ? ("disabled" as const) : ("active" as const),

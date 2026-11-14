@@ -1,5 +1,6 @@
 import { implement, ORPCError } from "@orpc/server";
 import { API_ERRORS, type ReconcileReport, serverContract } from "@rookbox/contracts";
+import type { AdminHealthReader } from "./admin-health.js";
 import { ApiKeyLimitError, type ApiKeyService } from "./api-keys.js";
 import type { AuthUser } from "./auth.js";
 import type { DesktopProxy } from "./desktop.js";
@@ -8,6 +9,7 @@ import { MachineError, type MachineService, toMachineError } from "./machines/se
 import type { LimitClass, Throttle } from "./route-limits.js";
 import { usageHandlers } from "./usage/router.js";
 import type { UsageService } from "./usage/service.js";
+import { type UserAdmin, UserAdminError } from "./users.js";
 
 export type RpcContext = {
   user: AuthUser;
@@ -26,6 +28,10 @@ export type RouterDeps = {
   admins: ReadonlySet<string>;
   users: { findIdByEmail(email: string): Promise<string | null> };
   reconcile(mode: { act: boolean; killOrphans: boolean }): Promise<ReconcileReport>;
+  /** Account management for the operator panel. */
+  userAdmin?: UserAdmin;
+  /** The operator panel's health view. */
+  adminHealth?: AdminHealthReader;
   logger: Logger;
   usage?: UsageService;
 };
@@ -38,6 +44,8 @@ export function createRouter({
   admins,
   users,
   reconcile,
+  userAdmin,
+  adminHealth,
   logger,
   usage,
 }: RouterDeps) {
@@ -64,6 +72,29 @@ export function createRouter({
       status: API_ERRORS.FORBIDDEN.status,
       message: API_ERRORS.FORBIDDEN.message,
     });
+  }
+
+  /** The account service, or a refusal when this deployment has none. */
+  function needUserAdmin(): UserAdmin {
+    if (!userAdmin) throw new ORPCError("SERVICE_UNAVAILABLE", { status: 503, message: "Off." });
+    return userAdmin;
+  }
+
+  /** A refused account change reaches the client with its `reason`, never a password or a trace. */
+  async function userWork<T>(work: () => Promise<T>): Promise<T> {
+    try {
+      return await work();
+    } catch (error) {
+      if (error instanceof UserAdminError) {
+        const missing = error.reason === "no_account";
+        throw new ORPCError(missing ? "NOT_FOUND" : "BAD_REQUEST", {
+          status: missing ? 404 : 400,
+          message: error.message,
+          data: { reason: error.reason },
+        });
+      }
+      throw error;
+    }
   }
 
   /**
@@ -183,6 +214,123 @@ export function createRouter({
           return machines.suspendAll(ownerId);
         }),
       ),
+      access: os.admin.access.handler(({ context }) => ({
+        admin: admins.has(context.user.email.toLowerCase()),
+      })),
+      health: os.admin.health.handler(({ context }) =>
+        run(async () => {
+          requireAdmin(context);
+          if (!adminHealth) throw new MachineError("NOT_FOUND");
+          return adminHealth();
+        }),
+      ),
+      users: {
+        list: os.admin.users.list.handler(({ context }) =>
+          run(async () => {
+            requireAdmin(context);
+            const counts = await machines.countByOwner();
+            return (await needUserAdmin().list()).map((user) => ({
+              email: user.email,
+              name: user.name,
+              status: user.status,
+              allowed: user.allowed,
+              admin: admins.has(user.email.toLowerCase()),
+              createdAt: user.createdAt.toISOString(),
+              machines: counts.get(user.id) ?? 0,
+            }));
+          }),
+        ),
+        create: os.admin.users.create.handler(({ input, context }) =>
+          run(async () => {
+            requireAdmin(context);
+            const result = await userWork(() => needUserAdmin().create(input));
+            logger.warn("admin created a user", { admin: context.user.id, email: result.email });
+            return result;
+          }),
+        ),
+        resetPassword: os.admin.users.resetPassword.handler(({ input, context }) =>
+          run(async () => {
+            requireAdmin(context);
+            const result = await userWork(() => needUserAdmin().setPassword(input));
+            logger.warn("admin reset a password", { admin: context.user.id, email: result.email });
+            return result;
+          }),
+        ),
+        disable: os.admin.users.disable.handler(({ input, context }) =>
+          run(async () => {
+            requireAdmin(context);
+            // An operator who locks themselves out cannot undo it from here.
+            if (input.email.trim().toLowerCase() === context.user.email.toLowerCase()) {
+              throw new ORPCError("BAD_REQUEST", {
+                status: 400,
+                message: "You cannot disable your own account.",
+                data: { reason: "self" },
+              });
+            }
+            const result = await userWork(() => needUserAdmin().disable(input));
+            logger.warn("admin disabled a user", { admin: context.user.id, email: result.email });
+            return result;
+          }),
+        ),
+        enable: os.admin.users.enable.handler(({ input, context }) =>
+          run(async () => {
+            requireAdmin(context);
+            const result = await userWork(() => needUserAdmin().enable(input));
+            logger.warn("admin enabled a user", { admin: context.user.id, email: result.email });
+            return result;
+          }),
+        ),
+      },
+      machines: {
+        list: os.admin.machines.list.handler(({ context }) =>
+          run(async () => {
+            requireAdmin(context);
+            const [all, people] = await Promise.all([
+              machines.listAll(),
+              userAdmin ? userAdmin.list() : Promise.resolve([]),
+            ]);
+            const emails = new Map(people.map((person) => [person.id, person.email]));
+            return all.map(({ row, status }) => ({
+              id: row.id,
+              name: row.name,
+              template: row.template,
+              status,
+              size: row.size,
+              createdAt: row.createdAt.toISOString(),
+              ownerEmail: emails.get(row.ownerId) ?? null,
+              ownerId: row.ownerId,
+            }));
+          }),
+        ),
+        suspend: os.admin.machines.suspend.handler(({ input, context }) =>
+          run(async () => {
+            requireAdmin(context);
+            const ownerId = await machines.ownerOf(input.id);
+            if (!ownerId) throw new MachineError("NOT_FOUND", "No such machine.");
+            logger.warn("admin suspends a machine", {
+              admin: context.user.id,
+              target: ownerId,
+              machine: input.id,
+            });
+            await machines.suspend(ownerId, input.id);
+            return { ok: true as const };
+          }),
+        ),
+        delete: os.admin.machines.delete.handler(({ input, context }) =>
+          run(async () => {
+            requireAdmin(context);
+            const ownerId = await machines.ownerOf(input.id);
+            if (!ownerId) throw new MachineError("NOT_FOUND", "No such machine.");
+            logger.warn("admin deletes a machine", {
+              admin: context.user.id,
+              target: ownerId,
+              machine: input.id,
+            });
+            await machines.delete(ownerId, input.id);
+            return { ok: true as const };
+          }),
+        ),
+      },
       reconcile: os.admin.reconcile.handler(({ input, context }) =>
         run(async () => {
           requireAdmin(context);
