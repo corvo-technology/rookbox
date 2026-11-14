@@ -307,7 +307,7 @@ export function createEcwClient(options: EcwClientOptions): SpaceClient {
       const found: SandboxInfo[] = [];
       let token: string | null = null;
       do {
-        const query: string = `${metadataQuery(metadata)}&state=running&state=paused&limit=100${
+        const query: string = `${metadataQuery(metadata)}&state=running,paused&limit=100${
           token ? `&nextToken=${enc(token)}` : ""
         }`;
         const { json, headers } = await call("GET", `/v2/sandboxes?${query}`, undefined, {
