@@ -11,10 +11,10 @@ type Props = {
 const { copy, homeHref } = Astro.props;
 
 const NAV_LINKS = [
+  { href: "#access", label: copy.access },
   { href: "#how", label: copy.product },
-  { href: "#desktop", label: copy.desktop },
-  { href: "#lifecycle", label: copy.lifecycle },
   { href: "#e2b", label: copy.e2b },
+  { href: "#brasil", label: copy.brazil },
   { href: "#start", label: copy.quickstart },
 ];
 ---

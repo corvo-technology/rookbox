@@ -16,12 +16,10 @@ import WaitlistForm from "./WaitlistForm.astro";
 
 const locale: Locale = isLocale(Astro.currentLocale) ? Astro.currentLocale : DEFAULT_LOCALE;
 const copy = getCopy(locale);
-const { hero, visual, demo, desktop, features, lifecycle, usecases, e2b, quickstart, cta, waitlist } =
-  copy;
+const { hero, visual, access, brazil, demo, features, e2b, quickstart, cta, waitlist } = copy;
 const sessions = buildSessions(SDK_DOMAIN, demo.session);
 const e2bSnippets = buildE2bSnippets(SDK_DOMAIN);
 const quickstartCode = buildQuickstart(SDK_DOMAIN);
-
 ---
 
 <BaseLayout
@@ -37,6 +35,7 @@ const quickstartCode = buildQuickstart(SDK_DOMAIN);
     <section class="hero" aria-labelledby="hero-title">
       <div class="wrap hero__wrap">
         <div class="hero__copy">
+          <p class="hero__tag hero__in" style="--i:0"><span class="live-dot" aria-hidden="true"></span>{hero.eyebrow}</p>
           <h1 id="hero-title" class="hd hero__in" style="--i:1">{hero.title}</h1>
           <p class="lead hero__in" style="--i:2">{hero.lead}</p>
           <div class="hero__in hero__form" id="waitlist" style="--i:3">
@@ -47,12 +46,29 @@ const quickstartCode = buildQuickstart(SDK_DOMAIN);
           </ul>
         </div>
         <div class="hero__visual hero__in" style="--i:2">
-          <HeroTerminal sessions={sessions} copy={visual} />
+          <HeroTerminal sessions={sessions} copy={visual} placeholder={waitlist.placeholder} />
         </div>
       </div>
     </section>
 
-    <section class="sec sec--how" id="how" aria-labelledby="how-title">
+    <section class="sec sec--access" id="access" aria-labelledby="access-title">
+      <div class="wrap">
+        <h2 id="access-title" class="sh acc__title" data-reveal>{access.title}</h2>
+        <ol class="acc">
+          {
+            access.steps.map((step, i) => (
+              <li class="acc__step" data-reveal style={`--d:${i * 80}ms`}>
+                <span class="acc__n mono" aria-hidden="true">{`0${i + 1}`}</span>
+                <h3>{step.title}</h3>
+                <p>{step.body}</p>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+    </section>
+
+    <section class="sec sec--alt sec--how" id="how" aria-labelledby="how-title">
       <div class="wrap">
         <div class="split" data-reveal>
           <h2 id="how-title" class="sh">{demo.title}</h2>
@@ -71,19 +87,63 @@ const quickstartCode = buildQuickstart(SDK_DOMAIN);
       </div>
     </section>
 
-    <section class="sec sec--desk" id="desktop" aria-labelledby="desktop-title">
-      <div class="wrap desk">
-        <div class="desk__copy" data-reveal>
-          <h2 id="desktop-title" class="sh">{desktop.title}</h2>
-          <p class="lead">{desktop.lead}</p>
+    <section class="sec" id="e2b" aria-labelledby="e2b-title">
+      <div class="wrap">
+        <div class="env">
+          <div data-reveal>
+            <p class="eyebrow">{e2b.eyebrow}</p>
+            <h2 id="e2b-title" class="sh">{e2b.title}</h2>
+            <p class="lead">{e2b.lead}</p>
+            <p class="fine env__note" set:html={rich(e2b.envLine)} />
+            <p class="fine env__note">{e2b.keyLine} <a class="env__link" href="#waitlist">{e2b.keyLink}</a></p>
+          </div>
+          <div data-reveal style="--d:100ms">
+            <E2bSnippet
+              client:visible
+              snippets={e2bSnippets}
+              languageLabel={e2b.languageLabel}
+              before={e2b.before}
+              after={e2b.after}
+            />
+          </div>
         </div>
-        <ul class="desk__points" data-reveal style="--d:100ms">
-          {desktop.points.map((point) => <li>{point}</li>)}
-        </ul>
       </div>
     </section>
 
-    <section class="sec sec--alt sec--feat" id="features" aria-labelledby="features-title">
+    <section class="sec sec--br" id="brasil" aria-labelledby="brasil-title">
+      <div class="wrap br">
+        <div class="br__copy" data-reveal>
+          <p class="br__eyebrow">{brazil.eyebrow}</p>
+          <h2 id="brasil-title" class="sh">{brazil.title}</h2>
+          <p class="lead">{brazil.lead}</p>
+          <p class="br__note">{brazil.note}</p>
+        </div>
+        <div class="br__sheet" data-reveal style="--d:100ms">
+          <div class="br__head">
+            <span class="pix">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 2.5 21.5 12 12 21.5 2.5 12Z"></path>
+                <path d="M12 8 16 12 12 16 8 12Z"></path>
+              </svg>
+              {brazil.badge}
+            </span>
+            <span class="br__status">{brazil.status}</span>
+          </div>
+          <dl class="br__rows">
+            {
+              brazil.rows.map((row) => (
+                <div class="br__row">
+                  <dt class="mono">{row.label}</dt>
+                  <dd>{row.value}</dd>
+                </div>
+              ))
+            }
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec sec--feat" id="features" aria-labelledby="features-title">
       <div class="wrap">
         <h2 id="features-title" class="sh feat__title" data-reveal>{features.title}</h2>
         <div class="feat">
@@ -110,70 +170,6 @@ const quickstartCode = buildQuickstart(SDK_DOMAIN);
               ))
             }
           </dl>
-        </div>
-      </div>
-    </section>
-
-    <section class="sec sec--life" id="lifecycle" aria-labelledby="lifecycle-title">
-      <div class="wrap">
-        <div class="split" data-reveal>
-          <h2 id="lifecycle-title" class="sh">{lifecycle.title}</h2>
-          <p class="lead">{lifecycle.lead}</p>
-        </div>
-        <ol class="lt" data-reveal>
-          {
-            lifecycle.cards.map((card, i) => (
-              <li class={`lt__item lt__item--${i}`} style={`--k:${i}`}>
-                <div class="lt__rail" aria-hidden="true">
-                  <span class="lt__node"></span>
-                  <span class="lt__line"></span>
-                </div>
-                <span class="lt__state">{card.state}</span>
-                <span class="lt__t">{card.value}</span>
-                <h3>{card.title}</h3>
-                <p>{card.body}</p>
-              </li>
-            ))
-          }
-        </ol>
-      </div>
-    </section>
-
-    <section class="sec sec--uses" id="usecases" aria-labelledby="usecases-title">
-      <div class="wrap uses">
-        <h2 id="usecases-title" class="sh" data-reveal>{usecases.title}</h2>
-        <ul class="uses__list">
-          {
-            usecases.items.map((item) => (
-              <li class="uses__row" data-reveal>
-                <h3>{item.title}</h3>
-                <p>{item.body}</p>
-              </li>
-            ))
-          }
-        </ul>
-      </div>
-    </section>
-
-    <section class="sec" id="e2b" aria-labelledby="e2b-title">
-      <div class="wrap">
-        <div class="env">
-          <div data-reveal>
-            <p class="eyebrow">{e2b.eyebrow}</p>
-            <h2 id="e2b-title" class="sh">{e2b.title}</h2>
-            <p class="lead">{e2b.lead}</p>
-            <p class="fine env__note" set:html={rich(e2b.envLine)} />
-            <p class="fine env__note">{e2b.keyLine} <a class="env__link" href="#waitlist">{e2b.keyLink}</a></p>
-          </div>
-          <div data-reveal style="--d:100ms">
-            <E2bSnippet
-              client:visible
-              snippets={e2bSnippets}
-              languageLabel={e2b.languageLabel}
-              before={e2b.before}
-              after={e2b.after}
-            />
-          </div>
         </div>
       </div>
     </section>

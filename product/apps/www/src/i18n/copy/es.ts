@@ -13,20 +13,67 @@ export const es: Copy = {
     home: "Inicio de Rookbox",
     menu: "Menú",
     product: "Producto",
-    desktop: "Escritorio",
-    lifecycle: "Ciclo de vida",
+    access: "Acceso",
     e2b: "Compatible con E2B",
+    brazil: "Pago en reales",
     quickstart: "Primeros pasos",
     dashboard: "Abrir el panel",
   },
   hero: {
+    eyebrow: "Lista de espera, solo por invitación",
     title: "Dale a cada agente su propio ordenador.",
     lead: "Rookbox da a tus agentes máquinas Linux bajo demanda. Cada una es una microVM Firecracker con kernel propio y funciona con el SDK de E2B que quizá ya uses.",
     facts: ["Kernel propio", "Arranca en unos 2 s", "Se reanuda en aprox. 1 s"],
   },
   visual: {
-    label: "Sesión de ejemplo: el SDK de E2B apuntando a Rookbox",
+    label:
+      "Sesión de ejemplo: el SDK de E2B apuntando a Rookbox, y la invitación que estás pidiendo",
     caption: "El SDK de E2B apuntando a Rookbox. La salida está simplificada.",
+    invite: "invitación para",
+    states: {
+      idle: "escribe tu email para entrar en la cola",
+      typed: "listo para entrar en la cola",
+      sending: "enviando",
+      done: "en la lista. la invitación llega por email",
+    },
+  },
+  access: {
+    title: "Cómo funciona el acceso.",
+    steps: [
+      {
+        title: "Entra en la lista",
+        body: "Solo tu email, nada más. Recibes una confirmación al instante.",
+      },
+      {
+        title: "Recibe la invitación por email",
+        body: "Damos acceso en lotes pequeños para que las máquinas sigan siendo rápidas. No prometemos fecha: te escribimos cuando sea tu turno.",
+      },
+      {
+        title: "Crea tu primera máquina",
+        body: "La invitación te da acceso al panel. Crea una máquina allí o apunta el SDK de E2B a Rookbox.",
+      },
+    ],
+  },
+  brazil: {
+    eyebrow: "Previsto para el lanzamiento del cobro",
+    title: "Hecho para quienes pagan en reales.",
+    lead: "El cobro todavía no está activo. Se está diseñando para quienes están en Brasil, sin tarjeta internacional de por medio.",
+    badge: "Pix",
+    status: "Previsto, aún no disponible",
+    rows: [
+      {
+        label: "Pago",
+        value: "Pix, el sistema de pago instantáneo de Brasil. Sin tarjeta internacional.",
+      },
+      {
+        label: "Moneda",
+        value:
+          "Reales brasileños (BRL). Pagar en reales por Pix no es una compra internacional con tarjeta, así que no se aplica el IOF.",
+      },
+      { label: "Medición", value: "Por segundo de uso." },
+      { label: "Soporte", value: "En portugués, y la invitación también llega en portugués." },
+    ],
+    note: "Los precios aún no se han publicado. Cuando lo estén, serán en reales.",
   },
   demo: {
     title: "Crear, ejecutar, exponer, suspender, reanudar.",
@@ -47,15 +94,6 @@ export const es: Copy = {
       saved: "memoria conservada, cómputo liberado",
       resumed: "reanudada en aprox. 1 s",
     },
-  },
-  desktop: {
-    title: "Cuando un agente necesita ver una pantalla, la tiene.",
-    lead: "Cada máquina puede ejecutar un escritorio Linux completo con Chromium. Míralo en vivo en tu navegador por VNC o deja que el agente lo maneje.",
-    points: [
-      "Chromium instalado y listo",
-      "Visible en tu navegador por VNC",
-      "La misma máquina que tu terminal y tus archivos",
-    ],
   },
   features: {
     title: "Una máquina de verdad, no un contenedor compartido.",
@@ -90,56 +128,9 @@ export const es: Copy = {
         title: "Tamaño por máquina",
         body: "Elige las vCPU y la memoria de cada máquina desde el SDK, para que una tarea pequeña no necesite una máquina grande.",
       },
-    ],
-  },
-  lifecycle: {
-    title: "Cuatro movimientos, todos medidos en segundos.",
-    lead: "Los tiempos son típicos, no garantizados.",
-    cards: [
       {
-        state: "En ejecución",
-        value: "~2 s",
-        title: "Arrancar",
-        body: "Una microVM nueva a partir de una plantilla: kernel y disco raíz propios.",
-      },
-      {
-        state: "Suspendida",
-        value: "Memoria conservada",
-        title: "Suspender",
-        body: "Guarda la memoria y el estado y libera el worker.",
-      },
-      {
-        state: "De nuevo en ejecución",
-        value: "~1 s",
-        title: "Reanudar",
-        body: "Continúa exactamente donde el agente lo dejó, con sus procesos.",
-      },
-      {
-        state: "Una máquina nueva",
-        value: "Solo el disco",
-        title: "Fork",
-        body: "Copia el disco en una máquina hermana. La memoria no se copia.",
-      },
-    ],
-  },
-  usecases: {
-    title: "Hecho para trabajos que piden un ordenador de verdad.",
-    items: [
-      {
-        title: "Navegación y uso del ordenador",
-        body: "Dale al agente un escritorio con Chromium para abrir páginas, rellenar formularios y usar apps hechas para personas.",
-      },
-      {
-        title: "Ejecución de código",
-        body: "Ejecuta el código que escribió el modelo en una máquina desechable, con kernel y archivos propios.",
-      },
-      {
-        title: "Agentes de larga duración en segundo plano",
-        body: "Deja que un agente trabaje durante horas, suspéndelo mientras espera y reanúdalo en aproximadamente un segundo.",
-      },
-      {
-        title: "Experimentos en paralelo",
-        body: "Haz fork de un disco preparado en varias máquinas y prueba enfoques distintos en paralelo.",
+        title: "Escritorio con Chromium",
+        body: "Cada máquina puede ejecutar un escritorio Linux completo con Chromium. Míralo en vivo en tu navegador por VNC o deja que el agente lo maneje.",
       },
     ],
   },
@@ -181,31 +172,34 @@ export const es: Copy = {
   },
   cta: {
     eyebrow: "Acceso anticipado",
-    title: "Pide un lugar en el próximo grupo.",
-    lead: "Rookbox es solo por invitación por ahora. Damos acceso en grupos pequeños para que las máquinas sigan siendo rápidas. Deja tu email y te escribimos cuando tu invitación esté lista.",
-    priceNote: "Facturación por segundo. Los precios aún no se han publicado.",
+    title: "Pide un lugar en el próximo lote.",
+    lead: "Solo por invitación, en lotes pequeños para que las máquinas sigan siendo rápidas. Deja tu email y te escribimos cuando sea tu turno.",
+    priceNote: "El cobro por segundo aún no ha empezado. Los precios no se han publicado.",
   },
   waitlist: {
     label: "Dirección de email",
     placeholder: "tu@empresa.com",
-    submit: "Apuntarme a la lista",
+    submit: "Entrar en la lista",
     sending: "Enviando",
-    optionsLegend: "¿Qué vas a ejecutar?",
-    optionsOptional: "Opcional",
-    options: [
-      "Navegador o uso del ordenador",
-      "Ejecución de código",
-      "Agentes de larga duración en segundo plano",
-      "Experimentos en paralelo",
-    ],
-    fine: "Solo por invitación, en grupos pequeños. Usamos tu email únicamente para enviarte la invitación.",
+    followup: {
+      prompt: "¿Quieres contarnos qué vas a ejecutar?",
+      hint: "Opcional, un clic.",
+      options: [
+        "Navegador o uso del ordenador",
+        "Ejecución de código",
+        "Agentes de larga duración en segundo plano",
+        "Experimentos en paralelo",
+      ],
+      thanks: "Anotado. Gracias.",
+      error: "No pudimos guardarlo ahora. Sigues en la lista.",
+    },
+    fine: "Solo tu email. Lo usamos únicamente para enviarte la invitación.",
     okTitle: "Estás en la lista.",
     okBody:
-      "Enviamos una confirmación a {email}. Cuando se libere un lugar recibirás un email de invitación con tu acceso.",
+      "Enviamos una confirmación a {email}. Cuando se abra un lugar, recibirás un email de invitación con tu acceso.",
     errorInvalid: "Eso no parece una dirección de email. Revísala e inténtalo de nuevo.",
     errorRate: "Demasiados intentos desde esta conexión. Inténtalo de nuevo en unos minutos.",
-    errorGeneric:
-      "No pudimos contactar con el servidor. Tu email no se guardó. Inténtalo de nuevo.",
+    errorGeneric: "No pudimos conectar con el servidor. Tu email no se guardó. Inténtalo de nuevo.",
     haveAccount: "Ya tengo cuenta",
   },
   footer: {
@@ -214,8 +208,8 @@ export const es: Copy = {
     tagline: "Máquinas para agentes de IA.",
     product: "Producto",
     howItWorks: "Cómo funciona",
-    desktop: "Escritorio",
-    lifecycle: "Ciclo de vida",
+    access: "Cómo funciona el acceso",
+    brazil: "Pago en reales",
     dashboard: "Panel",
     developers: "Desarrolladores",
     quickstart: "Primeros pasos",

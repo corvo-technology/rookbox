@@ -13,20 +13,70 @@ export const pt: Copy = {
     home: "Início do Rookbox",
     menu: "Menu",
     product: "Produto",
-    desktop: "Desktop",
-    lifecycle: "Ciclo de vida",
+    access: "Acesso",
     e2b: "Compatível com E2B",
+    brazil: "Pagamento em reais",
     quickstart: "Primeiros passos",
     dashboard: "Abrir o painel",
   },
   hero: {
+    eyebrow: "Lista de espera, só por convite",
     title: "Dê a cada agente o próprio computador.",
     lead: "O Rookbox dá aos seus agentes máquinas Linux sob demanda. Cada uma é uma microVM Firecracker com kernel próprio e funciona com o SDK da E2B que você talvez já use.",
     facts: ["Kernel próprio", "Inicia em cerca de 2 s", "Retoma em cerca de 1 s"],
   },
   visual: {
-    label: "Sessão de exemplo: o SDK da E2B apontado para o Rookbox",
+    label:
+      "Sessão de exemplo: o SDK da E2B apontado para o Rookbox, e o convite que você está pedindo",
     caption: "O SDK da E2B apontado para o Rookbox. A saída está simplificada.",
+    invite: "convite para",
+    states: {
+      idle: "digite seu email para entrar na fila",
+      typed: "pronto para entrar na fila",
+      sending: "enviando",
+      done: "na lista. o convite chega por email",
+    },
+  },
+  access: {
+    title: "Como o acesso funciona.",
+    steps: [
+      {
+        title: "Entre na lista",
+        body: "Só o seu email, nada mais. Você recebe uma confirmação na hora.",
+      },
+      {
+        title: "Receba o convite por email",
+        body: "Liberamos o acesso em lotes pequenos para as máquinas continuarem rápidas. Não prometemos data: avisamos quando for a sua vez.",
+      },
+      {
+        title: "Crie a sua primeira máquina",
+        body: "O convite traz o acesso ao painel. Crie uma máquina ali ou aponte o SDK da E2B para o Rookbox.",
+      },
+    ],
+  },
+  brazil: {
+    // TODO(content): confirm with the owner before launch: the legal entity that bills (BRL, nota
+    // fiscal), whether Pix is the only BRL method at launch, and the exact IOF wording with an
+    // accountant. This block is labelled as planned and must not read as live until billing ships.
+    eyebrow: "Previsto para o lançamento da cobrança",
+    title: "Feito para quem paga em reais.",
+    lead: "A cobrança ainda não está no ar. Ela está sendo desenhada para quem está no Brasil, sem cartão internacional no caminho.",
+    badge: "Pix",
+    status: "Previsto, ainda não disponível",
+    rows: [
+      { label: "Pagamento", value: "Pix. Sem cartão internacional." },
+      {
+        label: "Moeda",
+        value:
+          "Reais (BRL). Pagando em reais por Pix, não há compra internacional no cartão, então não entra IOF.",
+      },
+      { label: "Medição", value: "Por segundo de uso." },
+      // TODO(content): confirm the support channel and hours before promising Portuguese support.
+      { label: "Suporte", value: "Em português, e o convite também chega em português." },
+    ],
+    // TODO(content): decide whether and when prices are published in reais. No price, discount or
+    // founder perk is promised here.
+    note: "Os preços ainda não foram publicados. Quando forem, saem em reais.",
   },
   demo: {
     title: "Criar, executar, expor, suspender, retomar.",
@@ -47,15 +97,6 @@ export const pt: Copy = {
       saved: "memória mantida, processamento liberado",
       resumed: "retomada em cerca de 1 s",
     },
-  },
-  desktop: {
-    title: "Quando o agente precisa ver uma tela, ele tem uma.",
-    lead: "Cada máquina pode rodar um desktop Linux completo com Chromium. Acompanhe ao vivo no navegador por VNC ou deixe o agente controlá-lo.",
-    points: [
-      "Chromium instalado e pronto",
-      "Visível no seu navegador por VNC",
-      "A mesma máquina do terminal e dos arquivos",
-    ],
   },
   features: {
     title: "Uma máquina de verdade, não um contêiner compartilhado.",
@@ -90,56 +131,9 @@ export const pt: Copy = {
         title: "Tamanho por máquina",
         body: "Escolha as vCPUs e a memória de cada máquina pelo SDK, para que uma tarefa pequena não precise de uma máquina grande.",
       },
-    ],
-  },
-  lifecycle: {
-    title: "Quatro movimentos, todos medidos em segundos.",
-    lead: "Os tempos são típicos, não garantidos.",
-    cards: [
       {
-        state: "Em execução",
-        value: "~2 s",
-        title: "Iniciar",
-        body: "Uma nova microVM a partir de um template: kernel e disco raiz próprios.",
-      },
-      {
-        state: "Suspensa",
-        value: "Memória mantida",
-        title: "Suspender",
-        body: "Grava a memória e o estado e libera o worker.",
-      },
-      {
-        state: "De volta em execução",
-        value: "~1 s",
-        title: "Retomar",
-        body: "Continue exatamente de onde o agente parou, com os processos.",
-      },
-      {
-        state: "Uma nova máquina",
-        value: "Só o disco",
-        title: "Fork",
-        body: "Copia o disco para uma máquina irmã. A memória não é copiada.",
-      },
-    ],
-  },
-  usecases: {
-    title: "Feito para trabalhos que pedem um computador de verdade.",
-    items: [
-      {
-        title: "Navegação e uso do computador",
-        body: "Dê ao agente um desktop com Chromium para abrir páginas, preencher formulários e usar apps feitos para pessoas.",
-      },
-      {
-        title: "Execução de código",
-        body: "Rode o código escrito pelo modelo em uma máquina descartável, com kernel e arquivos próprios.",
-      },
-      {
-        title: "Agentes de longa duração em segundo plano",
-        body: "Deixe um agente trabalhar por horas, suspenda-o enquanto ele espera e retome em cerca de um segundo.",
-      },
-      {
-        title: "Experimentos em paralelo",
-        body: "Faça o fork de um disco preparado em várias máquinas e teste abordagens diferentes lado a lado.",
+        title: "Desktop com Chromium",
+        body: "Cada máquina pode rodar um desktop Linux completo com Chromium. Acompanhe ao vivo no navegador por VNC ou deixe o agente controlá-lo.",
       },
     ],
   },
@@ -182,23 +176,27 @@ export const pt: Copy = {
   cta: {
     eyebrow: "Acesso antecipado",
     title: "Peça uma vaga no próximo lote.",
-    lead: "O Rookbox está só por convite por enquanto. Liberamos o acesso em lotes pequenos para que as máquinas continuem rápidas. Deixe seu email e escrevemos quando o seu convite estiver pronto.",
-    priceNote: "Cobrança por segundo. Os preços ainda não foram publicados.",
+    lead: "Só por convite, em lotes pequenos para as máquinas continuarem rápidas. Deixe seu email e avisamos quando for a sua vez.",
+    priceNote: "A cobrança por segundo ainda não começou. Os preços não foram publicados.",
   },
   waitlist: {
     label: "Endereço de email",
     placeholder: "voce@empresa.com",
     submit: "Entrar na lista",
     sending: "Enviando",
-    optionsLegend: "O que você vai rodar?",
-    optionsOptional: "Opcional",
-    options: [
-      "Navegador ou uso do computador",
-      "Execução de código",
-      "Agentes de longa duração em segundo plano",
-      "Experimentos em paralelo",
-    ],
-    fine: "Só por convite, em lotes pequenos. Usamos seu email apenas para enviar o convite.",
+    followup: {
+      prompt: "Quer nos contar o que vai rodar?",
+      hint: "Opcional, 1 clique.",
+      options: [
+        "Navegador ou uso do computador",
+        "Execução de código",
+        "Agentes de longa duração em segundo plano",
+        "Experimentos em paralelo",
+      ],
+      thanks: "Anotado. Obrigado.",
+      error: "Não conseguimos salvar agora. Você continua na lista.",
+    },
+    fine: "Só o email. Usamos apenas para enviar o seu convite.",
     okTitle: "Você está na lista.",
     okBody:
       "Enviamos uma confirmação para {email}. Quando abrir uma vaga, você recebe um email de convite com o seu acesso.",
@@ -213,8 +211,8 @@ export const pt: Copy = {
     tagline: "Máquinas para agentes de IA.",
     product: "Produto",
     howItWorks: "Como funciona",
-    desktop: "Desktop",
-    lifecycle: "Ciclo de vida",
+    access: "Como o acesso funciona",
+    brazil: "Pagamento em reais",
     dashboard: "Painel",
     developers: "Desenvolvedores",
     quickstart: "Primeiros passos",

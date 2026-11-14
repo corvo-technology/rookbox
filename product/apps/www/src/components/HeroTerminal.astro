@@ -2,11 +2,21 @@
 import type { Copy } from "../i18n/copy";
 import type { Sessions } from "../snippets";
 
-type Props = { sessions: Sessions; copy: Copy["visual"] };
-const { sessions, copy } = Astro.props;
+type Props = { sessions: Sessions; copy: Copy["visual"]; placeholder: string };
+const { sessions, copy, placeholder } = Astro.props;
+const last = sessions.py.length;
 ---
 
-<figure class="ht">
+<figure
+  class="ht"
+  data-live
+  data-state="idle"
+  data-placeholder={placeholder}
+  data-idle={copy.states.idle}
+  data-typed={copy.states.typed}
+  data-sending={copy.states.sending}
+  data-done={copy.states.done}
+>
   <div class="ht__win">
     <div class="ht__bar" aria-hidden="true">
       <span class="ht__dots"><i></i><i></i><i></i></span>
@@ -18,6 +28,12 @@ const { sessions, copy } = Astro.props;
           <div class={`ln ln--${tone}`} style={`--l:${i}`} aria-hidden="true">{text}</div>
         ))
       }
+      <div class="ln ln--c ln--live" style={`--l:${last + 1}`} aria-hidden="true">
+        <span class="ln__k">{copy.invite}</span> <span class="ln__v" data-live-email>{placeholder}</span><span class="cursor"></span>
+      </div>
+      <div class="ln ln--m ln--state" style={`--l:${last + 2}`} aria-hidden="true">
+        # <span data-live-state>{copy.states.idle}</span>
+      </div>
     </div>
   </div>
   <figcaption class="fine">{copy.caption}</figcaption>

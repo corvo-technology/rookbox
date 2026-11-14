@@ -13,20 +13,66 @@ export const en: Copy = {
     home: "Rookbox home",
     menu: "Menu",
     product: "Product",
-    desktop: "Desktop",
-    lifecycle: "Lifecycle",
+    access: "Access",
     e2b: "E2B compatible",
+    brazil: "Paying in reais",
     quickstart: "Quickstart",
     dashboard: "Open the dashboard",
   },
   hero: {
+    eyebrow: "Waitlist, invitation only",
     title: "Give every agent its own computer.",
     lead: "Rookbox gives your agents on-demand Linux machines. Each one is a Firecracker microVM with its own kernel, and it works with the E2B SDK you may already use.",
     facts: ["Its own kernel", "Boots in about 2 s", "Resumes in about 1 s"],
   },
   visual: {
-    label: "Sample session: the E2B SDK pointed at Rookbox",
+    label: "Sample session: the E2B SDK pointed at Rookbox, and the invitation you are asking for",
     caption: "The E2B SDK pointed at Rookbox. Output is simplified.",
+    invite: "invitation for",
+    states: {
+      idle: "type your email to join the queue",
+      typed: "ready to join the queue",
+      sending: "sending",
+      done: "on the list. the invitation arrives by email",
+    },
+  },
+  access: {
+    title: "How access works.",
+    steps: [
+      {
+        title: "Join the list",
+        body: "Just your email, nothing else. You get a confirmation right away.",
+      },
+      {
+        title: "Get the invitation by email",
+        body: "We let people in small batches so the machines stay fast. We do not promise a date: we write when it is your turn.",
+      },
+      {
+        title: "Create your first machine",
+        body: "The invitation gives you access to the dashboard. Create a machine there, or point the E2B SDK at Rookbox.",
+      },
+    ],
+  },
+  brazil: {
+    eyebrow: "Planned for when billing launches",
+    title: "Made for people who pay in reais.",
+    lead: "Billing is not live yet. It is being designed for people in Brazil, with no international card in the way.",
+    badge: "Pix",
+    status: "Planned, not available yet",
+    rows: [
+      { label: "Payment", value: "Pix, Brazil's instant payment system. No international card." },
+      {
+        label: "Currency",
+        value:
+          "Brazilian reais (BRL). Paying in reais by Pix is not an international card purchase, so no IOF foreign-transaction tax applies.",
+      },
+      { label: "Metering", value: "Per second of use." },
+      {
+        label: "Support",
+        value: "In Portuguese, and the invitation email arrives in Portuguese too.",
+      },
+    ],
+    note: "Prices have not been published. When they are, they will be in reais.",
   },
   demo: {
     title: "Create, run, expose, suspend, resume.",
@@ -47,15 +93,6 @@ export const en: Copy = {
       saved: "memory kept, compute released",
       resumed: "resumed in about 1 s",
     },
-  },
-  desktop: {
-    title: "When an agent needs to see a screen, it has one.",
-    lead: "Every machine can run a full Linux desktop with Chromium. Watch it live in your browser over VNC, or let the agent drive it.",
-    points: [
-      "Chromium installed and ready",
-      "Viewable in your browser over VNC",
-      "The same machine as your terminal and files",
-    ],
   },
   features: {
     title: "A real machine, not a shared container.",
@@ -90,56 +127,9 @@ export const en: Copy = {
         title: "Sized per machine",
         body: "Choose the vCPU and memory of each machine through the SDK, so a small task does not need a big machine.",
       },
-    ],
-  },
-  lifecycle: {
-    title: "Four moves, all measured in seconds.",
-    lead: "Timings are typical, not guarantees.",
-    cards: [
       {
-        state: "Running",
-        value: "~2 s",
-        title: "Boot",
-        body: "A new microVM from a template: own kernel, own root disk.",
-      },
-      {
-        state: "Suspended",
-        value: "Memory kept",
-        title: "Suspend",
-        body: "Persist memory and state and release the worker.",
-      },
-      {
-        state: "Running again",
-        value: "~1 s",
-        title: "Resume",
-        body: "Pick up exactly where the agent left off, processes and all.",
-      },
-      {
-        state: "A new machine",
-        value: "Disk only",
-        title: "Fork",
-        body: "Copy the disk into a sibling machine. Memory is not copied.",
-      },
-    ],
-  },
-  usecases: {
-    title: "Made for work that needs a real computer.",
-    items: [
-      {
-        title: "Browsing and computer use",
-        body: "Give an agent a desktop with Chromium so it can open pages, fill forms and use apps built for people.",
-      },
-      {
-        title: "Code execution",
-        body: "Run code the model wrote in a machine you can throw away, with its own kernel and files.",
-      },
-      {
-        title: "Long-running background agents",
-        body: "Let an agent work for hours, suspend it while it waits and resume it in about a second.",
-      },
-      {
-        title: "Parallel experiments",
-        body: "Fork a prepared disk into several machines and try different approaches side by side.",
+        title: "Desktop with Chromium",
+        body: "Every machine can run a full Linux desktop with Chromium. Watch it live in your browser over VNC, or let the agent drive it.",
       },
     ],
   },
@@ -182,23 +172,27 @@ export const en: Copy = {
   cta: {
     eyebrow: "Early access",
     title: "Ask for a spot in the next batch.",
-    lead: "Rookbox is invitation only for now. We let people in small batches so the machines stay fast. Leave your email and we write to you when your invitation is ready.",
-    priceNote: "Billed per second. Prices have not been published yet.",
+    lead: "Invitation only, in small batches so the machines stay fast. Leave your email and we write when it is your turn.",
+    priceNote: "Per-second billing has not started. Prices have not been published.",
   },
   waitlist: {
     label: "Email address",
     placeholder: "you@company.com",
     submit: "Join the waitlist",
     sending: "Sending",
-    optionsLegend: "What will you run on it?",
-    optionsOptional: "Optional",
-    options: [
-      "Browser or computer use",
-      "Code execution",
-      "Long-running background agents",
-      "Parallel experiments",
-    ],
-    fine: "Invitation only, in small batches. We only use your email to send your invitation.",
+    followup: {
+      prompt: "Want to tell us what you will run?",
+      hint: "Optional, one click.",
+      options: [
+        "Browser or computer use",
+        "Code execution",
+        "Long-running background agents",
+        "Parallel experiments",
+      ],
+      thanks: "Noted. Thank you.",
+      error: "We could not save that now. You are still on the list.",
+    },
+    fine: "Just your email. We only use it to send your invitation.",
     okTitle: "You are on the list.",
     okBody:
       "We sent a confirmation to {email}. When a spot opens you get an invitation email with your access.",
@@ -213,8 +207,8 @@ export const en: Copy = {
     tagline: "Machines for AI agents.",
     product: "Product",
     howItWorks: "How it works",
-    desktop: "Desktop",
-    lifecycle: "Lifecycle",
+    access: "How access works",
+    brazil: "Paying in reais",
     dashboard: "Dashboard",
     developers: "Developers",
     quickstart: "Quickstart",

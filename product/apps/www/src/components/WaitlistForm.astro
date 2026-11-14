@@ -26,6 +26,8 @@ const VALUES = ["browser or computer use", "code execution", "long-running backg
     data-locale={locale}
     data-sending={copy.sending}
     data-ok-body={copy.okBody}
+    data-followup-thanks={copy.followup.thanks}
+    data-followup-error={copy.followup.error}
     data-error-invalid={copy.errorInvalid}
     data-error-rate={copy.errorRate}
     data-error-generic={copy.errorGeneric}
@@ -49,21 +51,6 @@ const VALUES = ["browser or computer use", "code execution", "long-running backg
       />
       <button class="btn wl__submit" type="submit" data-submit>{copy.submit}</button>
     </div>
-    <fieldset class="wl__opts">
-      <legend class="wl__legend">
-        {copy.optionsLegend} <span class="wl__optional">{copy.optionsOptional}</span>
-      </legend>
-      <div class="wl__chips">
-        {
-          copy.options.map((label, i) => (
-            <label class="wl__chip">
-              <input type="checkbox" name="use" value={VALUES[i]} />
-              <span>{label}</span>
-            </label>
-          ))
-        }
-      </div>
-    </fieldset>
     <div class="wl__hp" aria-hidden="true">
       <label>Website <input type="text" name="website" tabindex="-1" autocomplete="off" /></label>
     </div>
@@ -73,6 +60,19 @@ const VALUES = ["browser or computer use", "code execution", "long-running backg
   <div class="wl__done" data-done tabindex="-1" hidden>
     <p class="wl__done-title">{copy.okTitle}</p>
     <p class="wl__done-body" data-done-body></p>
+    <div class="wl__follow" data-followup>
+      <p class="wl__ask">{copy.followup.prompt} <span class="wl__hint">{copy.followup.hint}</span></p>
+      <div class="wl__chips">
+        {
+          copy.followup.options.map((label, i) => (
+            <button class="wl__pick" type="button" data-pick={VALUES[i]}>
+              {label}
+            </button>
+          ))
+        }
+      </div>
+    </div>
+    <p class="wl__thanks" data-thanks role="status" hidden></p>
   </div>
   {
     tone === "light" && (

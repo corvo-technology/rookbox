@@ -2,6 +2,8 @@
  * Every visible word on the landing page, per language. Text in `backticks` renders in the
  * monospace face (see `rich` in ../rich.ts).
  */
+type Step = { title: string; body: string };
+
 export type Copy = {
   meta: { title: string; description: string; skipToContent: string; ogAlt: string };
   nav: {
@@ -9,20 +11,41 @@ export type Copy = {
     home: string;
     menu: string;
     product: string;
-    desktop: string;
-    lifecycle: string;
+    access: string;
     e2b: string;
+    brazil: string;
     quickstart: string;
     dashboard: string;
   };
   hero: {
+    /** The small line above the headline: this is a waitlist. */
+    eyebrow: string;
     title: string;
     lead: string;
     /** Three short facts shown under the buttons. */
     facts: [string, string, string];
   };
   /** The terminal session next to the headline. */
-  visual: { label: string; caption: string };
+  visual: {
+    label: string;
+    caption: string;
+    /** The line after the sample session, followed by the address being typed. */
+    invite: string;
+    /** What the last line says as the visitor goes through the form. */
+    states: { idle: string; typed: string; sending: string; done: string };
+  };
+  /** How access works: three plain steps. */
+  access: { title: string; steps: [Step, Step, Step] };
+  /** Billing for people who pay in reais. Planned, not live. */
+  brazil: {
+    eyebrow: string;
+    title: string;
+    lead: string;
+    badge: string;
+    status: string;
+    rows: { label: string; value: string }[];
+    note: string;
+  };
   demo: {
     title: string;
     lead: string;
@@ -33,24 +56,10 @@ export type Copy = {
     /** Comments inside the sample session. */
     session: { ready: string; pause: string; saved: string; resumed: string };
   };
-  desktop: {
-    title: string;
-    lead: string;
-    points: [string, string, string];
-  };
   features: {
     title: string;
     /** The two capabilities shown large, each with one number. */
     lead: { stat: string; statLabel: string; title: string; body: string }[];
-    items: { title: string; body: string }[];
-  };
-  lifecycle: {
-    title: string;
-    lead: string;
-    cards: { state: string; value: string; title: string; body: string }[];
-  };
-  usecases: {
-    title: string;
     items: { title: string; body: string }[];
   };
   e2b: {
@@ -87,10 +96,14 @@ export type Copy = {
     placeholder: string;
     submit: string;
     sending: string;
-    /** The optional "what will you run" question, and its four answers. */
-    optionsLegend: string;
-    optionsOptional: string;
-    options: [string, string, string, string];
+    /** The optional "what will you run" question, asked after they are on the list. */
+    followup: {
+      prompt: string;
+      hint: string;
+      options: [string, string, string, string];
+      thanks: string;
+      error: string;
+    };
     /** Honest framing: invitation only, small batches. */
     fine: string;
     okTitle: string;
@@ -107,8 +120,8 @@ export type Copy = {
     tagline: string;
     product: string;
     howItWorks: string;
-    desktop: string;
-    lifecycle: string;
+    access: string;
+    brazil: string;
     dashboard: string;
     developers: string;
     quickstart: string;

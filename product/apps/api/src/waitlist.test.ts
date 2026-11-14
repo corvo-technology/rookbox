@@ -24,6 +24,10 @@ function memoryWaitlist(): WaitlistStore & { rows: Map<string, WaitlistRecord> }
       });
       return "created";
     },
+    async setNoteOnce(email, note) {
+      const row = rows.get(email);
+      if (row && row.note === null) row.note = note;
+    },
     async find(email) {
       return rows.get(email) ?? null;
     },
@@ -156,6 +160,19 @@ describe("POST /waitlist", () => {
     const again = await post({ email: "A@Example.test" });
     expect(again.status).toBe(200);
     expect(await again.json()).toEqual({ ok: true });
+    expect(store.rows.size).toBe(1);
+    expect(resend.sent).toHaveLength(1);
+  });
+
+  it("lets a second post for the same email set the note once, with the same answer", async () => {
+    const { post, store, resend } = setup();
+    await post({ email: "a@example.test" });
+    const first = await post({ email: "a@example.test", note: "code execution" });
+    expect(first.status).toBe(200);
+    expect(await first.json()).toEqual({ ok: true });
+    expect(store.rows.get("a@example.test")?.note).toBe("code execution");
+    await post({ email: "a@example.test", note: "parallel experiments" });
+    expect(store.rows.get("a@example.test")?.note).toBe("code execution");
     expect(store.rows.size).toBe(1);
     expect(resend.sent).toHaveLength(1);
   });
