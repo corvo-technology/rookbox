@@ -1,0 +1,79 @@
+---
+import type { Copy } from "../i18n/copy";
+import type { E2bSnippets } from "../snippets";
+
+type Props = {
+  snippets: E2bSnippets;
+  copy: Copy["e2b"];
+  ui: Copy["ui"];
+};
+
+const { snippets, copy, ui } = Astro.props;
+
+const TABS = [
+  { id: "py", label: "Python" },
+  { id: "ts", label: "TypeScript" },
+] as const;
+
+const KEY = "E2B_API_KEY=";
+const [keyAfter = "", urlLine = ""] = snippets.env.after.split("\n");
+const oldValue = snippets.env.before.slice(KEY.length);
+const newValue = keyAfter.slice(KEY.length);
+---
+
+<!--
+  Without JavaScript this is the finished page: the "before" block, the "with Rookbox" block and
+  the code, all visible. scripts/e2b.ts folds the two env blocks into one that morphs between them,
+  and adds the copy buttons and the language toggle.
+-->
+<div class="e2b-code" data-e2b data-copied={ui.copied}>
+  <div class="e2b-code__pair">
+    <figure class="code mono code--before" data-env-before>
+      <figcaption>{copy.before}</figcaption>
+      <pre>{snippets.env.before}</pre>
+    </figure>
+    <figure
+      class="code mono code--after code--env"
+      data-env
+      data-state="after"
+      data-copy-before={snippets.env.before}
+      data-copy-after={snippets.env.after}
+    >
+      <figcaption>
+        <span data-env-title>{copy.after}</span>
+        <span class="bar" hidden data-env-bar>
+          <span class="toggle" role="group" aria-label={`${copy.before} / ${copy.after}`}>
+            <button type="button" class="toggle__btn" data-env-btn="before" aria-pressed="false">{copy.before}</button>
+            <button type="button" class="toggle__btn toggle__btn--sel" data-env-btn="after" aria-pressed="true">{copy.after}</button>
+          </span>
+          <button type="button" class="copy" data-copy>{ui.copy}</button>
+        </span>
+      </figcaption>
+      <pre><span class="dl dl--key">{KEY}<span class="swap"><span class="swap__old" aria-hidden="true">{oldValue}</span><span class="swap__new">{newValue}</span></span></span><span class="dl dl--add" data-url-line>{urlLine}</span></pre>
+    </figure>
+  </div>
+  <figure class="code mono code--same" data-code>
+    <figcaption>
+      <span>{copy.code}</span>
+      <span class="bar" hidden data-code-bar>
+        <span class="toggle" role="group" aria-label={copy.languageLabel}>
+          {
+            TABS.map((tab, i) => (
+              <button
+                type="button"
+                class={i === 0 ? "toggle__btn toggle__btn--sel" : "toggle__btn"}
+                data-lang-btn={tab.id}
+                aria-pressed={i === 0 ? "true" : "false"}
+              >
+                {tab.label}
+              </button>
+            ))
+          }
+        </span>
+        <button type="button" class="copy" data-copy>{ui.copy}</button>
+      </span>
+    </figcaption>
+    {TABS.map((tab) => <pre data-lang={tab.id}>{snippets.code[tab.id]}</pre>)}
+  </figure>
+  <p class="sr-only" role="status" aria-live="polite" data-copy-status></p>
+</div>

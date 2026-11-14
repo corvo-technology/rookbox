@@ -76,6 +76,22 @@ describe("landing copy", () => {
   });
 });
 
+describe("interactive labels", () => {
+  it.each(Object.entries(COPIES))(
+    "%s names the copy button, its confirmation and the tags",
+    (_, copy) => {
+      for (const label of Object.values(copy.ui)) expect(label.trim().length).toBeGreaterThan(1);
+      expect(copy.ui.copy).not.toBe(copy.ui.copied);
+    },
+  );
+
+  it("keeps the demo's height fixed: every session line is rendered up front", () => {
+    const source = readFileSync(join(HERE, "components/Demo.astro"), "utf8");
+    expect(source).toContain("sessions[tab.id].map");
+    expect(source).not.toMatch(/\shidden[\s=>]|display:\s*none/);
+  });
+});
+
 describe("snippets", () => {
   it("changes only the environment for E2B, and never asks for E2B_DOMAIN or a template", () => {
     const { env, code } = buildE2bSnippets("https://api.rookbox.run");

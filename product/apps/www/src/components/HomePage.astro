@@ -4,17 +4,34 @@ import type { Locale } from "../i18n/locales";
 import { DEFAULT_LOCALE, isLocale } from "../i18n/locales";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { E2B_API_URL, SDK_DOMAIN } from "../site";
+import { parseFact, rollDigits } from "../scripts/lifecycle";
 import { buildE2bSnippets, buildSessions } from "../snippets";
-import { E2bSnippet } from "./E2bSnippet";
+import Demo from "./Demo.astro";
+import E2b from "./E2b.astro";
 import Footer from "./Footer.astro";
 import Header from "./Header.astro";
 import Rook from "./Rook.astro";
-import { SessionDemo } from "./SessionDemo";
 import WaitlistForm from "./WaitlistForm.astro";
 
 const locale: Locale = isLocale(Astro.currentLocale) ? Astro.currentLocale : DEFAULT_LOCALE;
 const copy = getCopy(locale);
-const { hero, visual, brazil, demo, e2b, cta, waitlist } = copy;
+const { hero, visual, brazil, demo, e2b, cta, waitlist, ui } = copy;
+const facts = demo.facts.map((text) => ({ text, parts: parseFact(text) }));
+
+// The Pix motif: an 11 x 11 grid of pixels that resolves into a diamond with a check inside.
+const PIX = 11;
+const MID = (PIX - 1) / 2;
+const CHECK = [[3, 5], [4, 6], [5, 7], [6, 6], [7, 5], [8, 4]];
+const diamond = [] as { x: number; y: number; k: number }[];
+for (let y = 0; y < PIX; y++) {
+  for (let x = 0; x < PIX; x++) {
+    if (Math.abs(x - MID) + Math.abs(y - MID) === MID) diamond.push({ x, y, k: 0 });
+  }
+}
+diamond.sort((a, b) => Math.atan2(a.x - MID, MID - a.y) - Math.atan2(b.x - MID, MID - b.y));
+diamond.forEach((cell, i) => {
+  cell.k = i;
+});
 const sessions = buildSessions(SDK_DOMAIN, demo.session);
 const e2bSnippets = buildE2bSnippets(E2B_API_URL);
 ---
@@ -46,54 +63,81 @@ const e2bSnippets = buildE2bSnippets(E2B_API_URL);
 
     <section class="sec sec--demo" id="demo" aria-labelledby="demo-title">
       <div class="wrap">
-        <h2 id="demo-title" class="sh" data-reveal>{demo.title}</h2>
-        <div class="demo-wrap" data-reveal>
-          <SessionDemo
-            client:visible
+        <h2 id="demo-title" class="sh" data-reveal="left">{demo.title}</h2>
+        <div class="demo-wrap">
+          <Demo
             sessions={sessions}
             steps={demo.steps}
             languageLabel={demo.languageLabel}
             terminalLabel={demo.terminalLabel}
+            visual={visual}
+            ui={ui}
           />
         </div>
-        <ul class="facts" data-reveal>
-          {demo.facts.map((fact) => <li>{fact}</li>)}
+        <ul class="facts" data-reveal="scale">
+          {
+            facts.map(({ text, parts }) => (
+              <li>
+                {parts ? (
+                  <Fragment>{parts.before}<span class="num" data-roll={parts.value} style={`--n:${parts.value}`}><span class="sr-only">{parts.value}</span><span class="num__win" aria-hidden="true"><span class="num__col">{rollDigits(parts.value).map((d) => <i>{d}</i>)}</span></span></span>{parts.after}</Fragment>
+                ) : (
+                  text
+                )}
+              </li>
+            ))
+          }
         </ul>
       </div>
     </section>
 
     <section class="sec sec--e2b" id="e2b" aria-labelledby="e2b-title">
       <div class="wrap">
-        <h2 id="e2b-title" class="sh" data-reveal>{e2b.title}</h2>
-        <div class="e2b-wrap" data-reveal>
-          <E2bSnippet
-            client:visible
-            snippets={e2bSnippets}
-            languageLabel={e2b.languageLabel}
-            before={e2b.before}
-            after={e2b.after}
-            code={e2b.code}
-          />
+        <h2 id="e2b-title" class="sh" data-reveal="right">{e2b.title}</h2>
+        <div class="e2b-wrap" data-reveal="up">
+          <E2b snippets={e2bSnippets} copy={e2b} ui={ui} />
         </div>
       </div>
     </section>
 
     <section class="sec sec--pix" id="pix" aria-labelledby="pix-title">
-      <div class="wrap pix-wrap" data-reveal>
-        <p class="pix">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 2.5 21.5 12 12 21.5 2.5 12Z"></path>
-            <path d="M12 8 16 12 12 16 8 12Z"></path>
-          </svg>
-          {brazil.badge}
-        </p>
-        <h2 id="pix-title" class="sh">{brazil.title}</h2>
-        <p class="pix__lead">{brazil.lead}</p>
+      <div class="wrap pix-wrap">
+        <div class="pix-copy" data-reveal="up">
+          <p class="pix">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 2.5 21.5 12 12 21.5 2.5 12Z"></path>
+              <path d="M12 8 16 12 12 16 8 12Z"></path>
+            </svg>
+            {brazil.badge}
+          </p>
+          <h2 id="pix-title" class="sh">{brazil.title}</h2>
+          <p class="pix__lead">{brazil.lead}</p>
+        </div>
+        <svg class="pixgrid" viewBox={`0 0 ${PIX} ${PIX}`} aria-hidden="true" shape-rendering="crispEdges" data-reveal="none">
+          {
+            Array.from({ length: PIX * PIX }, (_, i) => {
+              const x = i % PIX;
+              const y = Math.floor(i / PIX);
+              const d = diamond.find((c) => c.x === x && c.y === y);
+              const c = CHECK.findIndex(([cx, cy]) => cx === x && cy === y);
+              const k = d ? d.k : c >= 0 ? diamond.length + c * 2 : 0;
+              return (
+                <rect
+                  class={d ? "pg pg--d" : c >= 0 ? "pg pg--c" : "pg"}
+                  x={x + 0.08}
+                  y={y + 0.08}
+                  width="0.84"
+                  height="0.84"
+                  style={d || c >= 0 ? `--k:${k}` : undefined}
+                />
+              );
+            })
+          }
+        </svg>
       </div>
     </section>
 
     <section class="sec sec--cta" aria-labelledby="cta-title">
-      <div class="wrap cta" data-reveal>
+      <div class="wrap cta" data-reveal="scale">
         <h2 id="cta-title" class="sh">{cta.title}</h2>
         <div class="cta__form">
           <WaitlistForm copy={waitlist} locale={locale} id="cta" />

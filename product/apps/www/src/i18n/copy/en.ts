@@ -59,6 +59,7 @@ export const en: Copy = {
     badge: "Pix",
   },
   cta: { title: "Join the waitlist." },
+  ui: { copy: "Copy", copied: "Copied", memory: "memory kept", fork: "fork", steps: "Steps" },
   waitlist: {
     label: "Email address",
     placeholder: "you@company.com",

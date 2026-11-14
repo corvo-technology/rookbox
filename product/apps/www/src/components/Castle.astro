@@ -1,0 +1,35 @@
+---
+import { buildCells, COLS, ROWS } from "../castle-grid";
+
+type Props = { label?: string; class?: string };
+const { label, class: className = "rook__svg" } = Astro.props;
+const cells = buildCells();
+---
+
+<!--
+  Fully lit in the markup, so without JavaScript it is a finished, static picture. scripts/castle.ts
+  dims it and drives it; `data-o` is the wall pixel's build rank.
+-->
+<svg
+  class={className}
+  viewBox={`0 0 ${COLS} ${ROWS}`}
+  role={label ? "img" : undefined}
+  aria-label={label}
+  aria-hidden={label ? undefined : "true"}
+  shape-rendering="crispEdges"
+>
+  {
+    cells.map((cell) => (
+      <rect
+        class={cell.door ? "px px--door" : "px"}
+        x={cell.x + 0.06}
+        y={cell.y + 0.06}
+        width="0.88"
+        height="0.88"
+        data-x={cell.x}
+        data-y={cell.y}
+        data-o={cell.door ? undefined : cell.rank}
+      />
+    ))
+  }
+</svg>
