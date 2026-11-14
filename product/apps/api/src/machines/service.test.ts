@@ -444,6 +444,11 @@ describe("ensureDesktop", () => {
     expect(script).toContain("export DISPLAY=:0");
     // noVNC must not bind the wildcard: the machine's port forwarder holds 6080 on its own address.
     expect(script).toContain("--listen 127.0.0.1:6080");
+    // `pgrep -f` matches the script's own command line, so a guard on a name the script also
+    // contains ("novnc_proxy", "xfce4-session") is always true and the process never starts.
+    expect(script).not.toMatch(/pgrep -f '?novnc/);
+    expect(script).toContain("pgrep -f '[x]fce4-session'");
+    expect(script).toContain("/dev/tcp/127.0.0.1/6080");
   });
 
   it("reports a stack that did not come up as a host error, without the output", async () => {

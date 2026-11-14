@@ -23,11 +23,11 @@ if ! pgrep -x Xvfb >/dev/null; then
   bg Xvfb :0 -ac -screen 0 1280x800x24 -retro -dpi 96 -nolisten tcp
   for _ in $(seq 1 50); do [ -S /tmp/.X11-unix/X0 ] && break; sleep 0.1; done
 fi
-if ! pgrep -f xfce4-session >/dev/null; then bg startxfce4; fi
+if ! pgrep -f '[x]fce4-session' >/dev/null; then bg startxfce4; fi
 if ! pgrep -x x11vnc >/dev/null; then
   bg x11vnc -display :0 -forever -wait 50 -shared -rfbport 5900 -nopw -localhost
 fi
-if ! pgrep -f novnc_proxy >/dev/null && ! pgrep -f websockify >/dev/null; then
+if ! (echo >/dev/tcp/127.0.0.1/6080) 2>/dev/null; then
   bg /opt/noVNC/utils/novnc_proxy --vnc localhost:5900 --listen 127.0.0.1:6080 --web /opt/noVNC
 fi
 for _ in $(seq 1 ${DESKTOP_WAIT_S * 2}); do ready && exit 0; sleep 0.5; done
