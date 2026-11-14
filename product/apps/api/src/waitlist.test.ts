@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createEmailSender } from "./email.js";
 import { waitlistInvitedEmail, waitlistJoinedEmail } from "./email-templates.js";
+import { loadEnv } from "./env.js";
 import { silentLogger } from "./logger.js";
 import { createRateLimiter } from "./rate-limit.js";
 import { setupApp } from "./test-app.js";
@@ -266,6 +267,49 @@ describe("email sender", () => {
     expect(await broken.send({ to: "a@example.test", subject: "s", html: "", text: "" })).toBe(
       false,
     );
+  });
+
+  it("posts to a Resend-compatible endpoint when one is given", async () => {
+    const urls: string[] = [];
+    const sender = createEmailSender({
+      apiKey: "k",
+      from: "Pedro at Rook <pedro@example.test>",
+      endpoint: "https://mail.example.test/emails",
+      logger: silentLogger,
+      fetch: async (url) => {
+        urls.push(String(url));
+        return new Response("{}");
+      },
+    });
+    expect(await sender.send({ to: "a@example.test", subject: "s", html: "", text: "" })).toBe(
+      true,
+    );
+    expect(urls).toEqual(["https://mail.example.test/emails"]);
+  });
+
+  it("reads the Rook-compatible email settings from the environment", () => {
+    const base = {
+      DATABASE_URL: "postgres://u:p@localhost:5432/db",
+      BETTER_AUTH_SECRET: "x".repeat(32),
+      BETTER_AUTH_URL: "https://api.example.test",
+      APP_ORIGIN: "https://app.example.test",
+      ROOKBOX_ALLOWED_EMAILS: "o@example.test",
+      SPACE_ECW_API_URL: "https://api.box.example.test",
+      E2B_DOMAIN: "box.example.test",
+    };
+    expect(loadEnv(base).EMAIL_PROVIDER).toBe("none");
+    const ok = loadEnv({
+      ...base,
+      EMAIL_PROVIDER: "resend",
+      EMAIL_API_KEY: "k",
+      EMAIL_FROM: "Pedro at Rook <pedro@example.test>",
+      EMAIL_API_URL: "https://mail.example.test/emails",
+    });
+    expect(ok.EMAIL_API_URL).toBe("https://mail.example.test/emails");
+    expect(() => loadEnv({ ...base, EMAIL_API_URL: "http://mail.example.test/e" })).toThrow(
+      /EMAIL_API_URL/,
+    );
+    expect(() => loadEnv({ ...base, EMAIL_PROVIDER: "resend" })).toThrow(/EMAIL_API_KEY/);
   });
 
   it("renders table-based, light and dark safe HTML with a plain-text part", () => {
