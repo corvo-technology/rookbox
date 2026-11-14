@@ -35,11 +35,14 @@ export const MACHINE_STATUSES = [
 export const MachineStatus = z.enum(MACHINE_STATUSES);
 export type MachineStatus = z.infer<typeof MachineStatus>;
 
-/** Bounds the API accepts; the disk ceiling matches the 128 GiB limit of SPACE's create sizing. */
+/**
+ * Bounds the API accepts and the dashboard offers. The ceiling is sized for a small server (about
+ * five running 2 vCPU / 4 GiB machines fit on 32 GB); raising it is a code change, not a setting.
+ */
 export const SIZE_LIMITS = {
-  vcpu: { min: 1, max: 16 },
-  memoryMib: { min: 512, max: 65_536 },
-  diskMib: { min: 1_024, max: 131_072 },
+  vcpu: { min: 1, max: 4 },
+  memoryMib: { min: 512, max: 8_192 },
+  diskMib: { min: 1_024, max: 40_960 },
 } as const;
 
 export const MachineSize = z.object({
@@ -51,8 +54,8 @@ export type MachineSize = z.infer<typeof MachineSize>;
 
 export const SIZE_PRESETS = {
   small: { vcpu: 2, memoryMib: 2_048, diskMib: 10_240 },
-  medium: { vcpu: 4, memoryMib: 8_192, diskMib: 20_480 },
-  large: { vcpu: 8, memoryMib: 16_384, diskMib: 40_960 },
+  medium: { vcpu: 2, memoryMib: 4_096, diskMib: 20_480 },
+  large: { vcpu: 4, memoryMib: 8_192, diskMib: 40_960 },
 } as const satisfies Record<string, MachineSize>;
 export type SizePreset = keyof typeof SIZE_PRESETS;
 

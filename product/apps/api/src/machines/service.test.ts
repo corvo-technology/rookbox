@@ -64,6 +64,47 @@ describe("create", () => {
     expect((error as MachineError).data).toEqual({ limit: 1 });
   });
 
+  it("answers the capacity error when the running machines of all owners reach the cap", async () => {
+    const { service, space } = newMachineService({ maxRunningTotal: 2 });
+    await service.create("alice", { name: "a", template: "seed", size: small });
+    const second = await service.create("bob", { name: "b", template: "seed", size: small });
+    const error = await failure(
+      service.create("carol", { name: "c", template: "seed", size: small }),
+    );
+    expect(error).toBeInstanceOf(MachineError);
+    expect((error as MachineError).code).toBe("HOST_CAPACITY");
+    expect((error as MachineError).message).toBe("The beta is full right now, try again later.");
+    expect(space.calls.filter((c) => c.op === "create")).toHaveLength(2);
+    // Fork and restore need room too; a suspended machine frees its slot.
+    expect(((await failure(service.fork("bob", { id: second.id }))) as MachineError).code).toBe(
+      "HOST_CAPACITY",
+    );
+    await service.suspend("bob", second.id);
+    await expect(
+      service.create("carol", { name: "c", template: "seed", size: small }),
+    ).resolves.toMatchObject({ status: "running" });
+    expect(((await failure(service.restore("bob", second.id))) as MachineError).code).toBe(
+      "HOST_CAPACITY",
+    );
+  });
+
+  it("does not let concurrent creates slip past the cap", async () => {
+    const { service } = newMachineService({ maxRunningTotal: 1 });
+    const results = await Promise.allSettled(
+      ["alice", "bob", "carol"].map((owner) =>
+        service.create(owner, { name: "m", template: "seed", size: small }),
+      ),
+    );
+    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+  });
+
+  it("has no global cap when it is 0", async () => {
+    const { service } = newMachineService({ maxRunningTotal: 0 });
+    for (const owner of ["a", "b", "c", "d", "e", "f"]) {
+      await service.create(owner, { name: "m", template: "seed", size: small });
+    }
+  });
+
   it("refuses a name the account already uses", async () => {
     const { service } = newMachineService();
     await service.create("alice", { name: "one", template: "seed", size: small });
@@ -269,7 +310,7 @@ describe("owner filtering", () => {
     const { space, service, store } = newMachineService();
     const bobs = await service.create("bob", { name: "theirs", template: "seed", size: small });
     await store.insert({
-      id: bobs.id + "x",
+      id: `${bobs.id}x`,
       ownerId: "alice",
       name: "stolen",
       template: "seed",
@@ -277,8 +318,8 @@ describe("owner filtering", () => {
       idleTimeoutS: 900,
       forkedFrom: null,
     });
-    space.sandboxes.set(bobs.id + "x", { ...space.sandboxes.get(bobs.id)!, id: bobs.id + "x" });
-    expect(((await failure(service.get("alice", bobs.id + "x"))) as MachineError).code).toBe(
+    space.sandboxes.set(`${bobs.id}x`, { ...space.sandboxes.get(bobs.id)!, id: `${bobs.id}x` });
+    expect(((await failure(service.get("alice", `${bobs.id}x`))) as MachineError).code).toBe(
       "NOT_FOUND",
     );
   });

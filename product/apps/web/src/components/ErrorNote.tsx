@@ -57,8 +57,8 @@ export function useErrorText() {
           };
         case "capacity":
           return {
-            title: t`The machine service is busy right now.`,
-            hint: t`There's no room for another machine at the moment. Try again in a minute.`,
+            title: t`The beta is full right now.`,
+            hint: t`There's no room for another machine at the moment. Try again later.`,
           };
         case "quota":
           return {

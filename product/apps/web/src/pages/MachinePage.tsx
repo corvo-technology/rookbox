@@ -1,4 +1,4 @@
-import { Trans, useLingui } from "@lingui/react/macro";
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import type { ExecResult, Machine } from "@rookbox/contracts";
 import { canPerform, DESKTOP_TEMPLATES, isTransitional } from "@rookbox/contracts";
 import { Button, Input, Skeleton, Spinner } from "@rookbox/ui-web";
@@ -394,6 +394,15 @@ export function MachinePage() {
                 </Spec>
               ) : null}
             </dl>
+            {config.data ? (
+              <p className="mt-3 text-label text-muted-foreground">
+                <Plural
+                  value={Math.max(1, Math.round(config.data.defaultIdleTimeoutS / 60))}
+                  one="Idle machines are suspended after # minute and keep their state."
+                  other="Idle machines are suspended after # minutes and keep their state."
+                />
+              </p>
+            ) : null}
           </Panel>
 
           <PortPanel machine={data} />

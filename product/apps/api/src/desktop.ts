@@ -30,6 +30,7 @@ export const DESKTOP_COOKIE = "rbx_desk";
 const TRAFFIC_HEADER = "e2b-traffic-access-token";
 const TOKEN_TTL_MS = 60_000;
 const MAX_USED_LINKS = 10_000;
+const ACTIVE_RECHECK_MS = 30_000;
 
 export type DesktopDeps = {
   machines: Pick<MachineService, "desktopTarget" | "ensureDesktop">;
@@ -43,6 +44,11 @@ export type DesktopDeps = {
   host: string | null;
   linkTtlS: number;
   sessionTtlS: number;
+  /**
+   * Whether the account is still allowed (not disabled). Checked on every open and request, so a
+   * disabled user's desktop session ends at once instead of at its expiry. Unset: always active.
+   */
+  isActive?: (userId: string) => Promise<boolean>;
   logger: Logger;
   fetch?: typeof fetch;
   now?: () => number;
@@ -113,6 +119,10 @@ export function createDesktopProxy(deps: DesktopDeps) {
     return null;
   }
 
+  async function active(userId: string): Promise<boolean> {
+    return deps.isActive ? deps.isActive(userId) : true;
+  }
+
   /** Marks a link used. False when it was already. */
   function consume(jti: string, exp: number): boolean {
     const nowS = Math.floor(now() / 1_000);
@@ -152,6 +162,7 @@ export function createDesktopProxy(deps: DesktopDeps) {
           : text(403, "This link is not valid.");
       }
       const { claims } = verdict;
+      if (!(await active(claims.userId))) return text(403, "This link is not valid.");
       try {
         await target(claims.userId, claims.machineId);
       } catch (error) {
@@ -191,6 +202,9 @@ export function createDesktopProxy(deps: DesktopDeps) {
     async http(request: Request, id: string, rest: string): Promise<Response> {
       const session = sessionFor(request.headers.get("cookie"), id);
       if (!session) {
+        return text(401, "Open the desktop again from the dashboard.");
+      }
+      if (!(await active(session.userId))) {
         return text(401, "Open the desktop again from the dashboard.");
       }
       let token: string;
@@ -273,6 +287,7 @@ export function createDesktopProxy(deps: DesktopDeps) {
     const session = sessionFor(req.headers.cookie, id);
     if (!session) return reject(401, "Unauthorized");
     try {
+      if (!(await active(session.userId))) return reject(401, "Unauthorized");
       const token = await target(session.userId, id);
       const protocols = String(req.headers["sec-websocket-protocol"] ?? "")
         .split(",")
@@ -301,7 +316,18 @@ export function createDesktopProxy(deps: DesktopDeps) {
             Math.max(0, session.exp * 1_000 - now()),
           );
           timer.unref();
-          client.on("close", () => clearTimeout(timer));
+          // An account disabled while the desktop is open loses it within a minute.
+          const watch = setInterval(() => {
+            void active(session.userId).then(
+              (ok) => ok || client.close(4401, "account disabled"),
+              () => undefined,
+            );
+          }, ACTIVE_RECHECK_MS);
+          watch.unref();
+          client.on("close", () => {
+            clearTimeout(timer);
+            clearInterval(watch);
+          });
         });
       });
     } catch (error) {

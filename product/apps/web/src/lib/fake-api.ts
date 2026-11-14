@@ -294,7 +294,7 @@ export function createFakeApi(options: FakeApiOptions = {}): AppClient {
         return {
           templates: ["desktop", "corvo-computer", "seed"],
           maxMachines: MAX_MACHINES,
-          defaultIdleTimeoutS: 900,
+          defaultIdleTimeoutS: 1_800,
           domain: "box.example.com",
         };
       }),

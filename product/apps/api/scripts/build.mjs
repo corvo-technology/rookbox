@@ -6,7 +6,14 @@ import { build } from "esbuild";
 const pkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 const external = Object.keys(pkg.dependencies ?? {});
 
-for (const entry of ["index", "cli/migrate", "cli/seed-owner", "cli/reconcile", "cli/usage"]) {
+for (const entry of [
+  "index",
+  "cli/migrate",
+  "cli/seed-owner",
+  "cli/reconcile",
+  "cli/usage",
+  "cli/user",
+]) {
   await build({
     entryPoints: [`src/${entry}.ts`],
     outfile: `dist/${entry}.js`,

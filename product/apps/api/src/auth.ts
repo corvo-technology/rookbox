@@ -11,11 +11,14 @@ export type AuthUser = { id: string; email: string };
 export type Identity = (headers: Headers) => Promise<AuthUser | null>;
 
 export type AuthOptions = {
-  /** Open the sign-up endpoint. Only the seed command does; the HTTP server never does. */
+  /** Open the sign-up endpoint. Only the CLI (seed and `user create`) does; the HTTP server never does. */
   allowSignUp: boolean;
+  /** Replaces the Prisma adapter. Tests only. */
+  database?: Parameters<typeof betterAuth>[0]["database"];
 };
 
 export const MIN_PASSWORD_LENGTH = 12;
+export const MAX_PASSWORD_LENGTH = 128;
 
 /**
  * The session cookie's scope.
@@ -67,15 +70,32 @@ export function createAuth(db: Db, env: Env, logger: Logger, options: AuthOption
     baseURL: apiOrigin(env),
     basePath: "/api/auth",
     trustedOrigins: [env.APP_ORIGIN],
-    database: prismaAdapter(db, { provider: "postgresql" }),
+    database: options.database ?? prismaAdapter(db, { provider: "postgresql" }),
+    // `disabledAt` is ours (the kill switch); declaring it lets better-auth read it back with the user.
+    user: {
+      additionalFields: { disabledAt: { type: "date", required: false, input: false } },
+    },
     emailAndPassword: {
       enabled: true,
       disableSignUp: !options.allowSignUp,
       minPasswordLength: MIN_PASSWORD_LENGTH,
-      maxPasswordLength: 128,
+      maxPasswordLength: MAX_PASSWORD_LENGTH,
     },
     advanced: cookieSettings(env),
     databaseHooks: {
+      // A disabled account gets no new session, so it cannot sign in.
+      session: {
+        create: {
+          before: async (session, context) => {
+            const user = await context?.context.internalAdapter.findUserById(session.userId);
+            if (user && (user as { disabledAt?: Date | null }).disabledAt) {
+              logger.warn("sign-in refused: account disabled", { user: session.userId });
+              return false;
+            }
+            return { data: session };
+          },
+        },
+      },
       user: {
         create: {
           before: async (user) => {
@@ -103,18 +123,29 @@ export function createIdentity(deps: {
    */
   allowedEmails: ReadonlySet<string>;
 }): Identity {
-  const permitted = (user: AuthUser | null) =>
-    user && deps.allowedEmails.has(user.email.toLowerCase()) ? user : null;
+  // The kill switch: a disabled account is refused on every request, session or key alike, so it
+  // takes effect at once, without waiting for a session to expire.
+  const permitted = (user: (AuthUser & { disabledAt?: Date | string | null }) | null) =>
+    user && !user.disabledAt && deps.allowedEmails.has(user.email.toLowerCase())
+      ? { id: user.id, email: user.email }
+      : null;
   return async (headers) => {
     const bearer = headers.get("authorization")?.match(/^Bearer (rbx_[A-Za-z0-9]+)$/)?.[1];
     if (bearer) {
       const userId = await deps.apiKeys.authenticate(bearer);
       if (!userId) return null;
-      const user = await deps.db.user.findUnique({ where: { id: userId } });
-      return permitted(user ? { id: user.id, email: user.email } : null);
+      return permitted(await deps.db.user.findUnique({ where: { id: userId } }));
     }
     const session = await deps.auth.api.getSession({ headers });
-    return permitted(session ? { id: session.user.id, email: session.user.email } : null);
+    return permitted(session?.user ?? null);
+  };
+}
+
+/** True when the account exists and is not disabled. The desktop proxy asks it on every request. */
+export function createIsActive(db: Db): (userId: string) => Promise<boolean> {
+  return async (userId) => {
+    const user = await db.user.findUnique({ where: { id: userId }, select: { disabledAt: true } });
+    return user !== null && user.disabledAt === null;
   };
 }
 

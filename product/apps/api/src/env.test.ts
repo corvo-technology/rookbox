@@ -15,7 +15,9 @@ const valid = {
 describe("loadEnv", () => {
   it("applies defaults and normalizes the allowlist", () => {
     const env = loadEnv(valid);
-    expect(env.MACHINE_IDLE_TIMEOUT_S).toBe(900);
+    expect(env.MACHINE_IDLE_TIMEOUT_S).toBe(1_800);
+    expect(env.MAX_MACHINES_PER_USER).toBe(3);
+    expect(env.MAX_RUNNING_MACHINES_TOTAL).toBe(5);
     expect(env.PORT).toBe(3000);
     expect(env.RUN_MIGRATIONS).toBe(true);
     expect(env.ROOKBOX_ALLOWED_EMAILS).toEqual(["owner@example.test", "second@example.test"]);

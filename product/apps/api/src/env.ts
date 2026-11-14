@@ -132,15 +132,20 @@ const EnvObject = z.object({
   /** The E2B domain: sandboxes live at https://<port>-<id>.<E2B_DOMAIN>. */
   E2B_DOMAIN: z.string().min(1),
   /** Idle seconds before a machine is suspended on its own. */
-  MACHINE_IDLE_TIMEOUT_S: z.coerce.number().int().min(60).max(86_400).default(900),
+  MACHINE_IDLE_TIMEOUT_S: z.coerce.number().int().min(60).max(86_400).default(1_800),
   /**
    * Create machines with open internet (`allowInternetAccess: true`). The host's own default is
    * closed: no DNS, no internet. The host always blocks the metadata address, private ranges and
    * host services either way.
    */
   MACHINE_ALLOW_INTERNET: flag.default(true),
-  /** Most machines one account may hold at once (a cost guard). */
-  MAX_MACHINES_PER_USER: z.coerce.number().int().min(1).max(100).default(10),
+  /** Most machines one account may hold at once (a cost guard). Sized for a small server. */
+  MAX_MACHINES_PER_USER: z.coerce.number().int().min(1).max(100).default(3),
+  /**
+   * Most machines running at once across all accounts. At the cap, create, fork and restore answer
+   * the capacity error ("The beta is full right now"). 0 turns the cap off.
+   */
+  MAX_RUNNING_MACHINES_TOTAL: z.coerce.number().int().min(0).max(1_000).default(5),
   /**
    * Shared secret the usage reporter signs its requests with. Without it, `POST
    * /ingest/usage-events` answers 503 and no usage is recorded.

@@ -60,7 +60,7 @@ path `apps/api/Dockerfile`, port `3000`). Guará injects `DATABASE_URL`; set the
 | `RECONCILE_ACT` | Optional, default `false`. Let the scheduled reconciler fix rows. |
 | `RECONCILE_KILL_ORPHANS` | Optional, default `false`. Needs `RECONCILE_ACT`. Let it also delete machines that have no row. |
 | `RECONCILE_STUCK_AFTER_S` / `RECONCILE_ORPHAN_GRACE_S` | Optional, defaults `600` / `900`. See "Reconciler". |
-| `ROOKBOX_ALLOWED_EMAILS` | The owner's email (comma-separated for more). Sign-up over HTTP is always closed. |
+| `ROOKBOX_ALLOWED_EMAILS` | The owner's email first, then every beta tester's (comma-separated). Only these emails can have an account or sign in. Sign-up over HTTP is always closed; accounts come from `user:create` ("Beta accounts" below). |
 | `ROOKBOX_SEED_OWNER_PASSWORD` | 12+ characters. Creates the owner account at the first start. Remove it afterwards. |
 | `SPACE_ECW_API_URL` | `https://api.box.rookbox.run` |
 | `SPACE_ECW_API_KEY` | The SPACE service key (an ECW key of one SPACE organization). Server side only. |
@@ -69,8 +69,9 @@ path `apps/api/Dockerfile`, port `3000`). Guará injects `DATABASE_URL`; set the
 | `SPACE_TIMEOUT_MS` | Optional, default `60000` (5000 to 300000). How long to wait on a call that waits on a VM: create, suspend, restore, fork. |
 | `SIGNIN_MAX_ATTEMPTS` | Optional, default `5`. Failed sign-ins allowed per email and per address within the window. |
 | `SIGNIN_WINDOW_S` | Optional, default `600`. The window for `SIGNIN_MAX_ATTEMPTS`, in seconds. |
-| `MACHINE_IDLE_TIMEOUT_S` | Optional, default `900`. Idle time before a machine suspends itself. |
-| `MAX_MACHINES_PER_USER` | Optional, default `10`. |
+| `MACHINE_IDLE_TIMEOUT_S` | Optional, default `1800`. Idle time before a machine suspends itself. The dashboard says so on the machine page. |
+| `MAX_MACHINES_PER_USER` | Optional, default `3`. Sized for a small server. |
+| `MAX_RUNNING_MACHINES_TOTAL` | Optional, default `5`. Most machines running at once across all accounts (about five 2 vCPU / 4 GiB machines fit on a 32 GB server). At the cap, create, fork and restore answer "The beta is full right now, try again later". `0` turns the cap off. |
 | `INGEST_SECRET` | 32+ random characters: `openssl rand -hex 32`. The usage reporter signs its requests with it; the same value goes in the reporter's environment. Unset, `POST /ingest/usage-events` answers 503 and no usage is recorded. See "Usage metering" below. |
 | `ADMIN_EMAILS` | Optional, comma-separated. Who may see everyone's usage (the admin view and `usage:report`). Unset, only the first `ROOKBOX_ALLOWED_EMAILS` entry may. |
 | `LOG_LEVEL` | Optional, default `info`. |
@@ -112,6 +113,38 @@ Start the API with `ROOKBOX_ALLOWED_EMAILS` and `ROOKBOX_SEED_OWNER_PASSWORD` se
 `owner account created`. Sign in on the dashboard, then remove the password variable. The seed is
 idempotent: if the account exists, it does nothing. To change the password later, delete the user
 row and seed again.
+
+### Beta accounts
+
+There is no sign-up page and no e-mail provider (so no "forgot password"). The owner manages
+accounts from the API's shell on Guará (`guara exec`, the same way as `usage:report`), with the
+same environment as the server:
+
+```sh
+node dist/cli/user.js create --email friend@example.com --name Friend   # prints a password ONCE
+node dist/cli/user.js set-password --email friend@example.com           # the reset; new password printed once
+node dist/cli/user.js disable --email friend@example.com [--suspend-machines]
+node dist/cli/user.js enable --email friend@example.com
+node dist/cli/user.js list
+```
+
+(`pnpm user:create`, `user:set-password`, `user:disable`, `user:enable` and `user:list` are the same
+commands.)
+
+- Add the email to `ROOKBOX_ALLOWED_EMAILS` first and restart; `create` refuses emails that are not
+  listed, and the allowlist is also checked at every sign-in and request.
+- `create` and `set-password` generate a strong random password unless `--password-stdin` supplies
+  one (12+ characters). It is printed once on stdout, never logged or stored in clear: pass it to
+  the person over a private channel and ask them to keep it in a password manager. `set-password`
+  also ends the person's logins.
+- `disable` is the kill switch: no sign-in, and sessions, API keys and open desktops stop working at
+  once (the desktop WebSocket within a minute). Their machines keep running and costing memory
+  unless you add `--suspend-machines`, which suspends every running machine they own. `enable`
+  restores access; nothing is deleted.
+- The migration `user_disabled_at` adds a nullable column and runs at start; it is additive.
+
+TODO: suspended machines are kept forever. Add an expiry (suspend for N days, then delete) before
+the beta grows, or disk fills up.
 
 ### SPACE service key
 
