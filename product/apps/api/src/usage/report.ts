@@ -29,6 +29,8 @@ export function formatReport(report: AdminUsage): string {
       t.suspendedDiskMibSeconds,
     ).padStart(15)}`;
   for (const user of report.users) lines.push(row(user.email ?? user.userId, user));
+  for (const customer of report.customers)
+    lines.push(row(`customer:${customer.customerId}`, customer));
   lines.push(row("(unassigned)", report.unassigned));
   return lines.join("\n");
 }

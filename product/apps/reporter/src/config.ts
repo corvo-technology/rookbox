@@ -1,4 +1,5 @@
 import { hostname } from "node:os";
+import { type CustomerRule, parseCustomerRules } from "./customers.js";
 import type { LogLevel } from "./log.js";
 
 export type Config = {
@@ -23,6 +24,8 @@ export type Config = {
   diskResizeMinMib: number;
   /** Polls a machine must be missing from before it is reported gone. */
   missedPollsForGone: number;
+  /** Metadata keys that file a machine under a customer when it has no `rookbox.owner` tag. */
+  customerRules: CustomerRule[];
   logLevel: LogLevel;
 };
 
@@ -79,6 +82,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     sendTimeoutMs: int(env, "SEND_TIMEOUT_MS", 15_000, 1_000, 120_000),
     diskResizeMinMib: int(env, "DISK_RESIZE_MIN_MIB", 1_024, 1, 10_000_000),
     missedPollsForGone: int(env, "MISSED_POLLS_FOR_GONE", 2, 1, 20),
+    customerRules: parseCustomerRules(env.CUSTOMER_RULES),
     logLevel: level as LogLevel,
   };
 }

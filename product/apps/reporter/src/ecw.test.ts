@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { parseCustomerRules } from "./customers.js";
 import { createEcwClient, parseSandbox } from "./ecw.js";
 
 const listed = (id: string, extra: Record<string, unknown> = {}) => ({
@@ -54,6 +55,17 @@ describe("parseSandbox", () => {
   it("maps paused to suspended, and a missing owner tag to null", () => {
     const parsed = parseSandbox(listed("sbx1", { state: "paused", metadata: {} }));
     expect(parsed).toMatchObject({ state: "suspended", owner: null });
+  });
+
+  it("files a machine under a customer by its metadata, but never over an owner tag", () => {
+    const rules = parseCustomerRules("corvo=rook");
+    const rook = listed("sbx1", { metadata: { botId: "b1", corvo: "1" } });
+    expect(parseSandbox(rook, rules).owner).toBe("customer:rook");
+    expect(parseSandbox(rook).owner).toBeNull();
+    const tagged = listed("sbx2", { metadata: { corvo: "1", "rookbox.owner": "u1" } });
+    expect(parseSandbox(tagged, rules).owner).toBe("u1");
+    const stranger = listed("sbx3", { metadata: { other: "1" } });
+    expect(parseSandbox(stranger, rules).owner).toBeNull();
   });
 
   it("refuses what it does not understand rather than guess", () => {

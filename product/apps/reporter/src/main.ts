@@ -19,6 +19,7 @@ try {
     baseUrl: config.ecwUrl,
     apiKey: config.ecwKey,
     timeoutMs: config.ecwTimeoutMs,
+    customerRules: config.customerRules,
   });
   const sender = createSender({ db, logger, config });
   const service = createService({ config, db, ecw, sender, logger });
