@@ -116,6 +116,7 @@ export function createFakeApi(options: FakeApiOptions = {}): AppClient {
     });
     const research = add({
       name: "research-agent",
+      template: "desktop",
       size: SIZE_PRESETS.small,
       status: "suspended",
       createdAt: new Date(at - 26 * HOUR),

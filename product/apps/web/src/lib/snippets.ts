@@ -16,3 +16,32 @@ sandbox = Sandbox.connect(
 )
 print(sandbox.commands.run("uname -a").stdout)`;
 }
+
+export type CreateSnippetLanguage = "python" | "typescript";
+
+/**
+ * Creates a machine with the E2B SDK pointed at Rookbox. The key is a placeholder: a person's own
+ * key comes from the API keys page and is read from the environment, never written into code.
+ */
+export function createSnippet(
+  language: CreateSnippetLanguage,
+  domain: string = ROOKBOX_DOMAIN,
+): string {
+  if (language === "python") {
+    return `import os
+from e2b import Sandbox
+
+sandbox = Sandbox.create(
+    domain="${domain}",
+    api_key=os.environ["E2B_API_KEY"],  # your rbx_... key
+)
+print(sandbox.sandbox_id)`;
+  }
+  return `import { Sandbox } from "e2b";
+
+const sandbox = await Sandbox.create({
+  domain: "${domain}",
+  apiKey: process.env.E2B_API_KEY, // your rbx_... key
+});
+console.log(sandbox.sandboxId);`;
+}
