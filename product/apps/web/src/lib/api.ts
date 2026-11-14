@@ -44,7 +44,8 @@ function createRealApi(url: string): AppClient {
 export const api: AppClient = API_URL
   ? createRealApi(API_URL)
   : createFakeApi({
-      seed: true,
+      // `?fakeEmpty` starts with no machines, to see the first-run screen.
+      seed: !new URLSearchParams(globalThis.location?.search).has("fakeEmpty"),
       createMs: 2_500,
       stepMs: 2_000,
       // `?fakeError=HOST_AUTH` makes every create fail that way, to see how it reads.

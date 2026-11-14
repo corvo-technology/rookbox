@@ -155,9 +155,12 @@ export function DeleteMachineDialog({
 export function MachineActionsMenu({
   machine,
   actions,
+  secondaryOnly = false,
 }: {
   machine: Machine;
   actions: MachineActionsState;
+  /** Leave out suspend and restore: the row already shows that one as a button. */
+  secondaryOnly?: boolean;
 }) {
   const { t } = useLingui();
   const [confirming, setConfirming] = useState(false);
@@ -174,7 +177,7 @@ export function MachineActionsMenu({
           {actions.busy ? <Spinner aria-hidden="true" /> : <Ellipsis />}
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-auto min-w-40">
-          {canPerform(machine.status, "restore") ? (
+          {secondaryOnly ? null : canPerform(machine.status, "restore") ? (
             <DropdownMenuItem disabled={!can("restore")} onClick={() => actions.run("restore")}>
               <Play />
               <Trans>Restore</Trans>
@@ -210,7 +213,10 @@ export function MachineActionsMenu({
   );
 }
 
-/** Suspend or restore, fork and delete as buttons in the row, for screens wide enough. */
+/**
+ * One primary action in the row (suspend or restore, whichever the machine can do) and the rest,
+ * fork and delete, in the overflow menu, so a list of machines is not a wall of equal buttons.
+ */
 export function MachineRowActions({
   machine,
   actions,
@@ -219,16 +225,14 @@ export function MachineRowActions({
   actions: MachineActionsState;
 }) {
   const { t } = useLingui();
-  const [confirming, setConfirming] = useState(false);
-  const can = (action: MachineAction) => canPerform(machine.status, action);
   const { name } = machine;
   const button = "h-11 px-3 text-body2 font-semibold";
   const spin = (action: MachineAction) =>
     actions.busy === action ? <Spinner aria-hidden="true" /> : null;
 
   return (
-    <div className="flex flex-wrap justify-end gap-1.5">
-      {can("suspend") ? (
+    <div className="flex items-center justify-end gap-1.5">
+      {canPerform(machine.status, "suspend") ? (
         <Button
           variant="outline"
           className={button}
@@ -240,7 +244,7 @@ export function MachineRowActions({
           {actions.busy === "suspend" ? <Trans>Suspending…</Trans> : <Trans>Suspend</Trans>}
         </Button>
       ) : null}
-      {can("restore") ? (
+      {canPerform(machine.status, "restore") ? (
         <Button
           variant="outline"
           className={button}
@@ -252,35 +256,7 @@ export function MachineRowActions({
           {actions.busy === "restore" ? <Trans>Restoring…</Trans> : <Trans>Restore</Trans>}
         </Button>
       ) : null}
-      {can("fork") ? (
-        <Button
-          variant="outline"
-          className={button}
-          aria-label={t`Fork ${name}`}
-          disabled={actions.busy !== null}
-          onClick={() => actions.run("fork")}
-        >
-          {spin("fork")}
-          {actions.busy === "fork" ? <Trans>Forking…</Trans> : <Trans>Fork</Trans>}
-        </Button>
-      ) : null}
-      {can("delete") ? (
-        <Button
-          variant="outline"
-          className={`${button} text-destructive`}
-          aria-label={t`Delete ${name}`}
-          disabled={actions.busy !== null}
-          onClick={() => setConfirming(true)}
-        >
-          <Trans>Delete</Trans>
-        </Button>
-      ) : null}
-      <DeleteMachineDialog
-        machine={machine}
-        actions={actions}
-        open={confirming}
-        onOpenChange={setConfirming}
-      />
+      <MachineActionsMenu machine={machine} actions={actions} secondaryOnly />
     </div>
   );
 }

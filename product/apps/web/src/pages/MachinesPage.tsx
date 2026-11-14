@@ -14,11 +14,12 @@ import {
   TableRow,
 } from "@rookbox/ui-web";
 import { useIsMutating, useMutationState, useQuery } from "@tanstack/react-query";
-import { Plus, Server } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { CreateMachineDialog, MACHINE_CREATE_KEY } from "../components/CreateMachineDialog";
 import { ErrorNote } from "../components/ErrorNote";
+import { FirstMachine } from "../components/FirstMachine";
 import {
   MACHINE_ACTION_KEY,
   MachineActionFailure,
@@ -30,26 +31,17 @@ import { PageHeader } from "../components/PageHeader";
 import { Segmented } from "../components/Segmented";
 import { useShortSizeText } from "../components/SizeText";
 import { StatusChip } from "../components/StatusChip";
+import { useTemplateLabel } from "../components/TemplateLabel";
 import { orpc, TRANSITION_POLL_MS } from "../lib/api";
 import { formatDate, formatRelative } from "../lib/format";
 import type { StateFilter } from "../lib/machine-filter";
 import { countByStatus, filterMachines } from "../lib/machine-filter";
 import { FILTER_INPUT_ID } from "../lib/site";
 
-function Stat({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-[14px] border border-border bg-card px-3 py-3 sm:px-[18px] sm:py-4">
-      <span className="text-body2 text-muted-foreground">{label}</span>
-      <strong className="block text-[28px] leading-9 font-semibold tracking-[-0.03em] tabular-nums">
-        {value}
-      </strong>
-    </div>
-  );
-}
-
 function MachineRow({ machine }: { machine: Machine }) {
   const { i18n } = useLingui();
   const sizeText = useShortSizeText();
+  const templateLabel = useTemplateLabel();
   const actions = useMachineActions(machine);
   return (
     <TableRow className="h-16">
@@ -66,8 +58,8 @@ function MachineRow({ machine }: { machine: Machine }) {
       <TableCell>
         <StatusChip status={machine.status} />
       </TableCell>
-      <TableCell className="font-mono text-body2 text-muted-foreground max-md:hidden">
-        {machine.template}
+      <TableCell className="text-body2 text-muted-foreground max-md:hidden">
+        {templateLabel(machine.template)}
       </TableCell>
       <TableCell className="text-body2 text-muted-foreground max-lg:hidden">
         {sizeText(machine.size)}
@@ -138,6 +130,8 @@ export function MachinesPage() {
 
   const all = machines.data ?? [];
   const rows = filterMachines(all, query, state);
+  const running = countByStatus(all, "running");
+  const suspended = countByStatus(all, "suspended");
 
   return (
     <div className="flex flex-col gap-5">
@@ -153,27 +147,9 @@ export function MachinesPage() {
       ) : machines.isError ? (
         <ErrorNote error={machines.error} onRetry={() => machines.refetch()} />
       ) : all.length === 0 ? (
-        <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-border px-6 py-16 text-center">
-          <Server className="size-10 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
-          <p className="text-heading3 font-medium text-foreground">
-            <Trans>No machines yet</Trans>
-          </p>
-          <p className="max-w-[420px] text-body1 text-muted-foreground">
-            <Trans>
-              A machine is your own Linux computer in the cloud. Create one to run commands, open a
-              desktop or host something.
-            </Trans>
-          </p>
-          {newMachine}
-        </div>
+        <FirstMachine onCreate={() => setCreating(true)} />
       ) : (
         <>
-          <div className="grid grid-cols-3 gap-2 sm:gap-3.5">
-            <Stat label={t`Running`} value={countByStatus(all, "running")} />
-            <Stat label={t`Suspended`} value={countByStatus(all, "suspended")} />
-            <Stat label={t`Total`} value={all.length} />
-          </div>
-
           <div className="flex flex-wrap items-center gap-2.5">
             <label htmlFor={FILTER_INPUT_ID} className="sr-only">
               <Trans>Filter machines</Trans>
@@ -198,6 +174,12 @@ export function MachinesPage() {
               ]}
             />
           </div>
+
+          <p className="text-body2 text-muted-foreground tabular-nums">
+            <Trans>
+              {running} running · {suspended} suspended · {all.length} in total
+            </Trans>
+          </p>
 
           <div className="overflow-hidden rounded-2xl border border-border bg-card">
             <Table>
@@ -232,9 +214,16 @@ export function MachinesPage() {
               </TableBody>
             </Table>
             {rows.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 p-10 text-center">
-                <p className="text-muted-foreground">
-                  <Trans>No machines match.</Trans>
+              <div className="flex flex-col items-center gap-3 p-10 text-center">
+                <p className="text-body1 font-medium text-foreground">
+                  <Trans>No machine matches</Trans>
+                </p>
+                <p className="max-w-[40ch] text-body2 text-muted-foreground">
+                  {query.trim() ? (
+                    <Trans>Nothing matches “{query.trim()}” with this state filter.</Trans>
+                  ) : (
+                    <Trans>No machine is in this state right now.</Trans>
+                  )}
                 </p>
                 <Button
                   variant="outline"

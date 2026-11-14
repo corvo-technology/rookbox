@@ -64,6 +64,11 @@ msgstr "{name} vuelve a estar en ejecución."
 msgid "{name} is suspended. Its memory was saved."
 msgstr "{name} está suspendida. Su memoria se guardó."
 
+#. placeholder {0}: all.length
+#: src/pages/MachinesPage.tsx
+msgid "{running} running · {suspended} suspended · {0} in total"
+msgstr "{running} en ejecución · {suspended} suspendidas · {0} en total"
+
 #: src/components/SizeText.tsx
 msgid "{vcpu} vCPU · {memory} RAM · {disk} disk"
 msgstr "{vcpu} vCPU · {memory} de RAM · {disk} de disco"
@@ -94,9 +99,9 @@ msgstr "Se alcanzó un límite del servicio de máquinas."
 msgid "A Linux desktop with Chromium you can open in a tab, plus a terminal."
 msgstr "Un escritorio Linux con Chromium que puedes abrir en una pestaña, más una terminal."
 
-#: src/pages/MachinesPage.tsx
-msgid "A machine is your own Linux computer in the cloud. Create one to run commands, open a desktop or host something."
-msgstr "Una máquina es tu propio ordenador Linux en la nube. Crea una para ejecutar comandos, abrir un escritorio o alojar algo."
+#: src/components/FirstMachine.tsx
+msgid "A machine is your own Linux computer in the cloud. Run commands, open a desktop or host something, then suspend it and pick up where you left off."
+msgstr "Una máquina es tu propio ordenador Linux en la nube. Ejecuta comandos, abre un escritorio o aloja algo, y luego suspéndela y retoma donde lo dejaste."
 
 #: src/components/CreateMachineDialog.tsx
 msgid "A machine with no activity for this long is suspended and keeps its memory. Restore it any time."
@@ -387,10 +392,6 @@ msgid "Delete {0}"
 msgstr "Eliminar {0}"
 
 #: src/components/MachineActions.tsx
-msgid "Delete {name}"
-msgstr "Eliminar {name}"
-
-#: src/components/MachineActions.tsx
 #: src/pages/admin/AdminMachinesPage.tsx
 msgid "Delete {name}?"
 msgstr "¿Eliminar {name}?"
@@ -416,6 +417,7 @@ msgstr "eliminada"
 msgid "Deleting"
 msgstr "Eliminando"
 
+#: src/components/TemplateLabel.tsx
 #: src/pages/MachinePage.tsx
 msgid "Desktop"
 msgstr "Escritorio"
@@ -495,6 +497,7 @@ msgid "Enable {email}"
 msgstr "Activar {email}"
 
 #: src/components/E2bSnippets.tsx
+#: src/components/FirstMachine.tsx
 msgid "Environment"
 msgstr "Entorno"
 
@@ -529,10 +532,6 @@ msgstr "Corrige la clave del servicio en la API y comprueba de nuevo."
 msgid "Fork"
 msgstr "Fork"
 
-#: src/components/MachineActions.tsx
-msgid "Fork {name}"
-msgstr "Hacer fork de {name}"
-
 #: src/pages/MachinesPage.tsx
 msgid "Fork copies the disk, not memory."
 msgstr "El fork copia el disco, no la memoria."
@@ -545,7 +544,6 @@ msgstr "Fork de"
 msgid "Forked into {forked}. The disk was copied, not memory."
 msgstr "Fork creado en {forked}. Se copió el disco, no la memoria."
 
-#: src/components/MachineActions.tsx
 #: src/pages/MachinePage.tsx
 msgid "Forking…"
 msgstr "Creando fork…"
@@ -585,6 +583,14 @@ msgstr "Estado"
 #: src/pages/LoginPage.tsx
 msgid "Hide password"
 msgstr "Ocultar contraseña"
+
+#: src/components/UsageChart.tsx
+msgid "Hours per day"
+msgstr "Horas por día"
+
+#: src/pages/UsagePage.tsx
+msgid "hours your machines were running"
+msgstr "horas con tus máquinas en ejecución"
 
 #: src/pages/admin/AdminUsersPage.tsx
 #: src/pages/ApiKeysPage.tsx
@@ -628,6 +634,7 @@ msgid "Key rejected"
 msgstr "Clave rechazada"
 
 #: src/components/E2bSnippets.tsx
+#: src/components/FirstMachine.tsx
 #: src/components/LanguageSelect.tsx
 #: src/pages/SettingsPage.tsx
 msgid "Language"
@@ -665,6 +672,10 @@ msgstr "Claro"
 msgid "Limit per account"
 msgstr "Límite por cuenta"
 
+#: src/components/TemplateLabel.tsx
+msgid "Linux"
+msgstr "Linux"
+
 #: src/components/CreateMachineDialog.tsx
 msgid "Linux with root access and no screen. The fastest to start."
 msgstr "Linux con acceso root y sin pantalla. El más rápido en arrancar."
@@ -685,6 +696,10 @@ msgstr "Cargando"
 msgid "Machine"
 msgstr "Máquina"
 
+#: src/pages/UsagePage.tsx
+msgid "Machine hours"
+msgstr "Horas de máquina"
+
 #: src/pages/admin/AdminHealthPage.tsx
 msgid "Machine records"
 msgstr "Registros de máquinas"
@@ -692,10 +707,6 @@ msgstr "Registros de máquinas"
 #: src/pages/admin/AdminHealthPage.tsx
 msgid "Machine service"
 msgstr "Servicio de máquinas"
-
-#: src/pages/UsagePage.tsx
-msgid "machine-hours"
-msgstr "horas de máquina"
 
 #: src/components/UsageChart.tsx
 msgid "Machine-hours running per day"
@@ -744,11 +755,6 @@ msgstr "Memoria"
 msgid "Memory GiB h"
 msgstr "Memoria GiB h"
 
-#. placeholder {0}: formatQuantity(peak, locale)
-#: src/components/UsageChart.tsx
-msgid "Most in a day: {0} h"
-msgstr "Máximo en un día: {0} h"
-
 #: src/components/AdminUsage.tsx
 #: src/components/CreateMachineDialog.tsx
 #: src/pages/admin/AdminUsersPage.tsx
@@ -774,6 +780,7 @@ msgid "Never reported"
 msgstr "Nunca ha informado"
 
 #: src/components/CreateMachineDialog.tsx
+#: src/components/FirstMachine.tsx
 #: src/pages/MachinesPage.tsx
 msgid "New machine"
 msgstr "Nueva máquina"
@@ -802,22 +809,29 @@ msgstr "Sin clave configurada"
 msgid "No keys yet"
 msgstr "Aún no hay claves"
 
+#: src/pages/MachinesPage.tsx
+msgid "No machine is in this state right now."
+msgstr "Ninguna máquina está en este estado ahora."
+
 #: src/pages/UsagePage.tsx
 msgid "No machine is running right now."
 msgstr "Ninguna máquina está en ejecución ahora."
 
-#: src/pages/admin/AdminMachinesPage.tsx
 #: src/pages/MachinesPage.tsx
+msgid "No machine matches"
+msgstr "Ninguna máquina coincide"
+
+#: src/components/UsageChart.tsx
+msgid "No machine ran on these days."
+msgstr "Ninguna máquina se ejecutó estos días."
+
+#: src/pages/admin/AdminMachinesPage.tsx
 msgid "No machines match."
 msgstr "Ninguna máquina coincide."
 
 #: src/pages/admin/AdminMachinesPage.tsx
 msgid "No machines on the server"
 msgstr "No hay máquinas en el servidor"
-
-#: src/pages/MachinesPage.tsx
-msgid "No machines yet"
-msgstr "Aún no hay máquinas"
 
 #: src/pages/UsagePage.tsx
 msgid "No usage in this period"
@@ -838,6 +852,11 @@ msgstr "Con problemas"
 #: src/pages/UsagePage.tsx
 msgid "Nothing has been reported yet."
 msgstr "Todavía no se ha reportado nada."
+
+#. placeholder {0}: query.trim()
+#: src/pages/MachinesPage.tsx
+msgid "Nothing matches “{0}” with this state filter."
+msgstr "Nada coincide con “{0}” con este filtro de estado."
 
 #: src/pages/admin/AdminHealthPage.tsx
 msgid "Off"
@@ -863,6 +882,10 @@ msgstr "Operación"
 #: src/components/CreateMachineDialog.tsx
 msgid "Optional, for example research-agent"
 msgstr "Opcional, por ejemplo research-agent"
+
+#: src/components/FirstMachine.tsx
+msgid "Or create one from code"
+msgstr "O crea una desde código"
 
 #: src/pages/MachinePage.tsx
 msgid "Output cut"
@@ -913,6 +936,10 @@ msgstr "RAM (GiB)"
 #: src/components/DesktopDialog.tsx
 msgid "Reconnect"
 msgstr "Reconectar"
+
+#: src/components/FirstMachine.tsx
+msgid "Replace <0>rbx_your_key_here</0> with a key from <1>API keys</1>."
+msgstr "Sustituye <0>rbx_your_key_here</0> por una clave de <1>Claves de API</1>."
 
 #: src/pages/admin/AdminHealthPage.tsx
 msgid "Reporting"
@@ -1022,10 +1049,6 @@ msgstr "Máquinas en ejecución"
 msgid "Running now"
 msgstr "En ejecución ahora"
 
-#: src/pages/UsagePage.tsx
-msgid "Running time"
-msgstr "Tiempo en ejecución"
-
 #: src/pages/admin/AdminHealthPage.tsx
 msgid "Running time is not accruing until it is back."
 msgstr "El tiempo de ejecución no se contabiliza hasta que vuelva."
@@ -1112,6 +1135,10 @@ msgstr "Especificaciones"
 #: src/pages/MachinePage.tsx
 msgid "Start the machine to run commands."
 msgstr "Inicia la máquina para ejecutar comandos."
+
+#: src/components/FirstMachine.tsx
+msgid "Start your first machine"
+msgstr "Crea tu primera máquina"
 
 #: src/components/DesktopDialog.tsx
 msgid "Starting the desktop. The first time can take a few seconds."
@@ -1360,10 +1387,6 @@ msgstr "Tiempo agotado"
 #: src/pages/LoginPage.tsx
 msgid "Too many attempts. Try again in {minutes} min."
 msgstr "Demasiados intentos. Inténtalo de nuevo en {minutes} min."
-
-#: src/pages/MachinesPage.tsx
-msgid "Total"
-msgstr "Total"
 
 #. placeholder {0}: all.length
 #: src/pages/admin/AdminMachinesPage.tsx
