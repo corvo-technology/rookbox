@@ -1,6 +1,7 @@
 import { ORPCError } from "@orpc/server";
 import { describe, expect, it } from "vitest";
 import { periodRange } from "./aggregate.js";
+import { reassignToCustomer } from "./reassign.js";
 import { formatReport } from "./report.js";
 import { usageHandlers } from "./router.js";
 import { ev, events, newUsage, resetSeq, snapshot, T0 } from "./test-support.js";
@@ -319,5 +320,104 @@ describe("the admin view", () => {
   it("answers 503 when usage is not wired", async () => {
     const handlers = usageHandlers(undefined);
     await expect(handlers.summary({ id: "u1" }, "7d")).rejects.toBeInstanceOf(ORPCError);
+  });
+});
+
+describe("customer apps", () => {
+  const rook = (fields = {}) => ({ owner: "customer:rook", ...fields });
+
+  it("files a machine under its customer, never under a user, and lists it for admins only", async () => {
+    resetSeq();
+    const { service, setNow } = newUsage();
+    await service.ingest(
+      events([
+        ev("seen", "bot1", 0, rook()),
+        ev("seen", "bot2", 0, rook()),
+        ev("suspended", "bot2", 1_800, rook()),
+        ev("seen", "mine", 0),
+        ev("seen", "stray", 0, { owner: null }),
+      ]),
+    );
+    setNow(HOUR);
+    const report = await service.admin("7d");
+    expect(report.customers).toEqual([
+      expect.objectContaining({
+        customerId: "rook",
+        machines: 2,
+        machinesNow: 1,
+        runningSeconds: HOUR + 1_800,
+        vcpuSeconds: 2 * (HOUR + 1_800),
+      }),
+    ]);
+    expect(report.users.map((user) => user.userId)).toEqual(["u1"]);
+    expect(report.unassigned.machines).toBe(1);
+    expect(formatReport(report)).toContain("customer:rook");
+    for (const user of ["u1", "u2", "customer:rook"]) {
+      const summary = await service.summary(user, "7d").catch(() => null);
+      expect(summary?.byMachine.map((m) => m.machineId) ?? []).not.toContain("bot1");
+    }
+  });
+
+  it("ignores a malformed customer owner, and lets an account tag or the API's record win", async () => {
+    resetSeq();
+    const { service, store, setNow } = newUsage();
+    store.machines.set("fork", { ownerId: "u2", name: "f" });
+    await service.ingest(
+      events([
+        ev("seen", "bad", 0, { owner: "customer:Not Valid" }),
+        ev("seen", "fork", 0, rook()),
+      ]),
+    );
+    setNow(HOUR);
+    const report = await service.admin("7d");
+    expect(report.customers).toEqual([]);
+    expect(report.unassigned.machines).toBe(1);
+    expect((await service.summary("u2", "7d")).byMachine.map((m) => m.machineId)).toEqual(["fork"]);
+  });
+
+  it("re-derives time recorded as unassigned once a snapshot restates the machine as the customer's", async () => {
+    resetSeq();
+    const { service, setNow } = newUsage();
+    await service.ingest(events([ev("seen", "bot1", 0, { owner: null })]));
+    expect((await service.admin("7d")).unassigned.machines).toBe(1);
+    await service.ingest(snapshot(600, [{ machineId: "bot1", owner: "customer:rook" }]));
+    setNow(HOUR);
+    const report = await service.admin("7d");
+    expect(report.unassigned.machines).toBe(0);
+    expect(report.customers[0]).toMatchObject({ customerId: "rook", runningSeconds: HOUR });
+    // A second snapshot adds nothing.
+    await service.ingest(snapshot(1_200, [{ machineId: "bot1", owner: "customer:rook" }]));
+    expect((await service.admin("7d")).customers[0]?.runningSeconds).toBe(HOUR);
+  });
+});
+
+describe("reassigning recorded usage to a customer", () => {
+  it("is a dry run by default, moves only unowned time, and is idempotent", async () => {
+    resetSeq();
+    const { service, store, setNow } = newUsage();
+    store.machines.set("fork", { ownerId: "u2", name: "f" });
+    await service.ingest(
+      events([
+        ev("seen", "bot1", 0, { owner: null }),
+        ev("seen", "mine", 0),
+        ev("seen", "gone1", 0, { owner: null }),
+        ev("gone", "gone1", 600, { owner: null }),
+      ]),
+    );
+    setNow(HOUR);
+    const ask = { machineIds: ["bot1", "mine", "gone1", "nope"], customerId: "rook" };
+    const dry = await reassignToCustomer(store, { ...ask, apply: false });
+    expect(dry).toMatchObject({ applied: false, machineIds: ["bot1", "gone1"] });
+    expect((await service.admin("7d")).customers).toEqual([]);
+    await reassignToCustomer(store, { ...ask, apply: true });
+    const report = await service.admin("7d");
+    expect(report.customers[0]).toMatchObject({ customerId: "rook", machines: 2 });
+    expect(report.unassigned.machines).toBe(0);
+    expect(report.users.map((user) => user.userId)).toEqual(["u1"]);
+    const again = await reassignToCustomer(store, { ...ask, apply: true });
+    expect(again.machineIds).toEqual([]);
+    await expect(
+      reassignToCustomer(store, { machineIds: [], customerId: "Bad Id", apply: false }),
+    ).rejects.toThrow();
   });
 });

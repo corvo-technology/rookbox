@@ -73,6 +73,7 @@ There is no pricing here. The reporter records what happened to each machine and
 | `DISK_RESIZE_MIN_MIB` | no | 1024 | A disk reading must move this much to count as a resize. |
 | `MISSED_POLLS_FOR_GONE` | no | 2 | Consecutive polls a machine must be missing before it is `gone`. |
 | `ECW_TIMEOUT_MS`, `SEND_TIMEOUT_MS` | no | 15000 | Request timeouts. |
+| `CUSTOMER_RULES` | no | none | Files machines of a customer app under a named customer when they have no `rookbox.owner` tag. A comma list `metadataKey=customerId` (or a JSON object `{"metadataKey":"customerId"}`); a machine whose metadata has the key is reported as `customer:<id>`. This deployment uses `corvo=rook`. Customer ids are lowercase letters, digits, `.`, `_`, `-`. The tag always wins; unmatched machines stay unassigned. |
 | `LOG_LEVEL` | no | info | `debug`, `info`, `warn` or `error`. |
 
 Logs are one JSON object per line on stdout. Secrets, keys and signatures are never logged.

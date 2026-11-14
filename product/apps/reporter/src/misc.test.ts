@@ -24,6 +24,19 @@ describe("loadConfig", () => {
       reporterId: "box-1",
     });
   });
+  it("reads customer rules as a list or as JSON, and refuses bad ones", () => {
+    expect(loadConfig(env).customerRules).toEqual([]);
+    expect(loadConfig({ ...env, CUSTOMER_RULES: "corvo=Rook, x=acme" }).customerRules).toEqual([
+      { metadataKey: "corvo", customerId: "rook" },
+      { metadataKey: "x", customerId: "acme" },
+    ]);
+    expect(loadConfig({ ...env, CUSTOMER_RULES: '{"corvo":"rook"}' }).customerRules).toEqual([
+      { metadataKey: "corvo", customerId: "rook" },
+    ]);
+    expect(() => loadConfig({ ...env, CUSTOMER_RULES: "corvo" })).toThrow(/CUSTOMER_RULES/);
+    expect(() => loadConfig({ ...env, CUSTOMER_RULES: "corvo=bad id" })).toThrow(/CUSTOMER_RULES/);
+    expect(() => loadConfig({ ...env, CUSTOMER_RULES: "{nope" })).toThrow(/CUSTOMER_RULES/);
+  });
   it("names what is missing or wrong", () => {
     expect(() => loadConfig({ ...env, INGEST_SECRET: "short" })).toThrow(/INGEST_SECRET/);
     expect(() => loadConfig({ ...env, SPACE_ECW_API_KEY: "" })).toThrow(/SPACE_ECW_API_KEY/);

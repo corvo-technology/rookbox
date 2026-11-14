@@ -98,10 +98,35 @@ export const UsageSummarySchema = z.object({
 });
 export type UsageSummary = z.infer<typeof UsageSummarySchema>;
 
+/**
+ * Usage of a customer app (one that uses the same sandbox key but is not a dashboard user) is
+ * filed under the owner `customer:<id>`. It is never a user account, so a user's own summary
+ * cannot include it; only an admin sees it, in `AdminUsage.customers`.
+ */
+export const CUSTOMER_OWNER_PREFIX = "customer:";
+export const CUSTOMER_ID_PATTERN = /^[a-z0-9][a-z0-9._-]{0,63}$/;
+
+/** The owner string for a customer id. */
+export const customerOwner = (customerId: string) => `${CUSTOMER_OWNER_PREFIX}${customerId}`;
+
+/** The customer id in an owner string, or null when it is not a well-formed customer owner. */
+export function parseCustomerOwner(owner: string | null | undefined): string | null {
+  if (!owner?.startsWith(CUSTOMER_OWNER_PREFIX)) return null;
+  const id = owner.slice(CUSTOMER_OWNER_PREFIX.length);
+  return CUSTOMER_ID_PATTERN.test(id) ? id : null;
+}
+
 export const AdminUsageUserSchema = UsageTotalsSchema.extend({
   userId: z.string().min(1),
   email: z.string().nullable(),
 });
+
+export const AdminUsageCustomerSchema = UsageTotalsSchema.extend({
+  customerId: z.string().regex(CUSTOMER_ID_PATTERN),
+  /** Machines of this customer running now. */
+  machinesNow: count,
+});
+export type AdminUsageCustomer = z.infer<typeof AdminUsageCustomerSchema>;
 
 export const AdminUsageSchema = z.object({
   period: UsagePeriodSchema,
@@ -118,6 +143,8 @@ export const AdminUsageSchema = z.object({
     stale: z.boolean(),
   }),
   users: z.array(AdminUsageUserSchema),
+  /** Customer apps such as a product built on the same sandbox key. Only an admin sees this. */
+  customers: z.array(AdminUsageCustomerSchema).default([]),
   /** Machines with no known owner. Only an admin sees this. */
   unassigned: UsageTotalsSchema,
 });

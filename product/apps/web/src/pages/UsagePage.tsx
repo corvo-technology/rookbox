@@ -13,6 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ChartColumn } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { AdminUsage } from "../components/AdminUsage";
 import { ErrorNote } from "../components/ErrorNote";
 import { PageHeader } from "../components/PageHeader";
 import { Panel, Tag } from "../components/Panel";
@@ -268,6 +269,7 @@ export function UsagePage() {
       ) : (
         <Loaded summary={usage.data} locale={i18n.locale} />
       )}
+      <AdminUsage period={period} locale={i18n.locale} />
       <p className="text-label text-muted-foreground">
         <Trans>Billing is coming soon.</Trans>
       </p>
