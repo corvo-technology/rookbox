@@ -392,12 +392,12 @@ describe("the runtime role's privileges", () => {
 describe("provisioning", () => {
   it("is idempotent, changes the password and covers tables created later", async () => {
     const again = await provisionRuntimeRole(runner(lite), RUNTIME_URL);
-    expect(again).toEqual({});
+    expect(again).toEqual({ mode: "group membership" });
     const rotated = await provisionRuntimeRole(
       runner(lite),
       `postgres://${RUNTIME_LOGIN}:another%20secret@localhost/rookbox`,
     );
-    expect(rotated).toEqual({});
+    expect(rotated).toEqual({ mode: "group membership" });
 
     await lite.exec(`CREATE TABLE "later" ("id" int PRIMARY KEY)`);
     await as("none", async (tx) => {
@@ -428,7 +428,7 @@ describe("provisioning", () => {
       runner(lite),
       `postgres://${encodeURIComponent('odd"login')}:${encodeURIComponent("pa'ss\\word")}@localhost/rookbox`,
     );
-    expect(result).toEqual({});
+    expect(result).toEqual({ mode: "group membership" });
     expect(await owned(`SELECT rolname FROM pg_roles WHERE rolname = 'odd"login'`)).toHaveLength(1);
   });
 });

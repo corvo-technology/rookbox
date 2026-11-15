@@ -437,11 +437,21 @@ right after the migrations: the runtime login named in `DATABASE_URL` is created
 the password in that URL, made a member of `rookbox_app`, and the group's grants are reapplied
 (`SELECT/INSERT/UPDATE/DELETE` on all tables, sequence usage, default privileges for tables later
 migrations create, no `UPDATE`/`DELETE` on the append-only `usage_event`). It is idempotent, so a
-password changed in `DATABASE_URL` takes effect on the next start. Without `CREATEROLE` (some
-managed Postgres), have an administrator create the login and `GRANT rookbox_app TO` it; the step
-then leaves it alone. At start the API also checks what its own login is and logs a warning
+password changed in `DATABASE_URL` takes effect on the next start. No superuser is needed: the
+owner only needs `CREATEROLE`.
+
+A `CREATEROLE` login can only grant roles it administers, and on managed Postgres the owner often
+holds no admin option on `rookbox_app` (someone else created it). When `GRANT rookbox_app TO <login>`
+is denied, provisioning falls back to **direct grants**: the same privileges (and revokes) are
+granted to the runtime login itself, as table owner, from one shared list, including
+`CONNECT` on the database, `USAGE` on schema `public`, default privileges for later tables and
+sequences, and the same revokes (no `_prisma_migrations`, no `UPDATE`/`DELETE` on `usage_event`).
+The start log says which path was used (`path: "group membership"` or `"direct grants"`). A login
+that already is a member of the group keeps working unchanged. Without `CREATEROLE`, have an
+administrator create the login (and optionally `GRANT rookbox_app TO` it); the step then grants
+directly or leaves it alone. At start the API also checks what its own login is and logs a warning
 (`Row-level security is not enforced ...`) when it is a superuser, owns the tables or has
-`BYPASSRLS`, or when `DATABASE_MIGRATION_URL` is unset.
+`BYPASSRLS` or lacks the table privileges, or when `DATABASE_MIGRATION_URL` is unset.
 
 ### Transaction pooler: settings are transaction-local
 

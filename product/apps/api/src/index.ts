@@ -69,7 +69,7 @@ try {
     logger.info("migrations applied", { count: applied.length, names: applied });
     const provisioned = await provisionDatabase(urls);
     if (provisioned.warning) logger.warn(provisioned.warning);
-    else logger.info("runtime database login provisioned");
+    else logger.info("runtime database login provisioned", { path: provisioned.mode });
   }
 
   const { db, close } = createDb(urls.url);
